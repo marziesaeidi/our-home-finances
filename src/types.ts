@@ -1,0 +1,9 @@
+export type Visibility = 'shared' | 'private';
+export type TransactionType = 'expense' | 'income' | 'transfer' | 'saving';
+export type Transaction = { id: string; title: string; amount: number; type: TransactionType; category: string; accountId: string; toAccountId?: string; goalId?: string; createdBy: 'مرزیه' | 'علی'; visibility: Visibility; date: string; note?: string; loanId?: string };
+export type Account = { id: string; name: string; type: string; balance: number; visibility: Visibility };
+export type Loan = { id: string; name: string; total: number; installment: number; count: number; paid: number; nextDate: string; frequency: string; note?: string };
+export type Goal = { id: string; name: string; target: number; saved: number; targetDate: string; visibility: Visibility };
+export type Recurring = { id: string; name: string; amount: number; frequency: string; nextDate: string; category: string; owner: string; reminder: boolean };
+export type Budget = { total: number; categories: Record<string, number> };
+export type Data = { transactions: Transaction[]; accounts: Account[]; loans: Loan[]; goals: Goal[]; recurring: Recurring[]; budget: Budget };
