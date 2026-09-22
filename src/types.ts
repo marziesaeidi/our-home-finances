@@ -1,6 +1,6 @@
 export type Visibility = 'shared' | 'private';
 export type TransactionType = 'expense' | 'income' | 'transfer' | 'saving';
-export type Transaction = { id: string; title: string; amount: number; type: TransactionType; category: string; accountId: string; toAccountId?: string; goalId?: string; createdBy: 'مرزیه' | 'علی'; visibility: Visibility; date: string; note?: string; loanId?: string };
+export type Transaction = { id: string; title: string; icon?: string; amount: number; type: TransactionType; category: string; accountId: string; toAccountId?: string; goalId?: string; createdBy: 'مرزیه' | 'علی'; visibility: Visibility; date: string; note?: string; loanId?: string };
 export type Account = { id: string; name: string; type: string; balance: number; visibility: Visibility };
 export type Loan = { id: string; name: string; total: number; installment: number; count: number; paid: number; nextDate: string; frequency: string; note?: string };
 export type Goal = { id: string; name: string; target: number; saved: number; targetDate: string; visibility: Visibility };
