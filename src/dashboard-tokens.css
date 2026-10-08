@@ -1,5 +1,5 @@
-/* Semantic tokens are scoped to this rollout, including Radix portal surfaces. */
-.ds-dashboard, .ds-portal {
+/* Dashboard palette is global, including portal surfaces. */
+:root, .ds-dashboard, .ds-portal {
  --background:#F8FAFC; --foreground:#0F172A; --card:#fff; --card-foreground:var(--foreground);
  --popover:#fff; --popover-foreground:var(--foreground); --primary:#2563EB; --primary-foreground:#fff;
  --success:#16A34A; --destructive:#DC2626; --warning:#D97706;
@@ -13,7 +13,7 @@
  font-family:Vazirmatn,system-ui,sans-serif; font-size:var(--type-body); line-height:1.8;
  color:var(--foreground); background:var(--background); text-align:start; font-synthesis:none;
 }
-html[data-theme=dark] :is(.ds-dashboard,.ds-portal) {
+html[data-theme=dark], html[data-theme=dark] :is(.ds-dashboard,.ds-portal) {
  --background:#0F172A; --foreground:#F8FAFC; --card:#1E293B; --card-foreground:#F8FAFC;
  --popover:#1E293B; --popover-foreground:#F8FAFC; --primary:#2563EB; --primary-foreground:#fff;
  --secondary:#24344F; --secondary-foreground:#DBEAFE; --muted:#24344F; --muted-foreground:#CBD5E1;

@@ -1,0 +1,91 @@
+/* Dashboard foundations shared by every route and portal. Breakpoints: 650px compact, 900px sidebar. */
+:root {
+ --brand:var(--primary); --brand-dark:color-mix(in srgb,var(--primary),black 15%); --surface:var(--card); --line:var(--border);
+ --font-sans:Vazirmatn,system-ui,sans-serif;
+ --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-6:1.5rem;
+ --radius-control:.5rem; --radius-card:var(--radius); --radius-pill:999px;
+ --shadow-color:color-mix(in srgb,var(--foreground),transparent 92%);
+ --shadow-card:0 1px 3px var(--shadow-color); --shadow-popover:0 12px 32px var(--shadow-color);
+ --warning-soft:color-mix(in srgb,var(--warning),var(--card) 92%); --destructive-soft:color-mix(in srgb,var(--destructive),var(--card) 92%);
+ --control-height:2.75rem;
+ --chart-1:var(--primary); --chart-2:var(--success); --chart-3:var(--warning); --chart-4:var(--destructive); --chart-5:var(--muted-foreground);
+}
+html { color-scheme:light; } html[data-theme=dark] { color-scheme:dark; }
+body { background:var(--background); color:var(--foreground); }
+button,input,select,textarea,svg text { font-family:var(--font-sans); }
+main { min-width:0; }
+h1,.page-head h1 { font-size:var(--type-heading); line-height:1.5; }
+h2,.section-heading h2 { font-size:var(--type-amount); line-height:1.7; }
+h3 { font-size:var(--type-body); }
+.page-head { margin-block:var(--space-4) var(--space-section); flex-wrap:wrap; }
+.page-head p,.field-hint,.muted,small { color:var(--muted-foreground); }
+.card,.stat-card,.finance-surface { background:var(--card); color:var(--card-foreground); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow-card); min-width:0; }
+.finance-surface { display:block; gap:0; overflow:visible; padding-block:0; --tw-ring-shadow:0 0 transparent; }
+.finance-surface:is(.account-card,.recurring-card,.plan-link) { display:flex; }
+.module-card,.module-editor,.add-form-card,.loan-card,.goal-card,.invite-card { padding:var(--space-card); }
+.module-card,.module-editor,.loan-card,.goal-card { margin-block:var(--space-4); }
+.primary,.outline,.danger,.finance-action:not(.card) { border-radius:var(--radius-control); }
+.primary,.outline,.danger { min-height:var(--control-height); font-size:var(--type-body); font-weight:500; }
+.primary { background:var(--primary); color:var(--primary-foreground); border-color:var(--primary); }
+.primary:hover { background:var(--brand-dark); }
+.outline { background:var(--card); color:var(--foreground); border-color:var(--border); }
+.danger,.plain-danger,.form-error { color:var(--destructive); }
+.danger { background:var(--destructive-soft); border-color:var(--destructive); }
+.finance-action { height:auto; white-space:normal; }
+.finance-action:disabled { opacity:.5; cursor:not-allowed; }
+.finance-action svg { width:1.125rem; height:1.125rem; }
+.finance-action.card { justify-content:flex-start; }
+.finance-action.row-main { align-items:flex-start; justify-content:flex-start; }
+.transaction-row { box-shadow:none; border-radius:0; }
+.field input:not([type=checkbox]):not([type=radio]):not([type=color]),.field select,.field textarea,.finance-select,.finance-textarea { background:var(--card); color:var(--foreground); border:1px solid var(--input); border-radius:var(--radius-control); min-height:var(--control-height); width:100%; min-width:0; padding:var(--space-2) var(--space-3); font-size:var(--type-body); text-align:start; }
+.field textarea { min-height:6rem; resize:vertical; }
+.field { gap:var(--space-2); font-size:var(--type-label); }
+.finance-form { gap:var(--space-4); }
+.amount-field,.calculated,.profile-card,.soft-note,.notice { background:var(--secondary); color:var(--foreground); border-radius:var(--radius-card); }
+.amount-field input { height:auto; border:0; box-shadow:none; background:transparent; color:var(--foreground); font-size:1.75rem; }
+.searchbox input { height:var(--control-height); border:0; background:transparent; }
+input[inputmode=numeric],input[inputmode=decimal],bdi,.ds-amount,.row-end,.stat-card strong { font-variant-numeric:tabular-nums; }
+input[type=checkbox],input[type=radio],progress { accent-color:var(--primary); }
+.row-icon,.row-icon.warm,.row-icon.lilac,.row-icon.mint,.avatar,.avatar.second { background:var(--secondary); color:var(--primary); }
+.badge,.house-chip { background:var(--secondary); color:var(--secondary-foreground); border-radius:var(--radius-control); font-size:var(--type-caption); }
+.positive { color:var(--success); }
+.budget-status.warning,.over { color:var(--warning); } .budget-status.exceeded { color:var(--destructive); }
+.progress,.thin-track { background:var(--muted); border-radius:var(--radius-pill); overflow:hidden; }
+.progress i,.thin-track i { background:var(--primary); } .progress.warning i { background:var(--warning); }
+progress,meter { width:100%; height:.625rem; border:0; border-radius:var(--radius-pill); }
+progress::-webkit-progress-bar { background:var(--muted); border-radius:var(--radius-pill); }
+progress::-webkit-progress-value { background:var(--primary); border-radius:var(--radius-pill); }
+progress::-moz-progress-bar { background:var(--primary); border-radius:var(--radius-pill); }
+.empty { color:var(--muted-foreground); background:var(--muted); border:1px dashed var(--border); border-radius:var(--radius-card); padding:var(--space-card); text-align:center; }
+.segment { background:var(--muted); border-radius:var(--radius-control); padding:var(--space-1); }
+.segment button.selected { background:var(--card); color:var(--foreground); box-shadow:var(--shadow-card); }
+.chips button.chosen,.category-picker button.selected,.icon-picker button.selected { background:var(--accent); color:var(--accent-foreground); border-color:var(--primary); }
+.desktop-side { background:var(--sidebar); border-inline-end:1px solid var(--sidebar-border); border-left:0; }
+.desktop-side nav button { color:var(--sidebar-foreground); text-align:start; }
+.desktop-side nav button.active { background:var(--sidebar-accent); color:var(--sidebar-accent-foreground); }
+.bottom-nav { background:var(--card); border-color:var(--border); }
+.bottom-nav button.active { color:var(--primary); }
+.bottom-nav .add-main { background:var(--primary); color:var(--primary-foreground); box-shadow:var(--shadow-popover); }
+.brand,.mobile-logo { color:var(--foreground); }
+.filter-panel,.searchbox,.filter-button { background:var(--card); border-color:var(--border); border-radius:var(--radius-card); color:var(--foreground); }
+.report-table { max-width:100%; overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:var(--type-label); }
+th,td { text-align:start; border-block-end:1px solid var(--border); padding:var(--space-3); }
+th { font-size:var(--type-caption); color:var(--muted-foreground); font-weight:500; }
+tbody tr:hover { background:var(--muted); }
+.payment-row,.transaction-row,.detail-row,.installment-row,.foreign-entry,.budget-status { border-color:var(--border); }
+.toast { background:var(--foreground); color:var(--background); box-shadow:var(--shadow-popover); max-width:calc(100vw - 2rem); white-space:normal; }
+.finance-dialog { display:block; width:min(36rem,calc(100vw - 2rem)); max-width:36rem; max-height:85dvh; overflow-y:auto; padding:var(--space-card); border-radius:var(--radius-card); box-shadow:var(--shadow-popover); }
+.finance-dialog .modal-head { margin-block-end:var(--space-4); }
+.finance-dialog .finance-form { max-height:none; overflow:visible; }
+.detail-actions { align-items:flex-start; }
+.finance-sheet { width:min(40rem,calc(100vw - 2rem)); max-width:40rem; }
+:focus-visible { outline:2px solid var(--ring); outline-offset:3px; }
+@media(max-width:650px) {
+ .page-head h1 { font-size:1.375rem; } .page-head,.ds-header { align-items:flex-start; } .ds-header { flex-wrap:wrap; }
+ .report-filters,.filter-panel { grid-template-columns:minmax(0,1fr); } .detail-actions>* { flex:1 1 auto; } .payment-row { flex-wrap:wrap; }
+ .two-stats { grid-template-columns:repeat(2,minmax(0,1fr)); } .stat-card strong { white-space:normal; overflow-wrap:anywhere; }
+ .finance-sheet { top:auto; bottom:0; translate:50% 0; transform:none; max-height:90dvh; border-end-start-radius:0; border-end-end-radius:0; }
+}
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+@media print { main { margin:0; max-width:none; } .desktop-side,.bottom-nav,.topbar { display:none; } }
