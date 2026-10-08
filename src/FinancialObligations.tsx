@@ -7,12 +7,12 @@ import { integer, sum } from './decimal';
 import { active, allowed, remainingLoan } from './finance';
 import { adjustInstallment, createLoan, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from './obligations';
 import type { DueItem, Settlement } from './obligations';
-import { id, persianDate, today } from './utils';
+import { fa, id, persianDate, today } from './utils';
 
 type Props={data:FinanceData;viewer:Transaction['createdBy'];change:(next:FinanceData|((d:FinanceData)=>FinanceData))=>void;initialTab?:Tab};
 type Tab='dashboard'|'checks'|'loans'|'recurring';
 const currencyLabels={IRT:'تومان',IRR:'ریال',USD:'دلار'};
-export const obligationMoney=(n:number,c:ObligationCurrency='IRT')=>`${n.toLocaleString('fa-IR')} ${currencyLabels[c]}`;
+export const obligationMoney=(n:number,c:ObligationCurrency='IRT')=>`${fa(n)} ${currencyLabels[c]}`;
 const text=(f:FormData,key:string)=>String(f.get(key)??'').trim();
 const number=(f:FormData,key:string,zero=false)=>integer(text(f,key),zero);
 function Input({name,label,value='',required=false}:{name:string;label:string;value?:string|number;required?:boolean}){return <label className="field"><span>{label}</span><input name={name} defaultValue={value} required={required}/></label>;}

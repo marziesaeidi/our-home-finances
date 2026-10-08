@@ -1,3 +1,5 @@
+import './reporting.test';
+import './personal.test';
 import './foreign.test';
 import './obligations.test';
 import { deleteFolder, folderReport, linkFolder, saveFolder } from '../src/folders';

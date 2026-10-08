@@ -3,9 +3,10 @@ import { currencies, currencyDefinition } from './currencies';
 import { validateObligations } from './obligations';
 import type { Data, FinanceData } from './types';
 import { canonicalDay, fromJalali, isoDay, periodKey } from './calendar';
-import { converted, decimal, sum } from './decimal';
+import { add, converted, decimal, sum } from './decimal';
 import { categories } from './data';
 import { validateSavingsAssets } from './savings';
+import { transactionCashDelta } from './finance';
 
 export const STORE_KEY = 'khaneh-v2';
 type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
@@ -13,6 +14,7 @@ const record = (x: unknown): x is Record<string, unknown> => !!x && typeof x ===
 export function validate(value: unknown): asserts value is FinanceData {
   if (!record(value)) throw new Error('ساختار فایل معتبر نیست.');
   if (value.schemaVersion !== 2) throw new Error('نسخه داده پشتیبانی نمی‌شود.');
+  if (!record(value.settings) || !record(value.budget) || !record(value.budget.categories) || !record(value.monthlyBudgets) || !Array.isArray(value.migrationWarnings) || value.migrationWarnings.some(w => typeof w !== 'string')) throw new Error('تنظیمات یا بودجه معتبر نیست.');
   for (const key of ['transactions', 'accounts', 'loans', 'goals', 'recurring', 'folders', 'assets', 'obligations', 'installments', 'accountEntries', 'categoryRecords']) {
     const rows = value[key];
     if (!Array.isArray(rows)) throw new Error('ساختار داده ناقص است.');
@@ -26,6 +28,18 @@ export function validate(value: unknown): asserts value is FinanceData {
     }
   }
   const data = value as unknown as FinanceData;
+  const categoryNames = new Set<string>();
+  for (const c of data.categoryRecords) {
+    if (typeof c.name !== 'string' || !c.name.trim() || categoryNames.has(c.name) || typeof c.archived !== 'boolean' || c.kind !== undefined && !['income','expense','both'].includes(c.kind) || c.icon !== undefined && (typeof c.icon !== 'string' || Array.from(c.icon).length > 16) || c.color !== undefined && (typeof c.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(c.color))) throw new Error('دسته‌بندی معتبر نیست.');
+    categoryNames.add(c.name);
+  }
+  if (data.settings.preferredCurrency !== undefined) currencyDefinition(data.settings.preferredCurrency, data.currencyDefinitions);
+  if (data.settings.calendar !== undefined && !['persian','gregory'].includes(data.settings.calendar) || data.settings.persianNumbers !== undefined && typeof data.settings.persianNumbers !== 'boolean') throw new Error('ترجیحات نمایش معتبر نیست.');
+  const occurrences = new Set<string>();
+  for (const t of data.transactions) if (t.occurrenceKey && t.status !== 'reversed') {
+    if (typeof t.occurrenceKey !== 'string' || occurrences.has(t.occurrenceKey)) throw new Error('نوبت پرداخت تکراری در فایل وجود دارد.');
+    occurrences.add(t.occurrenceKey);
+  }
   for (const f of data.folders) {
     if (typeof f.name !== 'string' || !f.name.trim() || f.note !== undefined && typeof f.note !== 'string' || f.budget !== undefined && (!Number.isSafeInteger(f.budget) || f.budget < 0) || f.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(f.color) || f.icon !== undefined && typeof f.icon !== 'string') throw new Error('مشخصات پوشه معتبر نیست.');
   }
@@ -35,10 +49,12 @@ export function validate(value: unknown): asserts value is FinanceData {
     if (fields.some(field => ['name','title','date','type','accountId','category','createdBy','visibility','currency','nextDate','frequency','owner','kind','quantity','openingQuantity','unit','custody','status','direction','loanId','transactionId','operation','at'].includes(field) && typeof row[field] !== 'string')) throw new Error('نوع اطلاعات فایل معتبر نیست.');
   }
   for (const a of data.accounts) {
+    if (!['shared','private'].includes(a.visibility) || !a.name.trim()) throw new Error('حساب معتبر نیست.');
     currencyDefinition(a.currency??'IRT',data.currencyDefinitions);
     if ( a.openingBalance === undefined || a.balance !== sum([a.openingBalance, ...data.accountEntries.filter(e => e.accountId === a.id).map(e => e.delta)])) throw new Error('موجودی حساب با دفتر تغییرات سازگار نیست.');
   }
   for (const t of data.transactions) {
+    if (t.status !== undefined && !['posted','reversed'].includes(t.status) || t.legacy !== undefined && typeof t.legacy !== 'boolean') throw new Error('وضعیت تراکنش معتبر نیست.');
     if (t.folderId && !data.folders.some(f => f.id === t.folderId)) throw new Error('ارتباط پوشه معتبر نیست.');
     if (!isoDay(t.date) || !['expense','income','transfer','saving','asset-buy','asset-sell','loan-receipt','loan-payment'].includes(t.type) || !['shared','private'].includes(t.visibility) || typeof t.title !== 'string') throw new Error('تراکنش معتبر نیست؛ نسخه اصلی حفظ شد.');
     // Existing dangling links are retained; new events must have valid relationships.
@@ -58,11 +74,33 @@ export function validate(value: unknown): asserts value is FinanceData {
   }
   for (const o of data.obligations) if (o.amount <= 0 || !isoDay(o.date) || !['pending','cleared','canceled','bounced'].includes(o.status) || !data.accounts.some(a => a.id === o.accountId)) throw new Error('تعهد معتبر نیست.');
   if (!['light','dark'].includes(data.settings.theme) || typeof data.settings.name !== 'string' || data.settings.currency !== 'IRT' || data.settings.timezone !== 'Asia/Tehran') throw new Error('تنظیمات معتبر نیست.');
+  for (const budget of Object.values(data.monthlyBudgets)) {
+    if (budget.folders && (typeof budget.folders !== 'object' || Object.values(budget.folders).some(n=>!Number.isSafeInteger(n)||n<0))) throw new Error('بودجه پوشه معتبر نیست.');
+    const warning=budget.warningThreshold??80, exceeded=budget.exceededThreshold??100;
+    if (!Number.isSafeInteger(warning)||!Number.isSafeInteger(exceeded)||warning<0||warning>=exceeded||exceeded>1000) throw new Error('آستانه بودجه معتبر نیست.');
+  }
+  if (data.settings.dashboard) for (const pref of Object.values(data.settings.dashboard)) {
+    const cards=['balances','monthly','budgets','goals','due','overdue','foreign','categories','recent'];
+    if (!pref || !Array.isArray(pref.order)||!Array.isArray(pref.hidden)||new Set(pref.order).size!==pref.order.length||[...pref.order,...pref.hidden].some(id=>!cards.includes(id))) throw new Error('تنظیمات داشبورد معتبر نیست.');
+  }
   for (const key of Object.keys(data.monthlyBudgets)) {
     if (!/^\d{4}-\d{2}$/.test(key)) throw new Error('کلید ماه بودجه معتبر نیست.');
     fromJalali(`${key.replace('-','/')}/1`);
   }
-  for (const entry of data.accountEntries) if (!data.accounts.some(a=>a.id===entry.accountId) || !data.transactions.some(t=>t.id===entry.transactionId)) throw new Error('ارتباط دفتر تغییرات معتبر نیست.');
+  for (const entry of data.accountEntries) if (!data.accounts.some(a=>a.id===entry.accountId) || !data.transactions.some(t=>t.id===entry.transactionId) || !['post','reverse'].includes(entry.operation) || !Number.isFinite(Date.parse(entry.at))) throw new Error('ارتباط دفتر تغییرات معتبر نیست.');
+  const bookedEffects = new Map<string, Map<string, number>>();
+  for (const entry of data.accountEntries) {
+    const accounts = bookedEffects.get(entry.transactionId) ?? new Map<string, number>();
+    accounts.set(entry.accountId, add(accounts.get(entry.accountId) ?? 0, entry.delta));
+    bookedEffects.set(entry.transactionId, accounts);
+  }
+  for (const t of data.transactions.filter(t => !t.legacy)) {
+    for (const account of data.accounts) {
+      const booked = bookedEffects.get(t.id)?.get(account.id) ?? 0;
+      const expected = t.status === 'reversed' ? 0 : transactionCashDelta(t, account.id);
+      if (booked !== expected) throw new Error('اثر نقدی تراکنش با دفتر حساب سازگار نیست.');
+    }
+  }
   // Reject aggregate values beyond the supported range before any screen renders them.
   for(const code of new Set(data.accounts.map(a=>a.currency)))sum(data.accounts.filter(a=>a.currency===code).map(a=>a.balance)); sum(data.goals.map(g=>g.saved)); sum(data.assets.filter(a=>a.quote).map(a=>converted(a.quantity,a.quote!)));
   if (!record(value.budget) || !record(value.budget.categories) || !record(value.monthlyBudgets) || !record(value.settings) || !Array.isArray(value.migrationWarnings)) throw new Error('تنظیمات یا بودجه معتبر نیست.');

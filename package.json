@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "npm run build && vite preview --host 0.0.0.0",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
     "rates": "node server/rates.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node tests/run.mjs && node --test tests/rates.test.mjs"

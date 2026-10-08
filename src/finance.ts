@@ -32,11 +32,14 @@ export function registerLoan(data: FinanceData, loan: Loan, date: string, creato
   if (borrowing) result = post(result, { id: `loan-receipt:${loan.id}`, title: `دریافت ${loan.name}`, amount: loan.principalTotal!, type: 'loan-receipt', category: 'وام', accountId: loan.disbursementAccountId!, loanId: loan.id, date, createdBy: creator, visibility: data.accounts.find(a => a.id === loan.disbursementAccountId)?.visibility ?? 'private' });
   return result;
 }
-function effects(data: FinanceData, t: Transaction, direction: 1 | -1): FinanceData {
+export function transactionCashDelta(t: Transaction, accountId: string): number {
   const inflow = ['income', 'asset-sell', 'loan-receipt'].includes(t.type);
   const cash = t.foreignExpense ? add(t.foreignExpense.debitMinor,t.foreignExpense.feeMinor) : t.allocationOnly ? 0 : add(t.amount, inflow ? -(t.fee ?? 0) : t.type === 'loan-payment' ? 0 : t.fee ?? 0);
+  return accountId===t.accountId ? (inflow?cash:-cash) : accountId===t.toAccountId ? t.amount : 0;
+}
+function effects(data: FinanceData, t: Transaction, direction: 1 | -1): FinanceData {
   const entries = data.accounts.flatMap(a => {
-    const delta = a.id === t.accountId ? direction * (inflow ? cash : -cash) : a.id === t.toAccountId ? direction * t.amount : 0;
+    const delta = direction * transactionCashDelta(t,a.id);
     return delta ? [{ id: `${t.id}:${direction}:${a.id}:${data.accountEntries.length}`, transactionId: t.id, accountId: a.id, delta, operation: direction === 1 ? 'post' as const : 'reverse' as const, at: new Date().toISOString() }] : [];
   });
   const accountEntries = [...data.accountEntries, ...entries];
