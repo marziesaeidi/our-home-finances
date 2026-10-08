@@ -113,7 +113,8 @@ export function settleRecurring(data: FinanceData, id: string, due: string, opts
   const key=`${id}:${due}`;if(data.transactions.some(t=>active(t)&&t.occurrenceKey===key))return data;
   const row=data.recurring.find(r=>r.id===id&&!r.archived&&r.owner===creator);
   if(!row || row.nextDate!==due || row.endDate&&due>row.endDate)throw new Error('سررسید فعال نیست.');
-  if (!row.transactionType || row.foreignCurrency&&!row.currency)throw new Error('نوع رویداد و ارز الگوی قدیمی را ابتدا تکمیل کن.');
+  if (row.foreignCurrency) throw new Error('اشتراک ارزی را از ماژول هزینه‌های ارزی با مبلغ اصلی و نرخ روز خرید ثبت کن؛ سپس سررسید یادآور را تغییر بده.');
+  if (!row.transactionType)throw new Error('نوع رویداد و ارز الگوی قدیمی را ابتدا تکمیل کن.');
   if (row.transactionType!=='expense'&&(row.currency??'IRT')!=='IRT')throw new Error('رویداد غیرهزینه ارزی را با نرخ و حساب‌های صریح ثبت کن.');
   day(due); if(row.frequency==='سفارشی')amount(row.customDays??0); const native=nativeTransaction(data,row.currency??'IRT',opts.value??row.amount,opts,creator,false);
   const tx:Transaction={id:`recurring:${key}:${opts.requestId}`,title:row.name,type:row.transactionType,...native,toAccountId:row.transactionType==='transfer'?row.toAccountId:undefined,goalId:row.transactionType==='saving'?row.goalId:undefined,allocationOnly:row.transactionType==='saving',goalWithdrawal:row.goalWithdrawal,category:row.category,accountId:opts.accountId,date:opts.date,createdBy:creator,visibility:data.accounts.find(a=>a.id===opts.accountId)!.visibility,occurrenceKey:key};

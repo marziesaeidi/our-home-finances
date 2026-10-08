@@ -1,3 +1,4 @@
+import { validateForeignExpense } from './foreignValidation';
 import type { FinanceData, Transaction, Loan, Installment } from './types';
 import { add, apportion, converted, decimal, integer, multiply, pricePerUnit, proportional, quantityAdd, split, sum } from './decimal';
 import { canonicalDay, isoDay, jalaliParts, nextDate } from './calendar';
@@ -5,7 +6,7 @@ import { canonicalDay, isoDay, jalaliParts, nextDate } from './calendar';
 export const active = (t: Transaction) => t.status !== 'reversed';
 export const allowed = (x: { visibility: string; owner?: string; createdBy?: string }, viewer: string) => x.visibility === 'shared' || (x.owner ?? x.createdBy) === viewer;
 export const earnedIncome = (t: Transaction) => active(t) && t.type === 'income' ? t.paymentAllocation ? add(t.amount,-(t.fx ? converted(String(t.paymentAllocation.principal),t.fx.rate) : t.paymentAllocation.principal)) : t.amount : 0;
-export const consumption = (t: Transaction) => active(t) ? t.paymentAllocation ? t.paymentAllocation.expense : t.type === 'expense' ? t.amount : t.type === 'loan-payment' ? sum([t.interest ?? 0, t.fee ?? 0]) : t.type === 'asset-buy' || t.type === 'asset-sell' ? t.fee ?? 0 : 0 : 0;
+export const consumption = (t: Transaction) => active(t) ? t.paymentAllocation ? t.paymentAllocation.expense : t.type === 'expense' ? add(t.amount,t.foreignExpense?.feeToman??0) : t.type === 'loan-payment' ? sum([t.interest ?? 0, t.fee ?? 0]) : t.type === 'asset-buy' || t.type === 'asset-sell' ? t.fee ?? 0 : 0 : 0;
 export const remainingLoan = (data: FinanceData, loan: Loan) => {
   if (loan.canceled) return 0;
   const schedule = data.installments.filter(i => i.loanId === loan.id && !i.settled);
@@ -33,7 +34,7 @@ export function registerLoan(data: FinanceData, loan: Loan, date: string, creato
 }
 function effects(data: FinanceData, t: Transaction, direction: 1 | -1): FinanceData {
   const inflow = ['income', 'asset-sell', 'loan-receipt'].includes(t.type);
-  const cash = t.allocationOnly ? 0 : add(t.amount, inflow ? -(t.fee ?? 0) : t.type === 'loan-payment' ? 0 : t.fee ?? 0);
+  const cash = t.foreignExpense ? add(t.foreignExpense.debitMinor,t.foreignExpense.feeMinor) : t.allocationOnly ? 0 : add(t.amount, inflow ? -(t.fee ?? 0) : t.type === 'loan-payment' ? 0 : t.fee ?? 0);
   const entries = data.accounts.flatMap(a => {
     const delta = a.id === t.accountId ? direction * (inflow ? cash : -cash) : a.id === t.toAccountId ? direction * t.amount : 0;
     return delta ? [{ id: `${t.id}:${direction}:${a.id}:${data.accountEntries.length}`, transactionId: t.id, accountId: a.id, delta, operation: direction === 1 ? 'post' as const : 'reverse' as const, at: new Date().toISOString() }] : [];
@@ -63,6 +64,8 @@ export function post(data: FinanceData, transaction: Transaction, financialDay =
   const categoryRecords = data.categoryRecords.some(c=>c.id===category.id) ? data.categoryRecords : [...data.categoryRecords,category];
   const t = { ...transaction, categoryId: category.id, currency: 'IRT' as const, status: 'posted' as const, legacy: false };
   integer(String(t.amount));
+  validateForeignExpense(data,t);
+  if (!t.foreignExpense && [t.accountId,t.toAccountId].filter(Boolean).some(id=>data.accounts.find(a=>a.id===id)?.currency!=='IRT')) throw new Error('برای حساب ارزی از ماژول هزینه ارزی استفاده کن.');
   integer(String(t.fee ?? 0), true);
   if (t.allocationOnly && !['saving','asset-buy','asset-sell'].includes(t.type)) throw new Error('ثبت بدون حرکت وجه نقد فقط برای تخصیص یا اصلاح دارایی است.');
   if (t.allocationOnly && t.assetId && t.fee) throw new Error('اصلاح بدون حرکت وجه نقد کارمزد نقدی ندارد.');

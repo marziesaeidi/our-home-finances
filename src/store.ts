@@ -1,3 +1,5 @@
+import { validateForeignExpense } from './foreignValidation';
+import { currencies, currencyDefinition } from './currencies';
 import { validateObligations } from './obligations';
 import type { Data, FinanceData } from './types';
 import { canonicalDay, fromJalali, isoDay, periodKey } from './calendar';
@@ -33,7 +35,8 @@ export function validate(value: unknown): asserts value is FinanceData {
     if (fields.some(field => ['name','title','date','type','accountId','category','createdBy','visibility','currency','nextDate','frequency','owner','kind','quantity','openingQuantity','unit','custody','status','direction','loanId','transactionId','operation','at'].includes(field) && typeof row[field] !== 'string')) throw new Error('نوع اطلاعات فایل معتبر نیست.');
   }
   for (const a of data.accounts) {
-    if (a.currency !== 'IRT' || a.openingBalance === undefined || a.balance !== sum([a.openingBalance, ...data.accountEntries.filter(e => e.accountId === a.id).map(e => e.delta)])) throw new Error('موجودی حساب با دفتر تغییرات سازگار نیست.');
+    currencyDefinition(a.currency??'IRT',data.currencyDefinitions);
+    if ( a.openingBalance === undefined || a.balance !== sum([a.openingBalance, ...data.accountEntries.filter(e => e.accountId === a.id).map(e => e.delta)])) throw new Error('موجودی حساب با دفتر تغییرات سازگار نیست.');
   }
   for (const t of data.transactions) {
     if (t.folderId && !data.folders.some(f => f.id === t.folderId)) throw new Error('ارتباط پوشه معتبر نیست.');
@@ -41,8 +44,11 @@ export function validate(value: unknown): asserts value is FinanceData {
     // Existing dangling links are retained; new events must have valid relationships.
     if (!t.legacy && (!data.accounts.some(a => a.id === t.accountId) || t.goalId && !data.goals.some(g => g.id === t.goalId) || t.assetId && !data.assets.some(a => a.id === t.assetId))) throw new Error('ارتباط مالی معتبر نیست.');
     if (t.amount <= 0 || t.fee !== undefined && t.fee < 0) throw new Error('مبلغ تراکنش معتبر نیست.');
-    if (t.fx && (t.fx.direction !== 'IRT-per-unit' || t.fx.rounding !== 'half-up' || !isoDay(t.fx.date) || typeof t.fx.source !== 'string' || !t.fx.source.trim() || typeof t.fx.currency !== 'string' || converted(t.fx.originalAmount,t.fx.rate) !== t.amount || decimal(t.fx.rate).units <= 0n)) throw new Error('مبلغ و نرخ تاریخی همخوان نیستند.');
+    if (t.fx && (t.fx.direction !== 'IRT-per-unit' || t.fx.rounding !== 'half-up' || !isoDay(t.fx.date) || typeof t.fx.source !== 'string' || !t.fx.source.trim() || typeof t.fx.currency !== 'string' || t.foreignExpense?.convertedOverride === undefined && converted(t.fx.originalAmount,t.fx.rate) !== t.amount || decimal(t.fx.rate).units <= 0n)) throw new Error('مبلغ و نرخ تاریخی همخوان نیستند.');
   }
+  for (const t of data.transactions) validateForeignExpense(data,t);
+  if(data.currencyDefinitions){ const codes=new Set(currencies.map(c=>c.code)); for(const c of data.currencyDefinitions){if(!/^[A-Z]{3}$/.test(c.code)||codes.has(c.code)||!c.label?.trim()||!Number.isInteger(c.decimals)||c.decimals<0||c.decimals>6)throw new Error('تنظیمات ارز معتبر نیست.');codes.add(c.code);} }
+  if(data.fxRefreshMinutes!==undefined && (!Number.isSafeInteger(data.fxRefreshMinutes)||data.fxRefreshMinutes<1||data.fxRefreshMinutes>10080))throw new Error('فاصله تازه‌سازی معتبر نیست.');
   for (const l of data.loans) if (!Number.isInteger(l.count) || l.count < 1 || l.count > 1200 || !Number.isInteger(l.paid) || l.paid < 0 || l.paid > l.count || l.total < 0 || l.installment < 0) throw new Error('مقادیر وام معتبر نیستند.');
   for (const g of data.goals) if (g.saved < 0 || g.target < 0) throw new Error('مقادیر هدف معتبر نیستند.');
   for (const a of data.assets) {
@@ -58,7 +64,7 @@ export function validate(value: unknown): asserts value is FinanceData {
   }
   for (const entry of data.accountEntries) if (!data.accounts.some(a=>a.id===entry.accountId) || !data.transactions.some(t=>t.id===entry.transactionId)) throw new Error('ارتباط دفتر تغییرات معتبر نیست.');
   // Reject aggregate values beyond the supported range before any screen renders them.
-  sum(data.accounts.map(a=>a.balance)); sum(data.goals.map(g=>g.saved)); sum(data.assets.filter(a=>a.quote).map(a=>converted(a.quantity,a.quote!)));
+  for(const code of new Set(data.accounts.map(a=>a.currency)))sum(data.accounts.filter(a=>a.currency===code).map(a=>a.balance)); sum(data.goals.map(g=>g.saved)); sum(data.assets.filter(a=>a.quote).map(a=>converted(a.quantity,a.quote!)));
   if (!record(value.budget) || !record(value.budget.categories) || !record(value.monthlyBudgets) || !record(value.settings) || !Array.isArray(value.migrationWarnings)) throw new Error('تنظیمات یا بودجه معتبر نیست.');
   for (const budget of [value.budget, ...Object.values(value.monthlyBudgets)]) {
     if (!record(budget) || !record(budget.categories) || !Number.isSafeInteger(budget.total) || Number(budget.total) < 0 || Object.values(budget.categories).some(n => !Number.isSafeInteger(n) || Number(n) < 0)) throw new Error('بودجه معتبر نیست.');

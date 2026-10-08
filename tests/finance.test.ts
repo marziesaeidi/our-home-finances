@@ -1,3 +1,4 @@
+import './foreign.test';
 import './obligations.test';
 import { deleteFolder, folderReport, linkFolder, saveFolder } from '../src/folders';
 import test, { mock } from 'node:test';

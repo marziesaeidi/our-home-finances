@@ -10,3 +10,9 @@ html[data-theme=dark]{color-scheme:dark;--surface:#21332b;--line:#3a4a41;--muted
 .obligation-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.obligation-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.obligation-stats strong{display:block;font-size:18px;margin-top:8px}.due-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.due-calendar>b{text-align:center}.due-day{min-height:75px;border:1px solid var(--border,#e7e7ef);border-radius:8px;padding:6px;overflow-wrap:anywhere}.due-day small{display:block;font-size:10px;margin-top:3px;color:var(--brand)}.due-today{border:2px solid var(--brand)}.installment-row{padding:14px 0;border-bottom:1px solid var(--border,#e7e7ef)}.module-card progress{width:100%;accent-color:var(--brand)}.modal .finance-form{max-height:65vh;overflow:auto}.module-card bdi{overflow-wrap:anywhere}.finance-form textarea{font:inherit;border:1px solid #dedee8;border-radius:12px;padding:12px;max-width:100%}@media(max-width:600px){.obligation-stats{grid-template-columns:1fr}.due-day{min-height:60px;padding:3px}.obligation-tabs button{flex:1;min-width:110px}.detail-row{gap:10px;flex-wrap:wrap}}
 
 .field input[type=checkbox]{width:auto;min-height:auto}.obligation-tabs{position:relative}.due-day small{color:var(--brand)}
+.foreign-line { display:flex; justify-content:space-between; gap:16px; padding:10px 0; flex-wrap:wrap; }
+.foreign-entry { display:flex; flex-direction:column; gap:10px; padding:18px 0; border-bottom:1px solid var(--border, #e4e7eb); overflow-wrap:anywhere; }
+.foreign-entry small { line-height:1.8; }
+.foreign-entry .outline { align-self:flex-start; }
+
+.field input[inputmode=decimal] { direction:ltr; text-align:right; }
