@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
-
+import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
-  plugins: [{
+  resolve: { alias: { '@': decodeURIComponent(new URL('./src', import.meta.url).pathname).replace(/^\/(\w:)/, '$1') } },
+  plugins: [tailwindcss(), {
     name: 'local-offline-shell',
     generateBundle(_options, bundle) {
       const assets = Object.keys(bundle).filter(name => /\.(js|css)$/.test(name));

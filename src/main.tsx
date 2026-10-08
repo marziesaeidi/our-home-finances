@@ -19,7 +19,7 @@ import { compact, fa, id, money, monthKey, persianDate, today } from './utils';
 import './style.css';
 import './fonts.css';
 import './extensions.css';
-
+import './design-system.css';
 import { loadStore, saveStore } from './store';
 import { active, allowed,  loanPayment, post, remainingLoan, reverse, revise, registerLoan } from './finance';
 import { add, integer, split, sum } from './decimal';
