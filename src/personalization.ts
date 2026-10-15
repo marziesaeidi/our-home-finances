@@ -1,3 +1,4 @@
+import { reverse } from './finance';
 import type { Category, FinanceData } from './types';
 
 export function categoryNames(data: FinanceData, kind?: 'income' | 'expense') {
@@ -21,5 +22,26 @@ export function saveCategory(data: FinanceData, category: Category): FinanceData
     recurring: data.recurring.map(r => previous && r.category === previous.name ? { ...r, category: name } : r),
     obligations: data.obligations.map(o => previous && o.category === previous.name ? { ...o, category: name } : o),
     budget: renameBudget(data.budget), monthlyBudgets: Object.fromEntries(Object.entries(data.monthlyBudgets).map(([key, budget]) => [key, renameBudget(budget)])),
+  };
+}
+
+export function deleteCategory(data: FinanceData, categoryId: string): FinanceData {
+  const category = data.categoryRecords.find(c => c.id === categoryId);
+  if (!category) throw new Error('دسته‌بندی پیدا نشد.');
+  const matches = data.transactions.filter(t => t.categoryId === categoryId || !t.categoryId && t.category === category.name);
+  let result = data;
+  // Reverse newest events first, using the ledger to restore every projection.
+  for (const t of matches) result = reverse(result, t.id);
+  const ids = new Set(matches.map(t => t.id));
+  const cleanBudget = (budget: FinanceData['budget']) => {
+    const categories = { ...budget.categories }; delete categories[category.name];
+    return { ...budget, categories };
+  };
+  return { ...result, categoryRecords: result.categoryRecords.filter(c => c.id !== categoryId),
+    transactions: result.transactions.filter(t => !ids.has(t.id)),
+    accountEntries: result.accountEntries.filter(e => !ids.has(e.transactionId)),
+    recurring: result.recurring.filter(r => r.category !== category.name),
+    budget: cleanBudget(result.budget),
+    monthlyBudgets: Object.fromEntries(Object.entries(result.monthlyBudgets).map(([key,b]) => [key,cleanBudget(b)])),
   };
 }

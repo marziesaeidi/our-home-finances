@@ -1,3 +1,4 @@
+import { deleteCategory } from '../src/personalization';
 import './reporting.test';
 import './personal.test';
 import './foreign.test';
@@ -247,3 +248,21 @@ test('Persian module screens render optional target and empty/unpriced states wi
 });
 
 import './input-format.test';
+
+test('category deletion removes matching events atomically and reconciles after reload',()=>{
+ let d=post(fixture(),tx());
+ d=post(d,tx({id:'other',category:'سایر',amount:40}));
+ const category=d.categoryRecords.find(c=>c.name==='خوراک')!;
+ const before=JSON.stringify(d);
+ const result=deleteCategory(d,category.id);
+ assert.equal(JSON.stringify(d),before);
+ assert.equal(balance(result,'a'),960);
+ assert.equal(result.transactions.length,1);
+ assert.equal(result.transactions[0].id,'other');
+ assert.ok(!result.categoryRecords.some(c=>c.id===category.id));
+ assert.ok(!result.accountEntries.some(e=>e.transactionId==='event'));
+ assert.equal(result.budget.categories['خوراک'],undefined);
+ validate(result);
+ const storage=new MemoryStorage(); saveStore(storage,result);
+ assert.deepEqual(loadStore(storage,legacy(),at),result);
+});
