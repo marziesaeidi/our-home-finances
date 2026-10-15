@@ -1,3 +1,4 @@
+import { formatNumericInput } from './input-format';
 import { checked, decimal } from './decimal';
 export type CurrencyDefinition = { code: string; label: string; decimals: number };
 export const currencies: CurrencyDefinition[] = [
@@ -20,4 +21,4 @@ export function nativeText(units: number, code: string, extra: CurrencyDefinitio
   const text=String(Math.abs(units)).padStart(digits+1,'0');
   return (negative?'-':'')+(digits?`${text.slice(0,-digits)}.${text.slice(-digits)}`:text);
 }
-export const nativeMoney = (units: number, code: string, extra: CurrencyDefinition[] = []) => `${nativeText(units,code,extra)} ${code==='IRT'?'تومان':code==='IRR'?'ریال':code}`;
+export const nativeMoney = (units: number, code: string, extra: CurrencyDefinition[] = []) => `${formatNumericInput(nativeText(units,code,extra))} ${code==='IRT'?'تومان':code==='IRR'?'ریال':code}`;

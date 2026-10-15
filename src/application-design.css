@@ -114,6 +114,35 @@ details.module-editor[open] > summary { margin-block-end:var(--space-4); }
 .bottom-nav button span { display:block; min-height:1.25rem; }
 @media print { .page-navigation { display:none; } }
 
+/* Field feedback is adjacent to the control and remains readable in both themes. */
+.field-error { display:block; color:var(--destructive); font-size:max(12px,.8125rem); line-height:1.8; }
+input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-invalid=true] {
+ border:2px solid var(--destructive); background:var(--destructive-soft); box-shadow:0 0 0 2px var(--destructive-soft);
+}
+.date-field { border:0; padding:0; margin:0; min-width:0; }
+.date-field legend { padding:0; margin-block-end:8px; }
+.date-segments { display:flex; align-items:center; border:1px solid var(--input); border-radius:var(--radius-control); background:var(--card); min-height:48px; overflow:hidden; }
+.date-segment { display:flex; align-items:center; flex:1; min-width:0; }
+.date-segment:first-child { flex:1.6; }
+.field .date-segment input { border:0; border-radius:0; background:transparent; text-align:center; width:100%; padding:10px 4px; direction:ltr; box-shadow:none; }
+.date-divider { color:var(--foreground); font-size:18px; flex:none; }
+.date-segments:focus-within { outline:2px solid var(--ring); outline-offset:2px; }
+@media(max-width:650px) {
+ :root { --type-caption:12px; --type-label:14px; --type-body:16px; }
+ body { font-size:16px; }
+ /* The floor also covers compact badges and dashboard utility classes. */
+ main :where(small,.text-xs) { font-size:12px; }
+ input,select,textarea,.field input,.field select,.field textarea { font-size:16px; min-height:48px; }
+ .finance-form,.filter-panel,.report-filters,.form-grid,.form-row { gap:16px; }
+ .field { gap:16px; margin:0; }
+ .date-field legend { margin-block-end:16px; }
+ .finance-form > .field,.finance-form > fieldset,.finance-form > .amount-field { margin-block:0; }
+ .module-editor > .field,.module-card > .field { margin-block:16px; }
+ .category-picker,.icon-picker { gap:16px; grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .form-error { font-size:14px; line-height:1.8; padding:12px; border:1px solid var(--destructive); border-radius:var(--radius-control); background:var(--destructive-soft); }
+ .amount-field input { font-size:28px; }
+}
+
 /* Savings boxes: balance first, then one clear action per task. */
 .savings-boxes { max-width:900px; margin-inline:auto; }
 .savings-boxes .section-heading { gap:16px; align-items:center; }

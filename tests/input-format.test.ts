@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { formatNumericInput, rawNumericInput } from '../src/input-format';
+import { integer } from '../src/decimal';
+assert.equal(formatNumericInput('300000'), '۳۰۰٬۰۰۰');
+assert.equal(formatNumericInput('۱۲۳۴۵۶۷.۵۰'), '۱٬۲۳۴٬۵۶۷.۵۰');
+assert.equal(formatNumericInput(''), '');
+assert.equal(formatNumericInput('12.'), '۱۲.');
+assert.equal(rawNumericInput('۳۰۰،۰۰۰'), '300000');
+assert.equal(rawNumericInput('۳۰۰٬۰۰۰'), '300000');
+assert.equal(integer(rawNumericInput(formatNumericInput('9007199254740991'))), Number.MAX_SAFE_INTEGER);
+console.log('Numeric input formatting checks passed');

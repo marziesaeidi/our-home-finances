@@ -1,4 +1,6 @@
-import type { ComponentProps, ElementType } from 'react';
+import { useId, useState, type ComponentProps, type ElementType } from 'react';
+import { normalizeDigits } from '../decimal';
+import { formatNumericInput, rawNumericInput } from '../input-format';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
@@ -12,11 +14,49 @@ export function Action({ className = '', ...props }: ComponentProps<'button'>) {
   return <Button variant={variant} className={cn('finance-action', className)} {...props}/>;
 }
 
-export function FieldInput(props: ComponentProps<'input'>) {
-  // Native checkboxes, color pickers and file controls retain browser behavior.
+export function FieldInput({ error, ...props }: ComponentProps<'input'> & { error?: string }) {
+  const errorId = useId();
+  const [validation, setValidation] = useState('');
+  const numeric = typeof props.value === 'number' || typeof props.defaultValue === 'number' || props.type === 'number' || props.inputMode === 'numeric' || props.inputMode === 'decimal';
+  const message = error || validation;
+  const validate = (node: HTMLInputElement) => {
+    const raw = rawNumericInput(node.value);
+    let next = '';
+    if (props.required && !node.value.trim()) next = 'این فیلد را تکمیل کن.';
+    else if (numeric && raw && !/^-?\d+(\.\d+)?$/.test(raw)) next = 'یک عدد معتبر وارد کن.';
+    else if (numeric && raw && props.min !== undefined && Number(raw) < Number(props.min)) next = `حداقل مقدار ${formatNumericInput(String(props.min))} است.`;
+    else if (numeric && raw && props.max !== undefined && Number(raw) > Number(props.max)) next = `حداکثر مقدار ${formatNumericInput(String(props.max))} است.`;
+    else if (numeric && raw && props.type === 'number' && (!props.step || props.step === 1 || props.step === '1') && !Number.isInteger(Number(raw))) next = 'عدد صحیح و بدون اعشار وارد کن.';
+    node.setCustomValidity(next);
+    setValidation(next);
+  };
   if (['checkbox', 'radio', 'color', 'file', 'range'].includes(props.type ?? ''))
     return <input data-slot="native-input" {...props}/>;
-  return <Input {...props}/>;
+  return <><Input {...props}
+    type={numeric ? 'text' : props.type}
+    inputMode={numeric ? (props.inputMode ?? 'decimal') : props.inputMode}
+    defaultValue={numeric && props.defaultValue !== undefined ? formatNumericInput(String(props.defaultValue)) : props.defaultValue}
+    value={numeric && props.value !== undefined ? formatNumericInput(String(props.value)) : props.value}
+    aria-invalid={message ? true : props['aria-invalid']}
+    aria-describedby={[props['aria-describedby'], message ? errorId : ''].filter(Boolean).join(' ') || undefined}
+    onInvalid={e => { e.preventDefault(); validate(e.currentTarget); if (!e.currentTarget.validity.valid) setValidation(e.currentTarget.validationMessage || 'مقدار معتبر وارد کن.'); props.onInvalid?.(e); }}
+    onBlur={e => { validate(e.currentTarget); props.onBlur?.(e); }}
+    onChange={e => {
+      if (numeric) {
+        const node = e.currentTarget;
+        const position = node.selectionStart ?? node.value.length;
+        const prefix = normalizeDigits(node.value.slice(0, position)).replace(/[,٬،]/g, '');
+        node.value = rawNumericInput(node.value);
+        props.onChange?.(e);
+        const formatted = formatNumericInput(node.value);
+        node.value = formatted;
+        let digits = 0, caret = 0;
+        while (caret < formatted.length && digits < prefix.length) { if (!/[,٬،]/.test(formatted[caret])) digits++; caret++; }
+        node.setSelectionRange(caret, caret);
+      } else props.onChange?.(e);
+      if (numeric || validation) validate(e.currentTarget);
+      else { e.currentTarget.setCustomValidity(''); setValidation(''); }
+    }}/>{message && <small id={errorId} className="field-error" role="alert">{message}</small>}</>;
 }
 
 export function FieldSelect({ className, ...props }: ComponentProps<'select'>) {

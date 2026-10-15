@@ -245,3 +245,5 @@ test('Persian module screens render optional target and empty/unpriced states wi
  const empty=renderToStaticMarkup(createElement(AssetHoldings,{data:fixture(),viewer:'مرزیه',change:()=>{}}));assert.match(empty,/هنوز دارایی نداری/);
  const assets=renderToStaticMarkup(createElement(AssetHoldings,{data:savingsAssetFixture(),viewer:'مرزیه',change:()=>{}}));assert.match(assets,/قیمت ثبت نشده/);assert.match(assets,/ارائه‌دهنده معتبر قیمت تنظیم نشده/);
 });
+
+import './input-format.test';

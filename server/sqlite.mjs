@@ -3,7 +3,11 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 import { openDatabase } from './database.mjs';
 
-export async function startDatabaseServer({ filename, port = 8789 } = {}) {
+export async function startDatabaseServer({ filename, port = 8789, publicOrigin = process.env.APP_PUBLIC_ORIGIN } = {}) {
+  // Explicit deployment origin only; never trust client-supplied forwarding headers.
+  if (publicOrigin && (new URL(publicOrigin).origin !== publicOrigin || !publicOrigin.startsWith('https://'))) {
+    throw new Error('APP_PUBLIC_ORIGIN must be an HTTPS origin without a trailing slash');
+  }
   // Reuse the application's complete financial validator on the server.
   const bundle = await build({ entryPoints: [fileURLToPath(new URL('../src/store.ts', import.meta.url))], bundle: true, write: false, platform: 'node', format: 'esm' });
   const { validate } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
@@ -18,7 +22,7 @@ export async function startDatabaseServer({ filename, port = 8789 } = {}) {
     if (req.method !== 'PUT') return send(405, { error: 'Method not allowed' });
     // Require JSON and reject cross-origin browser writes. Never enable CORS here.
     const origin = req.headers.origin;
-    if (origin && origin !== `http://${req.headers.host}`) return send(403, { error: 'Origin rejected' });
+    if (origin && origin !== `http://${req.headers.host}` && origin !== publicOrigin) return send(403, { error: 'Origin rejected' });
     if (!req.headers['content-type']?.startsWith('application/json')) return send(415, { error: 'JSON required' });
     try {
       const chunks = []; let size = 0;

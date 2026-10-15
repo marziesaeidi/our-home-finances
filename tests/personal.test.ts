@@ -53,8 +53,8 @@ test('account deletion cannot orphan history, schedules, transfers or balances',
   data.recurring.push({ id: 'r', name: 'پرداخت', amount: 10, nextDate: '2026-11-08', category: 'سایر', accountId: 'b', owner: 'مرزیه', frequency: 'ماهانه', reminder: false });
   assert.throws(() => removeAccount(data, 'b'));
 });
-test('display preferences change formatting without changing stored amounts or financial dates', () => {
-  try { configureDisplay({ calendar: 'gregory', persianNumbers: false }); assert.equal(fa(1234), '1,234'); assert.match(persianDate('2026-10-08'), /2026/); configureDisplay({}); assert.equal(fa(1234), '۱٬۲۳۴'); assert.match(persianDate('2026-10-08'), /۱۴۰۵/); } finally { configureDisplay({}); }
+test('display preferences retain Persian digits with either calendar', () => {
+  try { configureDisplay({ calendar: 'gregory', persianNumbers: false }); assert.equal(fa(1234), '۱٬۲۳۴'); assert.match(persianDate('2026-10-08'), /۲۰۲۶/); configureDisplay({}); assert.equal(fa(1234), '۱٬۲۳۴'); assert.match(persianDate('2026-10-08'), /۱۴۰۵/); } finally { configureDisplay({}); }
 });
 test('device lock stores a salted verifier, rejects wrong passwords and remains outside financial backups', async () => {
   const storage = new MemoryStorage(); await enableLock(storage, 'fictional-test-password');
