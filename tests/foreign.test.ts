@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
 import { ForeignExpenses } from '../src/ForeignExpenses';
 import { minorUnits, nativeText } from '../src/currencies';
-import { recordForeign, foreignSummary } from '../src/foreignLedger';
+import { recordForeign, foreignSummary, suggestedForeignDebit } from '../src/foreignLedger';
 import type { ForeignInput } from '../src/foreignLedger';
 import { ProxyRateProvider, RateService } from '../src/exchangeRates';
 import type { RateQuote } from '../src/exchangeRates';
@@ -96,4 +96,20 @@ test('RTL foreign dashboard renders empty and populated states with original and
   const props={data:fixture(),viewer:'مرزیه' as const,change:()=>{}};
   assert.match(renderToStaticMarkup(createElement(ForeignExpenses,props)),/هنوز هزینه‌ای/);
   props.data=recordForeign(props.data,input(),'مرزیه');const html=renderToStaticMarkup(createElement(ForeignExpenses,props));assert.match(html,/20 USD/);assert.match(html,/OpenAI/);assert.match(html,/برداشت/);
+});
+
+test('foreign debit autofill respects account units, exact rounding and receipt override',()=>{
+  const suggest=(original:string,rate:string,target='IRT',paymentRate='',override='')=>suggestedForeignDebit(original,rate,'USD',target,paymentRate,[],override);
+  assert.equal(suggest('۵','۶۰٬۰۰۰'),'300000');
+  assert.equal(suggest('5','60000','IRR'),'3000000');
+  assert.equal(suggest('5','60000','USD'),'5.00');
+  assert.equal(suggest('5','60000','EUR','75000'),'4.00');
+  assert.equal(suggest('0.01','100','EUR','3'),'0.33');
+  assert.equal(suggest('5','60000','IRT','','310000'),'310000');
+  assert.throws(()=>suggest('5',''));
+  assert.throws(()=>suggest('5','0'));
+  assert.throws(()=>suggest('5','60000','EUR',''));
+  assert.throws(()=>suggest('999999999999999999999','60000'));
+  const d=recordForeign(fixture(),input({original:'5',debit:suggest('5','60000'),fee:'1000'}),'مرزیه');
+  validate(d);assert.equal(d.accounts[0].balance,9699000);assert.equal(consumption(d.transactions[0]),301000);
 });

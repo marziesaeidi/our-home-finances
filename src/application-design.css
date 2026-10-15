@@ -199,3 +199,21 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
 .filter-submit { position:sticky; bottom:0; margin-top:auto; padding-block:16px calc(16px + env(safe-area-inset-bottom)); background:var(--background); }
 .filter-submit .finance-action { display:flex; justify-content:center; width:100%; min-height:48px; text-align:center; }
 .ds-grid[hidden] { display:none; }
+
+/* One card foundation for dashboard, reports, summaries and module surfaces. */
+[data-slot=card] { background:var(--card); color:var(--card-foreground); border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow-card); --tw-ring-shadow:0 0 transparent; min-width:0; }
+.report-card { margin-block:var(--space-4); }
+.report-card [data-slot=card-header],.report-card [data-slot=card-content] { padding-inline:var(--space-card); }
+.foreign-reports { align-items:start; gap:var(--space-4); margin-block:var(--space-4); }
+.foreign-reports>.report-card { margin-block:0; height:100%; }
+.report-metric-button.finance-action { display:block; width:100%; padding:0 var(--space-2); border-radius:var(--radius-control); text-align:start; font-weight:400; border:0; border-block-end:1px solid var(--border); }
+.report-metric-button:last-child { border-block-end:0; }
+.report-metric-button .ds-metric { border:0; width:100%; }
+.report-metric-button:hover,.report-metric-button[aria-pressed=true] { background:var(--accent); }
+.report-metric-button:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.module-card>h2,.module-card>h3 { font-size:var(--type-amount); font-weight:600; line-height:1.5; margin-block:0 var(--space-4); }
+.stat-card>span { font-size:var(--type-label); color:var(--muted-foreground); }
+.stat-card>strong { font-size:var(--type-amount); font-weight:600; font-variant-numeric:tabular-nums; }
+.report-card .foreign-entry { padding-block:var(--space-4); gap:var(--space-2); }
+.report-card .foreign-entry:last-child { border-block-end:0; }
+.report-card .foreign-entry>strong { font-size:var(--type-body); }

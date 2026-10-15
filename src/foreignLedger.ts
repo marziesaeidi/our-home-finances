@@ -1,7 +1,7 @@
 import type { FinanceData, Transaction } from './types';
 import type { RateQuote } from './exchangeRates';
-import { add, converted, integer, quantityAdd, sum } from './decimal';
-import { minorUnits, nativeText } from './currencies';
+import { add, checked, converted, decimal, integer, quantityAdd, sum } from './decimal';
+import { currencyDefinition, minorUnits, nativeText } from './currencies';
 import { active, allowed, consumption, post, reverse } from './finance';
 import { nextDate, periodKey } from './calendar';
 export type ForeignInput = { id: string; title: string; merchant: string; currency: string; original: string; date: string; quote: RateQuote; accountId: string; debit: string; fee: string; paymentRate: string; category: string; folderId?: string; note?: string; override?: string; reason?: string; subscription: boolean; frequency?: string; correctsId?: string };
@@ -34,4 +34,17 @@ export function foreignSummary(data: FinanceData, viewer: string, filter='foreig
   const rows=data.transactions.filter(t=>active(t)&&allowed(t,viewer)&&t.type==='expense'&&(!month||periodKey(t.date)===month)&&(filter==='all'||(filter==='domestic'?!t.fx||['IRT','IRR'].includes(t.fx.currency):t.fx&&!['IRT','IRR'].includes(t.fx.currency))));
   const group=(key:(t:Transaction)=>string)=>rows.reduce<Record<string,number>>((out,t)=>{const k=key(t);out[k]=add(out[k]??0,consumption(t));return out;},{});
   return {rows,total:sum(rows.map(consumption)),usd:rows.filter(t=>t.fx?.currency==='USD').reduce((s,t)=>quantityAdd(s,t.fx!.originalAmount),'0'),months:group(t=>periodKey(t.date)),merchants:group(t=>t.foreignExpense?.merchant??t.title),categories:group(t=>t.category),subscriptions:rows.filter(t=>t.foreignExpense?.subscription)};
+}
+
+/** Suggest a debit in the account's native unit, rounded half-up once at its precision. Fees stay separate. */
+export function suggestedForeignDebit(original:string, rate:string, currency:string, paymentCurrency:string, paymentRate:string, definitions:FinanceData['currencyDefinitions'], override=''):string {
+  const amount=decimal(original), quote=decimal(rate);
+  if(amount.units<=0n||quote.units<=0n)throw new Error('مبلغ و نرخ باید مثبت باشند.');
+  if(currency===paymentCurrency&&!override)return nativeText(minorUnits(original,currency,definitions),currency,definitions);
+  const target=decimal(paymentCurrency==='IRT'?'1':paymentCurrency==='IRR'?'0.1':paymentRate);
+  if(target.units<=0n)throw new Error('نرخ حساب باید مثبت باشد.');
+  const value=override?decimal(String(integer(override))):{units:amount.units*quote.units,scale:amount.scale*quote.scale};
+  const scale=10n**BigInt(currencyDefinition(paymentCurrency,definitions).decimals);
+  const numerator=value.units*target.scale*scale, denominator=value.scale*target.units;
+  return nativeText(checked((2n*numerator+denominator)/(2n*denominator)),paymentCurrency,definitions);
 }
