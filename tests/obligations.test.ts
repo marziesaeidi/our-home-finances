@@ -112,7 +112,7 @@ test('managed obligations survive atomic storage reload; invalid payment project
 });
 test('Persian RTL module renders dashboard calendar and all obligation sections',()=>{
   const data=createLoan(saveCheck(saveRecurring(fixture(),template(),who),check(),who),loan(),undefined,who);
-  for(const initialTab of ['dashboard','checks','loans','recurring'] as const){const html=renderToStaticMarkup(createElement(FinancialObligations,{data,viewer:who,change:()=>{},initialTab}));assert.match(html,/تعهدات مالی/);assert.match(html,/پرداخت‌های دوره‌ای/);assert.doesNotMatch(html,/NaN|Infinity/);if(initialTab==='dashboard')assert.match(html,/due-calendar/);}
+  for(const initialTab of ['dashboard','checks','loans','recurring'] as const){const html=renderToStaticMarkup(createElement(FinancialObligations,{data,viewer:who,change:()=>{},initialTab}));assert.match(html,/تعهدات مالی/);assert.match(html,/پرداخت‌های دوره‌ای/);assert.doesNotMatch(html,/NaN|Infinity/);if(initialTab==='dashboard'){assert.match(html,/data-slot="calendar"/);assert.match(html,/تعهدات .*|برای این روز تعهدی ثبت نشده است/);assert.match(html,/ds-calendar-legend/);}}
 });
 
 test('dashboard includes every weekly occurrence in the Jalali month without posting them',()=>{
@@ -129,4 +129,19 @@ test('new recurring confirmation retains existing transfer and savings semantics
   const base=fixture();base.accounts.push({id:'b',name:'دوم',type:'بانکی',balance:0,openingBalance:0,currency:'IRT',visibility:'shared'});
   const d=settleRecurring(saveRecurring(base,template({transactionType:'transfer',toAccountId:'b'}),who),'rent',date,opts(),who);
   assert.equal(balance(d),9900);assert.equal(d.accounts[1].balance,100);assert.equal(consumption(d.transactions[0]),0);validate(d);
+});
+
+
+test('new loans appear as collapsed cards in the obligations and existing loans entry points',()=>{
+  const data=createLoan(fixture(),loan(),undefined,who);
+  const before=JSON.stringify(data);
+  for(const onSelectLegacy of [undefined,()=>{}]){
+    const html=renderToStaticMarkup(createElement(FinancialObligations,{data,viewer:who,change:()=>{},initialTab:'loans',onSelectLegacy}));
+    assert.match(html,/loan-preview/);
+    assert.match(html,/loan-progress-ring/);
+    assert.match(html,/جزئیات/);
+    assert.match(html,/قسط پرداخت‌شده/);
+    assert.doesNotMatch(html,/installment-row/);
+  }
+  assert.equal(JSON.stringify(data),before);
 });

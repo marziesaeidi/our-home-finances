@@ -6,7 +6,7 @@ import { FinancialObligations } from './FinancialObligations';
 import { AssetHoldings } from './SavingsAssets';
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
-import type { FinanceData, Transaction, Budget } from './types';
+import type { FinanceData, Transaction, Budget, Loan } from './types';
 import { integer, normalizeDigits } from './decimal';
 import { active } from './finance';
 import { fromJalali, periodKey } from './calendar';
@@ -15,7 +15,7 @@ import { categories } from './data';
 import { persianDate, today } from './utils';
 
 export type ModulePage = 'foreign' | 'folders' | 'assets' | 'obligations' | 'reports' | 'backup' | 'automation';
-type Props = { page: ModulePage; data: FinanceData; viewer: Transaction['createdBy']; change: (next: FinanceData | ((d:FinanceData)=>FinanceData)) => void };
+type Props = { onSelectLegacy?: (loan:Loan)=>void; page: ModulePage; data: FinanceData; viewer: Transaction['createdBy']; change: (next: FinanceData | ((d:FinanceData)=>FinanceData)) => void };
 function Editor({ title, children, onSubmit }: { title: string; children: ReactNode; onSubmit: () => void }) {
   const [error, setError] = useState('');
   return <details className="card module-editor"><summary>{title}</summary><form className="finance-form" onSubmit={(e: FormEvent) => { e.preventDefault(); try { onSubmit(); setError(''); } catch (err) { setError(err instanceof Error ? err.message : 'ثبت انجام نشد.'); } }}>{children}{error && <p role="alert" className="form-error">{error}</p>}<Action className="primary" type="submit">ثبت</Action></form></details>;
