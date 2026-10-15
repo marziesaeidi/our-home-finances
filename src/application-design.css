@@ -187,3 +187,15 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
  .box-history .payment-row > strong { margin-inline-start:auto; }
 }
 .savings-boxes .box-total { flex-direction:row; }
+
+/* A focused flow has one back action in its top navigation. */
+.app-flow .desktop-side,.app-flow .bottom-nav,.app-flow .topbar .mobile-logo,.app-flow .top-actions { display:none; }
+.app-flow main { margin-inline:auto; padding-bottom:24px; }
+.app-flow .topbar { position:sticky; top:0; z-index:20; background:var(--background); }
+.top-back { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.transaction-filter-flow { display:flex; flex-direction:column; min-height:calc(100dvh - 210px); gap:24px; }
+.transaction-filter-flow .filter-panel { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; margin:0; padding:24px; }
+.transaction-filter-flow .field { gap:10px; margin:0; }
+.filter-submit { position:sticky; bottom:0; margin-top:auto; padding-block:16px calc(16px + env(safe-area-inset-bottom)); background:var(--background); }
+.filter-submit .finance-action { display:flex; justify-content:center; width:100%; min-height:48px; text-align:center; }
+.ds-grid[hidden] { display:none; }
