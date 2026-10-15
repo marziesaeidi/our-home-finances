@@ -10,14 +10,14 @@ import { saveGoal } from './savings';
 import { periodKey } from './calendar';
 import { id, money, persianDate, today } from './utils';
 
-type Props = { data: FinanceData; viewer: Transaction['createdBy']; change: (data: FinanceData) => void };
+type Props = { data: FinanceData; viewer: Transaction['createdBy']; change: (data: FinanceData) => void; createOnly?: boolean; onCreated?: (goal: Goal) => void; onCancel?: () => void };
 type Panel = 'create' | 'settings' | 'goal' | 'deposit' | 'withdraw' | 'plan' | null;
 const statuses = { active: 'فعال', completed: 'تکمیل‌شده', archived: 'بایگانی‌شده' };
 const icons = ['🌱', '🏠', '✈️', '🚗', '💅', '🎓', '🎁', '🛟'];
 
-export function SavingsBoxes({ data, viewer, change }: Props) {
+export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreated, onCancel }: Props) {
  const [selected, setSelected] = useState('');
- const [panel, setPanel] = useState<Panel>(null);
+ const [panel, setPanel] = useState<Panel>(createOnly ? 'create' : null);
  const [error, setError] = useState('');
  const [name, setName] = useState(''), [icon, setIcon] = useState('🌱'), [color, setColor] = useState('#16a085'), [description, setDescription] = useState('');
  const [status, setStatus] = useState<NonNullable<Goal['status']>>('active');
@@ -47,7 +47,9 @@ export function SavingsBoxes({ data, viewer, change }: Props) {
  const submit = () => {
   try {
    if (panel === 'create' || panel === 'settings') {
-    change(saveGoal(data, { ...(panel === 'settings' ? box : undefined), id: panel === 'settings' ? box!.id : id(), name, icon, color, description, status, visibility, owner: box?.owner ?? viewer, target: panel === 'settings' ? box!.target : targetEnabled ? integer(target) : 0, targetDate: panel === 'settings' ? box!.targetDate : targetEnabled && hasDate ? targetDate : '', saved: 0 }));
+    const goal: Goal = { ...(panel === 'settings' ? box : undefined), id: panel === 'settings' ? box!.id : id(), name, icon, color, description, status, visibility, owner: box?.owner ?? viewer, target: panel === 'settings' ? box!.target : targetEnabled ? integer(target) : 0, targetDate: panel === 'settings' ? box!.targetDate : targetEnabled && hasDate ? targetDate : '', saved: 0 };
+    change(saveGoal(data, goal));
+    if (panel === 'create') onCreated?.(goal);
    } else if (box && panel === 'goal') {
     change(saveGoal(data, { ...box, target: targetEnabled ? integer(target) : 0, targetDate: targetEnabled && hasDate ? targetDate : '' }));
    } else if (box && (panel === 'deposit' || panel === 'withdraw')) {
@@ -65,7 +67,7 @@ export function SavingsBoxes({ data, viewer, change }: Props) {
  const progress = (g: Goal) => Math.max(0, Math.min(100, g.target ? g.saved / g.target * 100 : 0));
  const heading = panel === 'create' ? 'باکس جدید' : panel === 'settings' ? 'تنظیمات باکس' : panel === 'goal' ? 'هدف باکس' : panel === 'plan' ? 'برنامه پس‌انداز' : panel === 'withdraw' ? 'برداشت از باکس' : 'واریز به باکس';
  return <div className="savings-boxes">
-  {box ? <>
+  {!createOnly && (box ? <>
    <Action className="outline box-back" onClick={() => { setSelected(''); setError(''); }}><ChevronLeft size={18}/> همه باکس‌ها</Action>
    <header className="box-hero"><span className="box-symbol" style={{ background: `${box.color ?? '#16a085'}18` }}>{box.icon ?? '🌱'}</span><h1>{box.name}</h1><strong>{money(box.saved)}</strong><p>موجودی باکس</p>{box.description && <p>{box.description}</p>}{box.status && box.status !== 'active' && <span>{statuses[box.status]}</span>}</header>
    <div className="box-actions"><Action className="primary" disabled={(box.status ?? 'active') !== 'active'} onClick={() => open('deposit')}><Plus size={18}/> واریز</Action><Action className="outline" disabled={box.saved <= 0} onClick={() => open('withdraw')}><ArrowUpFromLine size={18}/> برداشت</Action><Action className="outline" aria-label="تنظیمات باکس" onClick={() => open('settings')}><Settings2 size={18}/></Action></div>
@@ -80,9 +82,9 @@ export function SavingsBoxes({ data, viewer, change }: Props) {
    <div className="segment"><Action className={!showArchived ? 'selected' : ''} onClick={() => setShowArchived(false)}>باکس‌ها</Action><Action className={showArchived ? 'selected' : ''} onClick={() => setShowArchived(true)}>بایگانی</Action></div>
    <div className="box-grid">{goals.filter(g => (g.status === 'archived') === showArchived).map(g => <Action className="box-card" key={g.id} onClick={() => { setSelected(g.id); setError(''); }}><span className="box-symbol" style={{ background: `${g.color ?? '#16a085'}18` }}>{g.icon ?? '🌱'}</span><span className="box-feature-copy"><strong>{g.name}</strong><b>{money(g.saved)}</b><small>{g.target > 0 ? `${money(Math.max(0, g.target - g.saved))} مانده تا هدف` : 'بدون مبلغ هدف'}{g.status === 'completed' ? ' · تکمیل‌شده' : ''}</small></span><ChevronLeft/>{g.target > 0 && <progress aria-label={`پیشرفت ${g.name}`} max={g.target} value={Math.min(g.saved, g.target)}/>}</Action>)}</div>
    {!goals.filter(g => (g.status === 'archived') === showArchived).length && <div className="box-empty"><PiggyBank size={48}/><h2>{showArchived ? 'باکس بایگانی‌شده‌ای نداری' : 'اولین باکست را بساز'}</h2><p>{showArchived ? 'باکس‌های بایگانی‌شده اینجا می‌آیند.' : 'مثلاً سفر، خرید خانه یا روز مبادا.'}</p>{!showArchived && <Action className="primary" onClick={() => open('create')}>ساخت باکس</Action>}</div>}
-  </>}
+  </>)}
   {error && !panel && <p role="alert" className="form-error">{error}</p>}
-  {panel && <Dialog title={heading} onClose={() => { setPanel(null); setError(''); }}><form className="finance-form" onSubmit={e => { e.preventDefault(); submit(); }}>
+  {panel && <Dialog title={heading} onClose={() => { setPanel(null); setError(''); if (createOnly) onCancel?.(); }}><form className="finance-form" onSubmit={e => { e.preventDefault(); submit(); }}>
    {(panel === 'create' || panel === 'settings') && <><label className="field">نام باکس<FieldInput required placeholder="مثلاً سفر" value={name} onChange={e => setName(e.target.value)}/></label><fieldset className="box-icon-picker"><legend>نماد باکس</legend>{icons.map(item => <Action type="button" key={item} aria-label={`نماد ${item}`} aria-pressed={icon === item} className={icon === item ? 'selected' : 'outline'} onClick={() => setIcon(item)}>{item}</Action>)}</fieldset><details><summary>تنظیمات بیشتر</summary><div className="finance-form"><label className="field">توضیح (اختیاری)<FieldInput value={description} onChange={e => setDescription(e.target.value)}/></label><label className="field">رنگ باکس<FieldInput type="color" value={color} onChange={e => setColor(e.target.value)}/></label><label className="field">نمایش باکس<FieldSelect value={visibility} onChange={e => setVisibility(e.target.value as Goal['visibility'])}><option value="private">شخصی</option><option value="shared">مشترک</option></FieldSelect></label>{panel === 'settings' && <label className="field">وضعیت<FieldSelect value={status} onChange={e => setStatus(e.target.value as typeof status)}>{Object.entries(statuses).map(([v,n]) => <option value={v} key={v}>{n}</option>)}</FieldSelect></label>}</div></details></>}
    {(panel === 'create' || panel === 'goal') && <><label className="check-row"><FieldInput type="checkbox" checked={targetEnabled} onChange={e => setTargetEnabled(e.target.checked)}/> برای این باکس هدف دارم</label>{targetEnabled && <><label className="field">مبلغ هدف (تومان)<FieldInput required inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)}/></label><label className="check-row"><FieldInput type="checkbox" checked={hasDate} onChange={e => { setHasDate(e.target.checked); if (!targetDate) setTargetDate(today()); }}/> تاریخ هدف را مشخص می‌کنم</label>{hasDate && <DateField label="تاریخ هدف" value={targetDate} onChange={setTargetDate}/>}</>}</>}
    {(panel === 'deposit' || panel === 'withdraw') && <><p className="field-hint">{panel === 'deposit' ? 'این مبلغ از پول آزاد حساب برای باکس کنار گذاشته می‌شود.' : 'این مبلغ از باکس آزاد می‌شود و دوباره قابل خرج‌کردن است.'} پول در همان حساب می‌ماند.</p><label className="field">{panel === 'deposit' ? 'از کدام حساب؟' : 'پول باکس در کدام حساب است؟'}<FieldSelect required value={account} onChange={e => setAccount(e.target.value)}><option value="">انتخاب حساب</option>{fundingAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</FieldSelect></label>{account && <p className="field-hint">{panel === 'deposit' ? 'پول آزاد حساب' : 'قابل برداشت از این حساب'}: {money(available(account))}</p>}{!fundingAccounts.length && <p role="status">{panel === 'deposit' ? 'ابتدا یک حساب تومانی ثبت کن.' : 'واریز قابل برداشت در حساب‌های شما ثبت نشده است.'}</p>}<label className="field">مبلغ (تومان)<FieldInput required inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value)}/></label><DateField value={day} onChange={setDay}/></>}
