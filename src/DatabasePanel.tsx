@@ -12,9 +12,9 @@ export function DatabasePanel({ data }: { data: FinanceData }) {
       const { revision } = await current.json();
       const result = await fetch('/api/database', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data, revision }) });
       if (!result.ok) throw new Error(result.status === 409 ? 'دیتابیس هم‌زمان تغییر کرد؛ دوباره تلاش کنید.' : 'ذخیره در دیتابیس انجام نشد.');
-      setMessage('نسخه کامل اطلاعات در SQLite ذخیره شد.');
+      setMessage('نسخه اطلاعات روی کامپیوتر ذخیره شد.');
     } catch (error) { setMessage((error as Error).message); }
     finally { setBusy(false); }
   }
-  return <Surface as="section" className="card module-card"><h2>دیتابیس SQLite</h2><p>یک نسخه کامل از اطلاعات فعلی را در دیتابیس این کامپیوتر ذخیره کنید. ذخیره روزمره برنامه همچنان در مرورگر انجام می‌شود؛ برای به‌روزکردن نسخه دیتابیس، دوباره این دکمه را بزنید.</p><Action className="primary" disabled={busy} onClick={save}>{busy ? 'در حال ذخیره…' : 'ذخیره نسخه در SQLite'}</Action>{message && <p role="status">{message}</p>}</Surface>;
+  return <Surface as="section" className="card module-card"><h2>نسخه اطلاعات روی کامپیوتر</h2><p>با این دکمه یک نسخه از اطلاعات روی کامپیوتر ذخیره می‌شود. برای به‌روزکردن این نسخه، دوباره ذخیره کن. اطلاعات روزانه در مرورگر ذخیره می‌شوند.</p><Action className="primary" disabled={busy} onClick={save}>{busy ? 'در حال ذخیره…' : 'ذخیره روی کامپیوتر'}</Action>{message && <p role="status">{message}</p>}</Surface>;
 }

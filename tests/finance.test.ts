@@ -242,6 +242,6 @@ import { SavingsGoals, AssetHoldings } from '../src/SavingsAssets';
 test('Persian module screens render optional target and empty/unpriced states without invalid progress',()=>{
  const d=saveGoal(fixture(),{id:'monthly',name:'پس‌انداز ماهانه',target:0,saved:0,targetDate:'',monthlyTarget:100,visibility:'shared'});
  const goals=renderToStaticMarkup(createElement(SavingsGoals,{data:d,viewer:'مرزیه',change:()=>{}}));assert.match(goals,/بدون مبلغ هدف/);assert.doesNotMatch(goals,/NaN|Infinity/);
- const empty=renderToStaticMarkup(createElement(AssetHoldings,{data:fixture(),viewer:'مرزیه',change:()=>{}}));assert.match(empty,/دارایی ثبت نشده/);
+ const empty=renderToStaticMarkup(createElement(AssetHoldings,{data:fixture(),viewer:'مرزیه',change:()=>{}}));assert.match(empty,/هنوز دارایی نداری/);
  const assets=renderToStaticMarkup(createElement(AssetHoldings,{data:savingsAssetFixture(),viewer:'مرزیه',change:()=>{}}));assert.match(assets,/قیمت ثبت نشده/);assert.match(assets,/ارائه‌دهنده معتبر قیمت تنظیم نشده/);
 });
