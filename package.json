@@ -9,7 +9,9 @@
     "typecheck": "tsc -b",
     "rates": "node server/rates.mjs",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node tests/run.mjs && node --test tests/rates.test.mjs"
+    "test": "node tests/run.mjs && node --test tests/rates.test.mjs && node --test tests/database.test.mjs",
+    "database": "node server/sqlite.mjs",
+    "database:init": "node --input-type=module -e \"import { openDatabase } from './server/database.mjs'; const db = openDatabase(); db.close(); console.log('SQLite ready: data/khaneh.sqlite');\""
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -30,5 +32,8 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^5.7.3",
     "vite": "^6.0.5"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   }
 }
