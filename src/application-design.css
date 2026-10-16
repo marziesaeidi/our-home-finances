@@ -41,6 +41,9 @@ button.finance-surface:disabled { opacity:.5; cursor:not-allowed; }
 .finance-action.card { justify-content:flex-start; }
 .finance-action.row-main { align-items:flex-start; justify-content:flex-start; }
 .transaction-row { box-shadow:none; border-radius:0; }
+.transaction-day-group + .transaction-day-group { margin-block-start:2rem; }
+.transaction-day-group .date-heading { margin-block-start:0; }
+.route-content .transaction-day-group .list-card { display:grid; gap:var(--card-gap); }
 .field input:not([type=checkbox]):not([type=radio]):not([type=color]),.field select,.field textarea,.finance-select,.finance-textarea { background:var(--card); color:var(--foreground); border:1px solid var(--input); border-radius:var(--radius-control); min-height:var(--control-height); width:100%; min-width:0; padding:var(--space-2) var(--space-3); font-size:var(--type-body); text-align:start; }
 .field textarea { min-height:6rem; resize:vertical; }
 .field { gap:var(--space-2); font-size:var(--type-label); }
