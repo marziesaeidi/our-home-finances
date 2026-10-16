@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -14,6 +15,34 @@ export async function startDatabaseServer({ filename, port = 8789, publicOrigin 
   const database = openDatabase(filename);
   const server = createServer(async (req, res) => {
     const send = (status, value) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(value)); };
+    const invitationRoute = req.url === '/api/database/invitations';
+    const joinRoute = req.url === '/api/database/invitations/join';
+    if (invitationRoute || joinRoute) {
+      if (req.method !== 'POST') return send(405, { error: 'Method not allowed' });
+      const origin = req.headers.origin;
+      if (origin && origin !== `http://${req.headers.host}` && origin !== publicOrigin) return send(403, { error: 'Origin rejected' });
+      if (!req.headers['content-type']?.startsWith('application/json')) return send(415, { error: 'JSON required' });
+      try {
+        const chunks = []; let size = 0;
+        for await (const chunk of req) { size += chunk.length; if (size > (joinRoute ? 4096 : 10_000_000)) return send(413, { error: 'Payload too large' }); chunks.push(chunk); }
+        const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        if (joinRoute) {
+          if (typeof body.token !== 'string' || !/^[a-f0-9]{64}$/.test(body.token) || typeof body.name !== 'string' || !body.name.trim() || body.name.trim().length > 60) throw new Error('لینک دعوت و نام معتبر لازم است.');
+          return send(200, database.joinInvitation(body.token, body.name.trim(), validate));
+        }
+        validate(body.data);
+        const members = body.data.settings.members ?? [{id:'مرزیه',name:'مرزیه',role:'owner'},{id:'علی',name:'علی',role:'editor'}];
+        if (!members.some(m => m.id === body.viewer && m.role === 'owner' && !m.removed)) return send(403, { error: 'فقط مالک می‌تواند لینک دعوت بسازد.' });
+        const current = database.read();
+        if (current && JSON.stringify(JSON.parse(current.payload)) !== JSON.stringify(body.data)) return send(409, { error: 'نسخه دیتابیس با مرورگر متفاوت است. ابتدا نسخه اطلاعات روی کامپیوتر را به‌روز کن و دوباره دعوت بساز.' });
+        const data = {...body.data, settings:{...body.data.settings,members}};
+        validate(data);
+        if (!current || !body.data.settings.members) database.save(data, current?.revision ?? 0);
+        const token = randomBytes(32).toString('hex');
+        database.createInvitation(token, Date.now() + 7 * 24 * 60 * 60 * 1000);
+        return send(201, { token });
+      } catch (error) { return send(400, { error: error.message }); }
+    }
     if (req.url !== '/api/database') return send(404, { error: 'Not found' });
     if (req.method === 'GET') {
       const row = database.read();

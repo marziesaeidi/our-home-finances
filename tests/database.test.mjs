@@ -20,3 +20,22 @@ test('SQLite preserves exact snapshots, detects conflicts and survives reopen', 
     assert.equal(db.save({ ...original, amount: 10 }, 1), 2);
   } finally { db.close(); rmSync(directory, { recursive: true, force: true }); }
 });
+
+test('invitations expire, are single use, and join atomically without changing financial records', () => {
+ const db=openDatabase(':memory:');
+ try {
+  const data={settings:{members:[{id:'owner',name:'Owner',role:'owner'}]},transactions:[{id:'historical',amount:42}]};
+  db.save(data,0);
+  db.createInvitation('expired',Date.now()-1000);
+  assert.throws(()=>db.joinInvitation('expired','New',()=>{}));
+  db.createInvitation('valid',Date.now()+10000);
+  assert.throws(()=>db.joinInvitation('valid','New',()=>{throw new Error('validation');}),/validation/);
+  assert.equal(db.read().revision,1);
+  const joined=db.joinInvitation('valid','Chosen name',()=>{});
+  assert.equal(joined.member.name,'Chosen name');assert.equal(joined.member.role,'editor');
+  assert.deepEqual(joined.data.transactions,data.transactions);
+  assert.equal(joined.data.settings.members.length,2);
+  assert.throws(()=>db.joinInvitation('valid','Again',()=>{}));
+  assert.equal(db.read().revision,2);
+ } finally {db.close();}
+});

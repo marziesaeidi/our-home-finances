@@ -169,3 +169,6 @@
 .ob-history-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding-block:1rem; border-bottom:1px solid var(--border); }
 .ob-history-row>span { display:flex; align-items:center; gap:.65rem; }
 .ob-history-row small { display:block; color:var(--muted-foreground); margin-top:.4rem; }
+
+.category-settings-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
+.category-settings-row > span { min-width: 0; overflow-wrap: anywhere; }
