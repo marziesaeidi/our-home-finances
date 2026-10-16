@@ -2,7 +2,7 @@
 :root, .ds-dashboard, .ds-portal {
  --background:#F8FAFC; --foreground:#0F172A; --card:#fff; --card-foreground:var(--foreground);
  --popover:#fff; --popover-foreground:var(--foreground); --primary:#2563EB; --primary-foreground:#fff;
- --success:#16A34A; --destructive:#DC2626; --warning:#D97706;
+ --success:#16A34A; --destructive:#DC2626; --warning:#F59E0B;
  --secondary:#EFF6FF; --secondary-foreground:#1E40AF; --muted:#F1F5F9; --muted-foreground:#475569;
  --accent:#EFF6FF; --accent-foreground:#1E40AF; --border:#E2E8F0; --input:#CBD5E1; --ring:#2563EB;
  --sidebar:#F8FAFC; --sidebar-foreground:#0F172A; --sidebar-primary:#2563EB; --sidebar-primary-foreground:#fff;
@@ -73,3 +73,11 @@ html[data-theme=dark], html[data-theme=dark] :is(.ds-dashboard,.ds-portal) {
 html,body,button,input,select,textarea,.invite-code { font-family:Vazirmatn,system-ui,sans-serif; }
 @media(max-width:650px) { .ds-dashboard { padding:1rem; } .ds-grid { grid-template-columns:1fr; } .ds-header h1 { font-size:1.375rem; } }
 @media(prefers-reduced-motion:reduce) { :is(.ds-dashboard,.ds-portal) * { animation:none!important; transition:none!important; } }
+
+.ds-has-overdue { background:color-mix(in srgb,var(--destructive) 7%,var(--card)); border-color:color-mix(in srgb,var(--destructive) 45%,var(--border)); border-block-start:3px solid var(--destructive); }
+.ds-has-overdue .ds-title,.ds-has-overdue .ds-title svg,.ds-has-overdue .ds-amount { color:var(--destructive); }
+
+.ds-grid[hidden] { display:none; }
+
+#dashboard-calendar .ds-calendar-tabs { gap:1.25rem; height:auto; max-width:100%; flex-wrap:wrap; padding:.5rem; margin-block-end:1rem; }
+#dashboard-calendar .ds-calendar-tabs [data-slot=tabs-trigger] { padding:.5rem .75rem; }
