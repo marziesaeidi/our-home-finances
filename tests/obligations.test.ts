@@ -5,6 +5,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { FinancialObligations } from '../src/FinancialObligations';
 import { adjustInstallment, createLoan, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from '../src/obligations';
 import { consumption, earnedIncome, post, remainingLoan, reverse } from '../src/finance';
+import { expensePayments, payExpenseObligation } from '../src/expense-payments';
+import { ExpenseObligationPayment } from '../src/ExpenseObligationPayment';
 import { fromJalali, nextDate } from '../src/calendar';
 import { migrate, saveStore, loadStore, validate } from '../src/store';
 import type { Data, FinanceData, Loan, Obligation, Recurring, Transaction } from '../src/types';
@@ -18,6 +20,47 @@ const template=(extra:Partial<Recurring>={}):Recurring=>({id:'rent',name:'اجا
 const opts=(extra={})=>({requestId:'one',date,accountId:'a',...extra});
 const balance=(d:FinanceData)=>d.accounts[0].balance;
 const transaction=(extra:Partial<Transaction>={}):Transaction=>({id:'purchase',title:'اجاره ثبت‌شده',amount:100,type:'expense',category:'خانه',accountId:'a',date,createdBy:who,visibility:'shared',...extra});
+
+test('expense payment settles selected installment once, survives reload and reverses',()=>{
+  const initial=createLoan(fixture(),loan(),undefined,who);
+  const selected=expensePayments(initial,who).find(r=>r.id==='loan:0')!;
+  const settled=payExpenseObligation(initial,who,selected.key,opts());
+  assert.equal(balance(settled),9963);assert.equal(settled.transactions.length,1);
+  assert.equal(settled.installments[0].settled,true);assert.equal(settled.loans[0].principalRemaining,67);
+  assert.equal(consumption(settled.transactions[0]),4);validate(settled);
+  const reloaded=JSON.parse(JSON.stringify(settled));validate(reloaded);
+  assert.throws(()=>payExpenseObligation(reloaded,who,selected.key,opts()));
+  const undone=reverse(reloaded,settled.transactions[0].id);
+  assert.equal(balance(undone),10000);assert.equal(undone.installments[0].settled,false);validate(undone);
+});
+
+test('expense entry connects checks and recurring payments without a second expense',()=>{
+  let d=saveCheck(fixture(),check(),who);
+  d=payExpenseObligation(d,who,'check:check',opts());
+  assert.equal(d.obligations[0].status,'cleared');assert.equal(d.transactions.length,1);assert.equal(balance(d),9900);
+  d=saveRecurring(d,template(),who);
+  d=payExpenseObligation(d,who,`recurring:rent:${date}`,opts({value:125}));
+  assert.throws(()=>payExpenseObligation(d,who,`recurring:rent:${date}`,opts({value:125})));
+  assert.equal(d.transactions.length,2);assert.equal(balance(d),9775);assert.equal(d.recurring[0].nextDate,nextDate(date,'ماهانه'));validate(d);
+});
+
+test('expense choices exclude receivables and inaccessible obligations',()=>{
+  let d=saveCheck(fixture(),check({direction:'receive'}),who);
+  d=createLoan(d,loan({direction:'lend'}),undefined,who);
+  d=saveRecurring(d,template({transactionType:'income'}),who);
+  assert.equal(expensePayments(d,who).length,0);
+  assert.throws(()=>payExpenseObligation(d,who,'check:check',opts()));
+});
+
+test('expense payment selector renders the loan schedule and empty check state',()=>{
+  const d=createLoan(fixture(),loan(),undefined,who);
+  const render=(kind:'installment'|'check')=>renderToStaticMarkup(createElement(ExpenseObligationPayment,{data:d,viewer:who,kind,change:()=>{},onSaved:()=>{}}));
+  assert.match(render('installment'),/installment:loan:0/);
+  assert.doesNotMatch(render('installment'),/installment:loan:1/);
+  assert.doesNotMatch(render('installment'),/installment:loan:2/);
+  assert.match(render('installment'),/وام و قسط مربوط/);
+  assert.match(render('check'),/مورد پرداخت‌نشده‌ای وجود ندارد/);
+});
 
 test('check creation and editing never debit cash; settling and reload retry post once',()=>{
   let d=saveCheck(fixture(),check(),who);d=saveCheck(d,check({bank:'سامان'}),who);assert.equal(balance(d),10000);

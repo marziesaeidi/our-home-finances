@@ -48,6 +48,9 @@ button.finance-surface:disabled { opacity:.5; cursor:not-allowed; }
 .field textarea { min-height:6rem; resize:vertical; }
 .field { gap:var(--space-2); font-size:var(--type-label); }
 .finance-form { gap:var(--space-4); }
+.field.expense-purpose { gap:var(--space-3); margin-block-end:var(--space-6); }
+.expense-obligation-flow { display:flex; flex-direction:column; gap:var(--space-6); min-width:0; }
+.expense-obligation-flow .field { gap:var(--space-3); }
 .amount-field,.calculated,.profile-card,.soft-note,.notice { background:var(--secondary); color:var(--foreground); border-radius:var(--radius-card); }
 .amount-field input { height:auto; border:0; box-shadow:none; background:transparent; color:var(--foreground); font-size:1.75rem; }
 .amount-field { padding:var(--space-6); }
