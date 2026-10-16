@@ -11,7 +11,8 @@
  --chart-1:var(--primary); --chart-2:var(--success); --chart-3:var(--warning); --chart-4:var(--destructive); --chart-5:var(--muted-foreground);
 }
 html { color-scheme:light; } html[data-theme=dark] { color-scheme:dark; }
-body { background:var(--background); color:var(--foreground); }
+html { font-size:16px; }
+body { background:var(--background); color:var(--foreground); font-family:var(--font-sans); font-size:var(--type-body); font-weight:400; line-height:1.8; }
 button,input,select,textarea,svg text { font-family:var(--font-sans); }
 main { min-width:0; }
 h1,.page-head h1 { font-size:var(--type-heading); line-height:1.5; }
@@ -146,8 +147,8 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
  main :where(small,.text-xs) { font-size:12px; }
  input,select,textarea,.field input,.field select,.field textarea { font-size:16px; min-height:48px; }
  .finance-form,.filter-panel,.report-filters,.form-grid,.form-row { gap:16px; }
- .field { gap:16px; margin:0; }
- .date-field legend { margin-block-end:16px; }
+ .field { gap:var(--space-2); margin:0; }
+ .date-field legend { margin-block-end:var(--space-2); }
  .finance-form > .field,.finance-form > fieldset,.finance-form > .amount-field { margin-block:0; }
  .module-editor > .field,.module-card > .field { margin-block:16px; }
  .category-picker,.icon-picker { gap:16px; grid-template-columns:repeat(3,minmax(0,1fr)); }
@@ -324,3 +325,45 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
 .profile-link { display:flex; align-items:center; gap:8px; height:auto; padding:6px 8px; }
 .avatar { overflow:hidden; flex-shrink:0; }
 .avatar img { display:block; width:100%; height:100%; object-fit:cover; }
+
+/* Shared content rhythm, resilient to long labels and large amounts. */
+h1 { font-weight:700; }
+h2,h3 { font-weight:600; }
+small { font-size:var(--type-caption); }
+.lucide { stroke-width:1.75; flex-shrink:0; }
+.app-symbol { display:inline-block; vertical-align:middle; }
+.box-symbol .app-symbol { width:2rem; height:2rem; color:var(--primary); }
+.box-hero .box-symbol .app-symbol { width:3rem; height:3rem; }
+.route-content :is(.box-card,.box-feature,.loan-preview,.collection-card,.navigation-card) {
+ border-radius:var(--radius-card); padding:var(--space-card); gap:var(--space-4);
+}
+:is(.collection-copy h2,.box-feature-copy strong,.loan-preview-name strong) { font-size:var(--type-amount); font-weight:600; }
+:is(.collection-heading,.member-profile) { margin-block-end:var(--space-4); gap:var(--space-4); }
+:is(.box-grid,.obligation-tabs,.report-grid) { margin-block:var(--space-4); }
+.finance-form > :is(p,.field-hint,.calculated) { margin-block:0; }
+.finance-form > details[open] > .finance-form { margin-block-start:var(--space-4); }
+:is(.row-main,.row-end,.box-feature-copy,.loan-preview-name,.collection-copy,.detail-row) { overflow-wrap:anywhere; }
+:is(.row-main,.box-feature-copy,.loan-preview-name,.collection-copy) { min-width:0; }
+.transaction-row { width:100%; gap:var(--space-3); padding-block:var(--space-3); }
+.transaction-row .row-end { flex-shrink:0; white-space:normal; max-width:48%; }
+:is(.detail-row,.installment-row) { gap:var(--space-3); padding-block:var(--space-3); }
+.obligation-tabs [role=tab] { flex:1 1 auto; }
+@media(max-width:650px) {
+ .topbar { height:auto; min-height:72px; flex-wrap:wrap; gap:var(--space-2); padding-block:var(--space-2); }
+ .topbar .top-back { max-width:100%; }
+ .topbar .mobile-logo { font-size:var(--type-body); min-width:0; }
+ .topbar .mobile-logo strong { overflow-wrap:anywhere; }
+ .obligation-stats { grid-template-columns:minmax(0,1fr); }
+ .two-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .finance-form :is(input:not([type=checkbox]):not([type=radio]):not([type=color]),select,textarea) { font-size:1rem; }
+}
+
+/* Native emoji glyphs follow the user's phone and keyboard. */
+.app-symbol { font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; line-height:1.2; flex-shrink:0; }
+.emoji-picker { border:0; padding:0; margin:0; min-width:0; display:grid; gap:var(--space-3); }
+.emoji-picker legend { font-size:var(--type-label); margin-block-end:var(--space-2); }
+.emoji-presets { display:flex; flex-wrap:wrap; gap:var(--space-2); }
+.emoji-presets .finance-action { width:48px; min-height:48px; padding:var(--space-2); }
+.emoji-presets .selected { border-color:var(--primary); background:var(--accent); }
+.box-symbol .app-symbol { width:auto; height:auto; font-size:32px!important; }
+.box-hero .box-symbol .app-symbol { font-size:48px!important; }

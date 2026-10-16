@@ -10,7 +10,7 @@
  --radius:.75rem; --font-heading:Vazirmatn,system-ui,sans-serif;
  --type-heading:1.625rem; --type-body:.875rem; --type-label:.8125rem; --type-caption:.75rem; --type-amount:1rem;
  --space-section:1.5rem; --space-card:1rem; --space-page:1.25rem; --card-gap:1rem;
- font-family:Vazirmatn,system-ui,sans-serif; font-size:var(--type-body); line-height:1.8;
+ font-family:Vazirmatn,system-ui,sans-serif; line-height:1.8;
  color:var(--foreground); background:var(--background); text-align:start; font-synthesis:none;
 }
 html[data-theme=dark], html[data-theme=dark] :is(.ds-dashboard,.ds-portal) {

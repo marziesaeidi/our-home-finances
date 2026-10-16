@@ -188,3 +188,51 @@ test('new loans appear as collapsed cards in the obligations and existing loans 
   }
   assert.equal(JSON.stringify(data),before);
 });
+
+
+test('expense partial payment updates every obligation projection and survives durable reload and reversal',()=>{
+  const initial=createLoan(fixture(),loan(),undefined,who);
+  const partial=payExpenseObligation(initial,who,'installment:loan:0',opts({principal:10,interest:1,fees:0}));
+  const storage=new Map<string,string>();
+  const api={getItem:(key:string)=>storage.get(key)??null,setItem:(key:string,value:string)=>{storage.set(key,value);}};
+  saveStore(api,partial);
+  const loaded=loadStore(api,initial,at);
+  assert.equal(balance(loaded),9989);
+  assert.equal(remainingLoan(loaded,loaded.loans[0]),103);
+  assert.equal(loaded.loans[0].principalRemaining,90);
+  assert.equal(expensePayments(loaded,who).find(r=>r.id==='loan:0')!.amount,26);
+  assert.equal(dueItems(loaded,who).find(r=>r.id==='loan:0')!.amount,26);
+  assert.equal(totals(dueItems(loaded,who),date).outstanding.IRT,103);
+  const completed=payExpenseObligation(loaded,who,'installment:loan:0',opts({requestId:'remainder'}));
+  assert.equal(completed.loans[0].paid,1);
+  assert.equal(completed.loans[0].principalRemaining,67);
+  assert.equal(remainingLoan(completed,completed.loans[0]),77);
+  assert.equal(balance(completed),9963);
+  assert.ok(!dueItems(completed,who).some(r=>r.id==='loan:0'));
+  assert.ok(!expensePayments(completed,who).some(r=>r.id==='loan:0'));
+  const restored=reverse(reverse(completed,completed.transactions[0].id),completed.transactions[1].id);
+  assert.equal(balance(restored),10000);
+  assert.equal(remainingLoan(restored,restored.loans[0]),114);
+  assert.equal(totals(dueItems(restored,who),date).outstanding.IRT,114);
+  assert.equal(restored.loans[0].paid,0);
+  validate(restored);
+});
+
+test('many loans keep independent balances, schedules and views after expense payments and reversals',()=>{
+  let d=fixture();
+  for(let index=0;index<30;index++) d=createLoan(d,loan({id:`bulk-${index}`,name:`وام ${index} با عنوان طولانی برای بررسی نمایش`}),undefined,who);
+  assert.equal(d.installments.length,90);
+  for(let index=0;index<30;index++) d=payExpenseObligation(d,who,`installment:bulk-${index}:0`,opts({requestId:`payment-${index}`}));
+  assert.equal(balance(d),10000-30*37);
+  assert.equal(d.transactions.length,30);
+  assert.equal(totals(dueItems(d,who),date).outstanding.IRT,30*77);
+  assert.ok(d.loans.every(l=>l.paid===1&&l.principalRemaining===67));
+  const html=renderToStaticMarkup(createElement(FinancialObligations,{data:d,viewer:who,initialTab:'loans',change:()=>{}}));
+  assert.equal((html.match(/class="[^"]*\bloan-preview(?:\s|")/g)??[]).length,30);
+  const ids=d.transactions.map(t=>t.id);
+  for(const payment of ids) d=reverse(d,payment);
+  validate(d);
+  assert.equal(balance(d),10000);
+  assert.equal(totals(dueItems(d,who),date).outstanding.IRT,30*114);
+  assert.ok(d.loans.every(l=>l.paid===0&&l.principalRemaining===100));
+});
