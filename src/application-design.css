@@ -373,3 +373,26 @@ small { font-size:var(--type-caption); }
 .member-calendar-actions { display:flex; flex-direction:column; gap:var(--space-4); }
 .member-calendar-actions > p { margin-block:0; }
 .member-calendar-actions > .full { width:100%; }
+
+/* Vertical content cards keep a consistent rhythm between copy and controls. */
+.route-content .collection-card:not(.report-filters,.household-summary,.reminder-card,.stat-card) {
+ display:flex;
+ flex-direction:column;
+ gap:var(--space-4);
+}
+.route-content .collection-card:not(.report-filters,.household-summary,.reminder-card,.stat-card) > :is(h2,h3,p,form,.field,.section-heading,.collection-heading,.member-profile,.member-photo,.member-calendar-email,details) {
+ margin-block:0;
+}
+.member-card-grid .collection-card > #member-calendar-connection:empty { display:none; }
+.member-calendar-actions { padding-block-end:var(--space-4); }
+.member-calendar-actions > p { line-height:1.9; }
+/* Block cards and dialogs also need spacing when they do not use a stack. */
+:where(.module-card,.module-editor,.finance-dialog) > :is(h2,h3,p,form,.field,.detail-actions) + :is(h2,h3,p,form,.field,.detail-actions,.finance-action) {
+ margin-block-start:var(--space-4);
+}
+.route-content .collection-card:not(.report-filters,.household-summary,.reminder-card,.stat-card) > :is(h2,h3,p,form,.field,.detail-actions,.finance-action) {
+ margin-block-start:0;
+}
+.finance-dialog > .finance-action { margin-block-start:var(--space-3); margin-inline-end:var(--space-2); }
+.finance-form .detail-actions { gap:var(--space-3); }
+.field-hint,.account-hint { line-height:1.9; }
