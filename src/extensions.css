@@ -119,7 +119,7 @@
 .loan-preview:focus-visible { outline:2px solid var(--ring); outline-offset:3px; }
 .loan-preview-top { display:flex; align-items:center; gap:1rem; }
 .loan-progress-ring { display:grid; place-items:center; width:4rem; height:4rem; border-radius:50%; flex-shrink:0; }
-.loan-progress-ring>span { display:grid; place-items:center; width:3.35rem; height:3.35rem; border-radius:50%; background:var(--card); color:var(--primary); }
+.loan-progress-ring>span { display:grid; place-items:center; width:3.35rem; height:3.35rem; border-radius:50%; background:var(--accent); color:var(--primary); }
 .loan-preview-name { display:grid; gap:.5rem; flex:1; }
 .loan-preview-name strong { font-size:1.1rem; }
 .loan-preview-name small { color:var(--muted-foreground); }
@@ -131,7 +131,9 @@
 .loan-summary-amounts>div { display:grid; gap:.5rem; flex:1; }
 .loan-summary-amounts span { color:var(--muted-foreground); }
 @media(max-width:600px) { .loan-preview { padding:1rem; } .loan-preview-top { gap:.65rem; } .loan-preview-link { font-size:.8rem; } .loan-summary-amounts { gap:1rem; } }
-.obligation-preview-icon { background:var(--muted); color:var(--primary); }
+.obligation-preview-icon { width:44px; height:44px; border-radius:var(--radius-control); background:var(--accent); color:var(--primary); }
+.obligation-preview-icon>span { width:100%; height:100%; border-radius:inherit; }
+.obligation-preview-icon svg { width:22px; height:22px; }
 .obligation-preview.obligation-pay .loan-preview-name small { color:var(--destructive); }
 .obligation-preview.obligation-receive .loan-preview-name small { color:var(--success); }
 .ob-detail { max-width:52rem; margin-inline:auto; }

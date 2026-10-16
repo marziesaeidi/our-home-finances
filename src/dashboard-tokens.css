@@ -30,6 +30,8 @@ html[data-theme=dark], html[data-theme=dark] :is(.ds-dashboard,.ds-portal) {
 .ds-card { min-width:0; overflow-wrap:anywhere; }
 .ds-title { display:flex; align-items:center; gap:.5rem; font-size:1rem; font-weight:600; }
 .ds-title svg { width:1.125rem; height:1.125rem; color:var(--primary); flex-shrink:0; }
+.ds-title .navigation-card-icon { flex-shrink:0; }
+.ds-title .navigation-card-icon svg { width:22px; height:22px; }
 .ds-balances { border-block-start:3px solid var(--primary); }
 .ds-recent { grid-column:1/-1; }
 .ds-metric { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:.5rem; padding-block:.625rem; border-block-end:1px solid var(--border); }
