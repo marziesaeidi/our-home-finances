@@ -28,6 +28,15 @@ export function validate(value: unknown): asserts value is FinanceData {
     }
   }
   const data = value as unknown as FinanceData;
+  if(data.settings.members !== undefined) {
+    if(!Array.isArray(data.settings.members)||data.settings.members.length>100)throw new Error('فهرست اعضا معتبر نیست.');
+    const ids=new Set<string>();
+    for(const m of data.settings.members) {
+      if(!record(m)||typeof m.id!=='string'||!m.id.trim()||ids.has(m.id)||typeof m.name!=='string'||!m.name.trim()||m.name.length>60||!['owner','editor','reader'].includes(m.role)||m.removed!==undefined&&typeof m.removed!=='boolean'||m.avatar!==undefined&&(typeof m.avatar!=='string'||m.avatar.length>410000||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(m.avatar)))throw new Error('مشخصات عضو معتبر نیست.');
+      ids.add(m.id);
+    }
+    if(data.settings.members.filter(m=>m.role==='owner'&&!m.removed).length!==1)throw new Error('فضای مشترک باید یک مالک داشته باشد.');
+  }
   const categoryNames = new Set<string>();
   for (const c of data.categoryRecords) {
     if (typeof c.name !== 'string' || !c.name.trim() || categoryNames.has(c.name) || typeof c.archived !== 'boolean' || c.kind !== undefined && !['income','expense','both'].includes(c.kind) || c.icon !== undefined && (typeof c.icon !== 'string' || Array.from(c.icon).length > 16) || c.color !== undefined && (typeof c.color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(c.color))) throw new Error('دسته‌بندی معتبر نیست.');

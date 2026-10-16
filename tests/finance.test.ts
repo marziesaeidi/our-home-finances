@@ -1,3 +1,4 @@
+import './household.test';
 import { deleteCategory } from '../src/personalization';
 import './reporting.test';
 import './personal.test';
