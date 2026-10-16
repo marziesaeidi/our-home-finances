@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef } from 'react';
 
 export type FlowBackAction = { label: string; title?: string; run: () => void };
-export const FlowNavigationContext = createContext<(action: FlowBackAction | null) => void>(() => {});
+export const FlowNavigationContext = createContext<(action: FlowBackAction) => (() => void)>(() => () => {});
 
 /** Register a nested flow's back action in the app's top navigation. */
 export function FlowBack({ label, title, onBack }: { label: string; title?: string; onBack: () => void }) {
@@ -9,8 +9,7 @@ export function FlowBack({ label, title, onBack }: { label: string; title?: stri
   const callback = useRef(onBack);
   callback.current = onBack;
   useEffect(() => {
-    register({ label, title, run: () => callback.current() });
-    return () => register(null);
+    return register({ label, title, run: () => callback.current() });
   }, [register, label, title]);
   return null;
 }

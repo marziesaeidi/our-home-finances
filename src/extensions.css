@@ -113,9 +113,6 @@
 .obligation-pay strong { color:var(--destructive); }
 .obligation-receive strong { color:var(--success); }
 .obligation-stats .obligation-pay { border-block-start:3px solid var(--destructive); }
-.obligation-calendar .ds-legend-payment::before { background:var(--destructive); }
-.obligation-calendar .ds-day-payment button { background:color-mix(in srgb,var(--destructive) 18%,var(--card)); box-shadow:inset 0 -3px var(--destructive); }
-.obligation-calendar .ds-day-payment.ds-day-receipt button { background:color-mix(in srgb,var(--primary) 18%,var(--card)); box-shadow:inset 0 -3px var(--primary); }
 .loan-cards { display:grid; gap:1rem; margin-block:1rem; }
 .loan-preview { width:100%; padding:1.5rem; text-align:start; color:var(--foreground); cursor:pointer; font:inherit; transition:border-color .15s,box-shadow .15s; }
 .loan-preview:hover { border-color:var(--primary); box-shadow:0 4px 18px color-mix(in srgb,var(--primary) 10%,transparent); }
