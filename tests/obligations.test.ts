@@ -112,7 +112,7 @@ test('managed obligations survive atomic storage reload; invalid payment project
 });
 test('Persian RTL module renders dashboard calendar and all obligation sections',()=>{
   const data=createLoan(saveCheck(saveRecurring(fixture(),template(),who),check(),who),loan(),undefined,who);
-  for(const initialTab of ['dashboard','checks','loans','recurring'] as const){const html=renderToStaticMarkup(createElement(FinancialObligations,{data,viewer:who,change:()=>{},initialTab}));assert.match(html,/تعهدات مالی/);assert.match(html,/پرداخت‌های دوره‌ای/);assert.doesNotMatch(html,/NaN|Infinity/);if(initialTab==='dashboard'){assert.match(html,/data-slot="calendar"/);assert.match(html,/تعهدات .*|برای این روز تعهدی ثبت نشده است/);assert.match(html,/ds-calendar-legend/);}}
+  for(const initialTab of ['dashboard','checks','loans','recurring'] as const){const html=renderToStaticMarkup(createElement(FinancialObligations,{data,viewer:who,change:()=>{},initialTab}));assert.match(html,/<h1>چک‌ها، وام‌ها و تعهدات<\/h1>/);assert.match(html,/پرداخت‌های دوره‌ای/);assert.doesNotMatch(html,/NaN|Infinity/);if(initialTab==='dashboard'){assert.match(html,/data-slot="calendar"/);assert.match(html,/تعهدات .*|برای این روز تعهدی ثبت نشده است/);assert.match(html,/ds-calendar-legend/);}}
 });
 
 test('dashboard includes every weekly occurrence in the Jalali month without posting them',()=>{

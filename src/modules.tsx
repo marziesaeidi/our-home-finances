@@ -1,3 +1,5 @@
+import { FormField } from './components/form-fields';
+import { EditorForm as Editor } from './components/editor-form';
 import { Action, Surface, FieldInput } from './components/finance-ui';
 import { Personalization } from './SettingsPanel';
 import { FinancialReports } from './BudgetReporting';
@@ -5,7 +7,7 @@ import { ForeignExpenses } from './ForeignExpenses';
 import { FinancialObligations } from './FinancialObligations';
 import { AssetHoldings } from './SavingsAssets';
 import { useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+
 import type { FinanceData, Transaction, Budget, Loan } from './types';
 import { integer, normalizeDigits } from './decimal';
 import { active } from './finance';
@@ -16,10 +18,7 @@ import { persianDate, today } from './utils';
 
 export type ModulePage = 'foreign' | 'folders' | 'assets' | 'obligations' | 'reports' | 'backup' | 'automation';
 type Props = { onSelectLegacy?: (loan:Loan)=>void; page: ModulePage; data: FinanceData; viewer: Transaction['createdBy']; change: (next: FinanceData | ((d:FinanceData)=>FinanceData)) => void };
-function Editor({ title, children, onSubmit }: { title: string; children: ReactNode; onSubmit: () => void }) {
-  const [error, setError] = useState('');
-  return <details className="card module-editor"><summary>{title}</summary><form className="finance-form" onSubmit={(e: FormEvent) => { e.preventDefault(); try { onSubmit(); setError(''); } catch (err) { setError(err instanceof Error ? err.message : 'ثبت انجام نشد.'); } }}>{children}{error && <p role="alert" className="form-error">{error}</p>}<Action className="primary" type="submit">ثبت</Action></form></details>;
-}
+
 export function FinanceModules(props: Props) {
   const { page } = props;
   return page === 'foreign' ? <ForeignExpenses {...props}/> : page === 'assets' ? <AssetHoldings {...props}/> : page === 'obligations' ? <FinancialObligations {...props}/> : page === 'reports' ? <FinancialReports {...props}/> : page === 'backup' ? <Backup {...props}/> : <FinancialObligations {...props} initialTab="recurring"/>;
@@ -29,7 +28,7 @@ export function BudgetHistory({ data, change }: { data: FinanceData; change: (d:
   const key = (() => { try { return periodKey(fromJalali(`${month.replace('-', '/')}/1`)); } catch { return ''; } })();
   const budget = data.monthlyBudgets[key] ?? { total: 0, categories: Object.fromEntries(categories.map(c => [c, 0])) };
   const update = (next: Budget) => { if (!key) throw new Error('ماه معتبر وارد کن.'); change({ ...data, monthlyBudgets: { ...data.monthlyBudgets, [key]: next }, budget: key === periodKey(today()) ? next : data.budget }); };
-  return <Surface as="section" className="card module-card"><h2>بودجه هر ماه</h2><label className="field">سال و ماه شمسی<FieldInput value={month.replace('-', '/')} onChange={e => { const v = normalizeDigits(e.target.value).replace('/', '-'); setMonth(v); }} onBlur={() => { try { fromJalali(`${month.replace('-', '/')}/1`); setError(''); } catch (e) { setError((e as Error).message); } }}/></label>{error && <p className="form-error">{error}</p>}<Editor title="تنظیم سقف این ماه" onSubmit={() => { fromJalali(`${month.replace('-', '/')}/1`); update(budget); }}><label className="field">کل بودجه<FieldInput value={budget.total} inputMode="numeric" onChange={e => { try { fromJalali(`${month.replace('-', '/')}/1`); update({ ...budget, total: integer(e.target.value, true) }); setError(''); } catch (err) { setError((err as Error).message); } }}/></label>{Object.entries(budget.categories).map(([name, limit]) => <label className="field" key={name}>{name}<FieldInput value={limit} onChange={e => { try { fromJalali(`${month.replace('-', '/')}/1`); update({ ...budget, categories: { ...budget.categories, [name]: integer(e.target.value, true) } }); setError(''); } catch (err) { setError((err as Error).message); } }}/></label>)}</Editor></Surface>;
+  return <Surface as="section" className="card module-card"><h2>بودجه هر ماه</h2><FormField label="سال و ماه شمسی"><FieldInput value={month.replace('-', '/')} onChange={e => { const v = normalizeDigits(e.target.value).replace('/', '-'); setMonth(v); }} onBlur={() => { try { fromJalali(`${month.replace('-', '/')}/1`); setError(''); } catch (e) { setError((e as Error).message); } }}/></FormField>{error && <p className="form-error">{error}</p>}<Editor title="تنظیم سقف این ماه" onSubmit={() => { fromJalali(`${month.replace('-', '/')}/1`); update(budget); }}><FormField label="کل بودجه"><FieldInput value={budget.total} inputMode="numeric" onChange={e => { try { fromJalali(`${month.replace('-', '/')}/1`); update({ ...budget, total: integer(e.target.value, true) }); setError(''); } catch (err) { setError((err as Error).message); } }}/></FormField>{Object.entries(budget.categories).map(([name, limit]) => <label className="field" key={name}>{name}<FieldInput value={limit} onChange={e => { try { fromJalali(`${month.replace('-', '/')}/1`); update({ ...budget, categories: { ...budget.categories, [name]: integer(e.target.value, true) } }); setError(''); } catch (err) { setError((err as Error).message); } }}/></label>)}</Editor></Surface>;
 }
 function download(name: string, content: string, type = 'application/json') {
   const url = URL.createObjectURL(new Blob([content], { type }));

@@ -67,6 +67,7 @@ export function FieldTextarea({ className, ...props }: ComponentProps<'textarea'
   return <textarea data-slot="textarea" className={cn('finance-textarea', className)} {...props}/>;
 }
 
-export function Surface({ as: Tag = 'div', className, ...props }: ComponentProps<'div'> & { as?: ElementType }) {
-  return <Card asChild className="finance-surface"><Tag className={className} {...props}/></Card>;
+export function Surface<T extends ElementType = 'div'>({ as, className, ...props }: { as?: T; className?: string } & Omit<ComponentProps<T>, 'as' | 'className'>) {
+  const Tag = as ?? 'div';
+  return <Card asChild className="finance-surface"><Tag className={className} {...(Tag === 'button' ? { type: 'button' } : {})} {...props}/></Card>;
 }
