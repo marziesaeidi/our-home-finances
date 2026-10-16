@@ -17,7 +17,8 @@ export async function startDatabaseServer({ filename, port = 8789, publicOrigin 
     const send = (status, value) => { res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(value)); };
     const invitationRoute = req.url === '/api/database/invitations';
     const joinRoute = req.url === '/api/database/invitations/join';
-    if (invitationRoute || joinRoute) {
+    const accessRoute = ['/api/database/access/status','/api/database/access/list','/api/database/access/decide'].includes(req.url);
+    if (invitationRoute || joinRoute || accessRoute) {
       if (req.method !== 'POST') return send(405, { error: 'Method not allowed' });
       const origin = req.headers.origin;
       if (origin && origin !== `http://${req.headers.host}` && origin !== publicOrigin) return send(403, { error: 'Origin rejected' });
@@ -26,9 +27,17 @@ export async function startDatabaseServer({ filename, port = 8789, publicOrigin 
         const chunks = []; let size = 0;
         for await (const chunk of req) { size += chunk.length; if (size > (joinRoute ? 4096 : 10_000_000)) return send(413, { error: 'Payload too large' }); chunks.push(chunk); }
         const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+        if (accessRoute) {
+          if (req.url.endsWith('/status')) return send(200,database.accessStatus(body.token));
+          if (!database.isOwnerKey(body.ownerKey)) return send(403,{error:'دسترسی مالک لازم است. در مرورگر مالک یک لینک دعوت بساز.'});
+          if (req.url.endsWith('/list')) return send(200,{requests:database.requests()});
+          if (typeof body.approved !== 'boolean') throw new Error('تصمیم معتبر لازم است.');
+          return send(200,database.decideAccess(body.token,body.approved,validate));
+        }
         if (joinRoute) {
           if (typeof body.token !== 'string' || !/^[a-f0-9]{64}$/.test(body.token) || typeof body.name !== 'string' || !body.name.trim() || body.name.trim().length > 60) throw new Error('لینک دعوت و نام معتبر لازم است.');
-          return send(200, database.joinInvitation(body.token, body.name.trim(), validate));
+          if(typeof body.email !== 'string' || body.email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) throw new Error('ایمیل معتبر وارد کن.');
+          return send(202, database.requestAccess(body.token, body.name.trim(), body.email.trim().toLowerCase(), randomBytes(32).toString('hex')));
         }
         validate(body.data);
         const members = body.data.settings.members ?? [{id:'مرزیه',name:'مرزیه',role:'owner'},{id:'علی',name:'علی',role:'editor'}];
@@ -40,7 +49,8 @@ export async function startDatabaseServer({ filename, port = 8789, publicOrigin 
         if (!current || !body.data.settings.members) database.save(data, current?.revision ?? 0);
         const token = randomBytes(32).toString('hex');
         database.createInvitation(token, Date.now() + 7 * 24 * 60 * 60 * 1000);
-        return send(201, { token });
+        const ownerKey = randomBytes(32).toString('hex'); database.addOwnerKey(ownerKey);
+        return send(201, { token, ownerKey });
       } catch (error) { return send(400, { error: error.message }); }
     }
     if (req.url !== '/api/database') return send(404, { error: 'Not found' });
