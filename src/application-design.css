@@ -396,3 +396,16 @@ small { font-size:var(--type-caption); }
 .finance-dialog > .finance-action { margin-block-start:var(--space-3); margin-inline-end:var(--space-2); }
 .finance-form .detail-actions { gap:var(--space-3); }
 .field-hint,.account-hint { line-height:1.9; }
+
+/* Profile actions are reached directly from the photo and name. */
+.member-profile .member-avatar-button { position:relative; width:64px; height:64px; min-width:64px; min-height:64px; aspect-ratio:1; border-radius:50%; flex-shrink:0; overflow:visible; cursor:pointer; padding:0; }
+.member-avatar-button > img { display:block; width:100%; height:100%; aspect-ratio:1; object-fit:cover; border-radius:50%; }
+.member-avatar-button:disabled { cursor:default; opacity:1; }
+.member-avatar-camera { position:absolute; bottom:-2px; left:-2px; display:grid; place-items:center; width:24px; height:24px; border:2px solid var(--card); border-radius:50%; background:var(--primary); color:var(--primary-foreground); }
+.member-name-button { display:inline-flex; align-items:center; gap:10px; padding:4px 0; border:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
+.member-name-button svg { color:var(--muted-foreground); }
+.member-name-button:focus-visible,.member-avatar-button:focus-visible { outline:2px solid var(--ring); outline-offset:4px; }
+.member-photo-preview.avatar { width:112px; height:112px; min-width:112px; min-height:112px; flex-shrink:0; aspect-ratio:1; border-radius:50%; overflow:hidden; margin:8px auto 24px; font-size:32px; }
+.member-photo-preview.avatar + .member-photo-actions { margin-block-start:0; }
+.member-card-grid .member-profile { padding-block-end:8px; }
+.member-photo-actions { display:grid; gap:10px; }

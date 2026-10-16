@@ -70,7 +70,7 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
  };
  const progress = (g: Goal) => Math.max(0, Math.min(100, g.target ? g.saved / g.target * 100 : 0));
  const heading = panel === 'create' ? 'باکس جدید' : panel === 'settings' ? 'تنظیمات باکس' : panel === 'goal' ? 'هدف باکس' : panel === 'plan' ? 'برنامه پس‌انداز' : panel === 'withdraw' ? 'برداشت از باکس' : 'واریز به باکس';
- return <div className="savings-boxes">{!createOnly&&(panel||box)&&<FlowBack label="بازگشت" onBack={()=>{if(panel)setPanel(null);else setSelected('');setError('')}}/>}
+ return <div className="savings-boxes">{!createOnly&&box&&<FlowBack label="بازگشت" onBack={()=>{setSelected('');setError('')}}/>}
   {!createOnly && (box ? <>
    <Action className="outline box-back" onClick={() => { setSelected(''); setError(''); }}><ChevronLeft size={18}/> همه باکس‌ها</Action>
    <header className="box-hero"><span className="box-symbol" style={{ background: `${box.color ?? '#16a085'}18` }}><AppIcon symbol={box.icon ?? '🌱'}/></span><h1>{box.name}</h1><strong>{money(box.saved)}</strong><p>موجودی باکس</p>{box.description && <p>{box.description}</p>}{box.status && box.status !== 'active' && <span>{statuses[box.status]}</span>}</header>
