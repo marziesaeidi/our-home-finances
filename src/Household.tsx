@@ -12,8 +12,14 @@ export function Household({data,viewer,change}:{data:FinanceData;viewer:string;c
  function update(fn:(members:HouseholdMember[])=>HouseholdMember[]) { try { change(d=>({...d,settings:{...d.settings,members:fn(membersOf(d))}}));setMessage('تغییرات ذخیره شد.'); } catch(e) {setMessage((e as Error).message);} }
  async function photo(member:HouseholdMember,file?:File) {
   if(!file)return;
-  try { if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>300000)throw new Error('عکس JPG، PNG یا WebP تا ۳۰۰ کیلوبایت انتخاب کن.');
-   const value=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file);});
+  try { if(!['image/png','image/jpeg','image/webp'].includes(file.type)||file.size>20000000)throw new Error('عکس JPG، PNG یا WebP تا ۲۰ مگابایت انتخاب کن.');
+   const source=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=reject;reader.readAsDataURL(file);});
+   const image=await new Promise<HTMLImageElement>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('عکس قابل خواندن نیست.'));img.src=source;});
+   const canvas=document.createElement('canvas');const scale=Math.min(1,512/Math.max(image.naturalWidth,image.naturalHeight));
+   canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+   const context=canvas.getContext('2d');if(!context)throw new Error('پردازش عکس انجام نشد.');
+   context.fillStyle='#ffffff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0,canvas.width,canvas.height);
+   const value=canvas.toDataURL('image/jpeg',0.85);
    update(rows=>rows.map(m=>m.id===member.id?{...m,avatar:value}:m));
   }catch(e){setMessage((e as Error).message);}
  }
