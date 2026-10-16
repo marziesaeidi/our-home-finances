@@ -368,3 +368,8 @@ small { font-size:var(--type-caption); }
 .emoji-presets .selected { border-color:var(--primary); background:var(--accent); }
 .box-symbol .app-symbol { width:auto; height:auto; font-size:32px!important; }
 .box-hero .box-symbol .app-symbol { font-size:48px!important; }
+
+.member-calendar-email { margin-block-end:var(--space-4); }
+.member-calendar-actions { display:flex; flex-direction:column; gap:var(--space-4); }
+.member-calendar-actions > p { margin-block:0; }
+.member-calendar-actions > .full { width:100%; }

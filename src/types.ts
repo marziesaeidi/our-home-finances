@@ -1,4 +1,4 @@
-export type HouseholdMember = { id: string; name: string; role: 'owner' | 'editor' | 'reader'; avatar?: string; removed?: boolean };
+export type HouseholdMember = { id: string; name: string; role: 'owner' | 'editor' | 'reader'; avatar?: string; calendarEmail?: string; removed?: boolean };
 import type { CurrencyDefinition } from './currencies';
 import type { RateQuote } from './exchangeRates';
 export type Visibility = 'shared' | 'private';
@@ -20,6 +20,7 @@ export type Obligation = { id: string; name: string; kind: 'check' | 'payment'; 
 export type Installment = { id: string; loanId: string; index: number; amount: number; principal?: number; interest?: number; date: string; transactionId?: string; settled: boolean; fees?: number; paidAmount?: number; principalPaid?: number; interestPaid?: number; feesPaid?: number; transactionIds?: string[]; legacy?: boolean };
 export type AccountEntry = { id: string; transactionId: string; accountId: string; delta: number; operation: 'post' | 'reverse'; at: string };
 export type Category = { id: string; name: string; archived: boolean; kind?: 'income' | 'expense' | 'both'; icon?: string; color?: string };
-export type FinanceData = Data & { schemaVersion: 2; migratedAt: string; accountEntries: AccountEntry[]; categoryRecords: Category[]; folders: Folder[]; assets: Asset[]; obligations: Obligation[]; installments: Installment[]; monthlyBudgets: Record<string, Budget>; settings: { members?: HouseholdMember[]; name: string; theme: 'light' | 'dark'; currency: 'IRT'; timezone: 'Asia/Tehran'; preferredCurrency?: string; calendar?: 'persian' | 'gregory'; persianNumbers?: boolean; dashboard?: Record<string, { order: string[]; hidden: string[] }> }; migrationWarnings: string[]; currencyDefinitions?: CurrencyDefinition[]; fxRefreshMinutes?: number; assetOpeningRevisions?: OpeningRevision[] };
+export type FinanceData = Data & { schemaVersion: 2; migratedAt: string; accountEntries: AccountEntry[]; categoryRecords: Category[]; folders: Folder[]; assets: Asset[]; obligations: Obligation[]; installments: Installment[]; monthlyBudgets: Record<string, Budget>; settings: { calendarEmail?: string; members?: HouseholdMember[]; name: string; theme: 'light' | 'dark'; currency: 'IRT'; timezone: 'Asia/Tehran'; preferredCurrency?: string; calendar?: 'persian' | 'gregory'; persianNumbers?: boolean; dashboard?: Record<string, { order: string[]; hidden: string[] }> }; migrationWarnings: string[]; currencyDefinitions?: CurrencyDefinition[]; fxRefreshMinutes?: number; assetOpeningRevisions?: OpeningRevision[] };
 
 export type ForeignExpense = { version: 1; merchant: string; quote: RateQuote; paymentCurrency: string; debitMinor: number; feeMinor: number; feeToman: number; paymentRate: string; convertedOverride?: number; overrideReason?: string; subscription: boolean };
+

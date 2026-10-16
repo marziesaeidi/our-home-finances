@@ -28,10 +28,12 @@ export function validate(value: unknown): asserts value is FinanceData {
     }
   }
   const data = value as unknown as FinanceData;
+  if (data.settings.calendarEmail !== undefined && (typeof data.settings.calendarEmail !== 'string' || data.settings.calendarEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.settings.calendarEmail))) throw new Error('ایمیل تقویم معتبر نیست.');
   if(data.settings.members !== undefined) {
     if(!Array.isArray(data.settings.members)||data.settings.members.length>100)throw new Error('فهرست اعضا معتبر نیست.');
     const ids=new Set<string>();
     for(const m of data.settings.members) {
+      if(m.calendarEmail !== undefined && (typeof m.calendarEmail !== "string" || m.calendarEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m.calendarEmail))) throw new Error("ایمیل عضو معتبر نیست.");
       if(!record(m)||typeof m.id!=='string'||!m.id.trim()||ids.has(m.id)||typeof m.name!=='string'||!m.name.trim()||m.name.length>60||!['owner','editor','reader'].includes(m.role)||m.removed!==undefined&&typeof m.removed!=='boolean'||m.avatar!==undefined&&(typeof m.avatar!=='string'||m.avatar.length>410000||!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(m.avatar)))throw new Error('مشخصات عضو معتبر نیست.');
       ids.add(m.id);
     }
@@ -154,3 +156,4 @@ export function saveStore(storage: StorageLike, data: FinanceData, expected?: Fi
   if (previous !== null) storage.setItem('khaneh-v2-previous', previous);
   storage.setItem(STORE_KEY, JSON.stringify(data));
 }
+
