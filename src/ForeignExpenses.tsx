@@ -18,7 +18,7 @@ type Props={data:FinanceData;viewer:Transaction['createdBy'];change:(next:Financ
 export function ForeignExpenses(props:Props){
   const {data,viewer}=props;
   const [filter,setFilter]=useState('foreign'),[month,setMonth]=useState(''),[editing,setEditing]=useState<Transaction|undefined>(),[formKey,setFormKey]=useState(0),[message,setMessage]=useState('');
-  const [formOpen,setFormOpen]=useState(true);
+  const [formOpen,setFormOpen]=useState(false);
   const [selection,setSelection]=useState<{kind:string;label:string}|undefined>();
   const summary=foreignSummary(data,viewer,filter,month);
   const rows=summary.rows.filter(t=>!selection||(selection.kind==='ماه‌های شمسی'?periodKey(t.date):selection.kind==='خدمات و فروشگاه‌ها'?t.foreignExpense?.merchant??t.title:t.category)===selection.label);

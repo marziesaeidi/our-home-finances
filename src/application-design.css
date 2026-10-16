@@ -50,6 +50,9 @@ button.finance-surface:disabled { opacity:.5; cursor:not-allowed; }
 .finance-form { gap:var(--space-4); }
 .amount-field,.calculated,.profile-card,.soft-note,.notice { background:var(--secondary); color:var(--foreground); border-radius:var(--radius-card); }
 .amount-field input { height:auto; border:0; box-shadow:none; background:transparent; color:var(--foreground); font-size:1.75rem; }
+.amount-field { padding:var(--space-6); }
+.amount-field > div { margin-block-start:var(--space-3); gap:var(--space-4); }
+.amount-field input { padding:var(--space-3) var(--space-4); }
 .searchbox input { height:var(--control-height); border:0; background:transparent; }
 input[inputmode=numeric],input[inputmode=decimal],bdi,.ds-amount,.row-end,.stat-card strong { font-variant-numeric:tabular-nums; }
 input[type=checkbox],input[type=radio],progress { accent-color:var(--primary); }
@@ -128,11 +131,10 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
 }
 .date-field { border:0; padding:0; margin:0; min-width:0; }
 .date-field legend { padding:0; margin-block-end:8px; }
-.date-segments { display:flex; align-items:center; border:1px solid var(--input); border-radius:var(--radius-control); background:var(--card); min-height:48px; overflow:hidden; }
+.date-segments { display:flex; align-items:center; gap:var(--space-3); border:1px solid var(--input); border-radius:var(--radius-control); background:var(--card); min-height:48px; overflow:hidden; }
 .date-segment { display:flex; align-items:center; flex:1; min-width:0; }
 .date-segment:first-child { flex:1.6; }
 .field .date-segment input { border:0; border-radius:0; background:transparent; text-align:center; width:100%; padding:10px 4px; direction:ltr; box-shadow:none; }
-.date-divider { color:var(--foreground); font-size:18px; flex:none; }
 .date-segments:focus-within { outline:2px solid var(--ring); outline-offset:2px; }
 @media(max-width:650px) {
  :root { --type-caption:12px; --type-label:14px; --type-body:16px; }

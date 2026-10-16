@@ -32,7 +32,6 @@ export function DateField({ value, onChange, label }: { value: string; onChange:
     if (!e.currentTarget.contains(e.relatedTarget as Node) && inputs.current[0]?.validationMessage) setError('تاریخ کامل و معتبر وارد کن؛ مثلاً ' + (gregorian ? '۲۰۲۶/۱۰/۱۵' : '۱۴۰۵/۰۷/۲۳') + '.');
   }}><legend>{title}</legend><div className="date-segments" dir="ltr" data-invalid={!!error}>
     {['سال', 'ماه', 'روز'].map((name, index) => <span className="date-segment" key={name}>
-      {index > 0 && <span aria-hidden="true" className="date-divider">/</span>}
       <input ref={node => { inputs.current[index] = node; }} type="text" inputMode="numeric" required
         aria-label={`${title}، ${name}`} aria-invalid={!!error} aria-describedby={hint}
         placeholder={index === 0 ? 'سال' : name} value={persianDigits(parts[index] ?? '')}
