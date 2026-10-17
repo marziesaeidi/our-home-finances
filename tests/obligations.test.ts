@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FinancialObligations } from '../src/FinancialObligations';
-import { adjustInstallment, createLoan, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from '../src/obligations';
+import { adjustInstallment, createLoan, deleteRecurring, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from '../src/obligations';
 import { consumption, earnedIncome, post, remainingLoan, reverse } from '../src/finance';
 import { expensePayments, payExpenseObligation } from '../src/expense-payments';
 import { ExpenseObligationPayment } from '../src/ExpenseObligationPayment';
@@ -235,4 +235,18 @@ test('many loans keep independent balances, schedules and views after expense pa
   assert.equal(balance(d),10000);
   assert.equal(totals(dueItems(d,who),date).outstanding.IRT,30*114);
   assert.ok(d.loans.every(l=>l.paid===0&&l.principalRemaining===100));
+});
+
+test('deleting recurring template preserves payments, balances and reversal after reload',()=>{
+ let d=saveRecurring(fixture(),template(),who);
+ d=settleRecurring(d,'rent',date,opts({value:120}),who);
+ const accounts=structuredClone(d.accounts),transactions=structuredClone(d.transactions),entries=structuredClone(d.accountEntries);
+ assert.throws(()=>deleteRecurring(d,'rent','other'));
+ d=deleteRecurring(d,'rent',who);
+ assert.equal(d.recurring.length,0);
+ assert.deepEqual(d.accounts,accounts);assert.deepEqual(d.transactions,transactions);assert.deepEqual(d.accountEntries,entries);
+ assert.equal(dueItems(d,who).filter(r=>r.kind==='recurring').length,0);
+ d=JSON.parse(JSON.stringify(d));validate(d);
+ assert.throws(()=>settleRecurring(d,'rent',nextDate(date,'ماهانه'),opts(),who));
+ d=reverse(d,transactions[0].id);assert.equal(balance(d),10000);validate(d);
 });

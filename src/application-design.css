@@ -586,3 +586,17 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
  .collection-preview .loan-preview-name { flex-basis:calc(100% - 5rem); }
  .collection-preview .loan-preview-link { margin-inline-start:auto; }
 }
+
+/* Detail views and consistently sized grouped actions. */
+.asset-toolbar[hidden] { display:none; }
+.check-filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.check-filters .finance-action { min-width:0; width:100%; margin:0; }
+.installment-actions,.recurring-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; align-items:start; margin-block:16px; }
+.recurring-actions { grid-template-columns:repeat(3,minmax(0,1fr)); }
+:is(.installment-actions,.recurring-actions)>.planning-launcher { min-width:0; margin:0; }
+:is(.installment-actions,.recurring-actions) .finance-action { width:100%; min-height:48px; height:48px; margin:0; padding:8px; font-size:var(--type-caption); justify-content:center; gap:4px; }
+:is(.installment-actions,.recurring-actions) .planning-launch>span { font-size:18px; line-height:1; }
+.folder-editor-dialog.finance-dialog { height:min(760px,90dvh); }
+.folder-editor-dialog .planning-form { flex:1; min-height:0; }
+.folder-editor-dialog .planning-footer { margin-top:auto; }
+@media(max-width:650px) { .folder-editor-dialog.finance-dialog { height:100dvh; } }

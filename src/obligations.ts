@@ -109,6 +109,11 @@ export function saveRecurring(data: FinanceData, row: Recurring, viewer: string)
   if(old&&data.transactions.some(t=>active(t)&&t.occurrenceKey?.startsWith(`${row.id}:`))&&(old.currency??'IRT')!==(row.currency??'IRT'))throw new Error('ارز الگوی دارای سابقه تغییر نمی‌کند؛ الگوی جدید بساز.');
   return {...data,recurring:old?data.recurring.map(r=>r.id===row.id?row:r):[...data.recurring,row]};
 }
+export function deleteRecurring(data: FinanceData, id: string, viewer: string): FinanceData {
+  const row = data.recurring.find(r => r.id === id);
+  if (!row || row.owner !== viewer) throw new Error('الگو قابل حذف نیست.');
+  return { ...data, recurring: data.recurring.filter(r => r.id !== id) };
+}
 export function settleRecurring(data: FinanceData, id: string, due: string, opts: Settlement, creator: Transaction['createdBy']): FinanceData {
   const key=`${id}:${due}`;if(data.transactions.some(t=>active(t)&&t.occurrenceKey===key))return data;
   const row=data.recurring.find(r=>r.id===id&&!r.archived&&r.owner===creator);
