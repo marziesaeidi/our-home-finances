@@ -623,3 +623,52 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .report-transactions[open]>summary { margin-bottom:16px; }
 .report-help { margin-block:16px; }
 @media print { .financial-report>.page-head .finance-action,.report-breakdown,.report-help { display:none!important; } }
+
+/* Shared disclosure controls, including planning forms and report transactions. */
+:where(details:not(.composer-date)) > summary {
+ display:flex; align-items:center; justify-content:space-between; gap:var(--space-3);
+ box-sizing:border-box; min-height:var(--control-height); padding:var(--space-3) var(--space-4);
+ margin:0; list-style:none; cursor:pointer; border:1px solid var(--border);
+ border-radius:var(--radius-control); background:var(--card); color:var(--foreground);
+ font-size:var(--type-body); font-weight:500; line-height:1.8;
+}
+:where(details:not(.composer-date)) > summary::-webkit-details-marker { display:none; }
+:where(details:not(.composer-date)) > summary::after {
+ content:''; width:8px; height:8px; flex-shrink:0; border-inline-end:2px solid currentColor;
+ border-block-end:2px solid currentColor; transform:rotate(45deg); margin-inline:4px;
+}
+:where(details:not(.composer-date))[open] > summary::after { transform:rotate(225deg); }
+:where(details:not(.composer-date)) > summary:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.planning-options { border-block-start:0; }
+.planning-options>summary,details.module-editor>summary,.composer-extra>summary,.report-transactions>summary {
+ display:flex; padding:var(--space-3) var(--space-4); min-height:var(--control-height);
+ color:var(--foreground); font-size:var(--type-body); font-weight:500;
+}
+.planning-options[open]>summary { margin-block-end:var(--space-4); }
+
+/* Select fields retain native keyboard/form behavior and share one control style. */
+select.finance-select,.field select.finance-select,.composer-account select.finance-select {
+ box-sizing:border-box; width:100%; min-width:0; min-height:var(--control-height);
+ border:1px solid var(--input); border-radius:var(--radius-control); background-color:var(--card);
+ color:var(--foreground); padding:.75rem 1rem; font:inherit; font-size:var(--type-body);
+ font-weight:400; line-height:1.8; box-shadow:none; cursor:pointer;
+}
+select.finance-select:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+select.finance-select option { background:var(--card); color:var(--foreground); }
+
+.report-bar [data-slot=progress] { grid-column:1/-1; }
+.report-transactions { min-width:0; max-width:100%; }
+.report-table { width:100%; min-width:0; overflow-x:auto; overscroll-behavior-x:contain; }
+.report-table table { min-width:640px; table-layout:auto; }
+.report-table :is(th,td) { white-space:nowrap; vertical-align:middle; }
+.report-table :is(th,td):nth-child(2) { min-width:200px; white-space:normal; overflow-wrap:anywhere; }
+.report-table :is(th,td):nth-child(3) { min-width:110px; }
+.report-table:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.budget-status-list { display:grid; gap:var(--space-4); min-width:0; }
+.route-content .budget-status-list>.budget-status { margin:0; }
+
+/* Planning dialogs use the same inset, field spacing and controls as other forms. */
+.planning-editor-dialog .planning-form { box-sizing:border-box; min-width:0; gap:var(--space-4); }
+.planning-form .planning-options { min-width:0; }
+.planning-form .planning-options>.field { display:flex; flex-direction:column; gap:var(--space-2); margin-block:var(--space-4); }
+.planning-form .input-control,.planning-form .input-control>input { box-sizing:border-box; width:100%; min-width:0; }
