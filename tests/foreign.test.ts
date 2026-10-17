@@ -126,6 +126,6 @@ test('foreign debit autofill respects account units, exact rounding and receipt 
  test('foreign purchase form shows only simple purchase and payment fields',()=>{
   const html=renderToStaticMarkup(createElement(ForeignExpenses,{data:fixture(),viewer:'مرزیه',change:()=>{}}));
   assert.match(html,/چی خریدی؟/);assert.match(html,/از کجا خریدی؟/);assert.match(html,/مبلغ پرداختی به تومان/);assert.match(html,/خودکار/);
-  assert.doesNotMatch(html,/گزینه‌های پیشرفته|نرخ رسید را ندارم|اشتراک \/ پرداخت تکرارشونده|مبلغ نهایی خرید در رسید/);
+  assert.doesNotMatch(html,/دسته‌بندی خرید|نام پروژه \(اختیاری\)|گزینه‌های پیشرفته|نرخ رسید را ندارم|اشتراک \/ پرداخت تکرارشونده|مبلغ نهایی خرید در رسید/);
  });
 
