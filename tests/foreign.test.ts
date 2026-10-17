@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement } from 'react';
-import { ForeignExpenses } from '../src/ForeignExpenses';
+import { ForeignExpenses, ForeignExpenseReports } from '../src/ForeignExpenses';
 import { minorUnits, nativeText } from '../src/currencies';
 import { recordForeign, foreignSummary, suggestedForeignDebit } from '../src/foreignLedger';
 import type { ForeignInput } from '../src/foreignLedger';
@@ -95,8 +95,8 @@ test('proxy rejects HTTP errors and unknown quote dates instead of inventing rat
 });
 test('RTL foreign dashboard renders empty and populated states with original and debit currencies',()=>{
   const props={data:fixture(),viewer:'مرزیه' as const,change:()=>{}};
-  assert.match(renderToStaticMarkup(createElement(ForeignExpenses,props)),/هنوز هزینه‌ای/);
-  props.data=recordForeign(props.data,input(),'مرزیه');const html=renderToStaticMarkup(createElement(ForeignExpenses,props));assert.match(html,/20 USD/);assert.match(html,/OpenAI/);assert.match(html,/برداشت/);
+  assert.match(renderToStaticMarkup(createElement(ForeignExpenseReports,props)),/هنوز هزینه‌ای/);
+  props.data=recordForeign(props.data,input(),'مرزیه');const html=renderToStaticMarkup(createElement(ForeignExpenseReports,props));assert.match(html,/20 USD/);assert.match(html,/OpenAI/);assert.match(html,/برداشت/);
 });
 
 test('foreign debit autofill respects account units, exact rounding and receipt override',()=>{
@@ -126,6 +126,13 @@ test('foreign debit autofill respects account units, exact rounding and receipt 
  test('foreign purchase form shows only simple purchase and payment fields',()=>{
   const html=renderToStaticMarkup(createElement(ForeignExpenses,{data:fixture(),viewer:'مرزیه',change:()=>{}}));
   assert.match(html,/چی خریدی؟/);assert.match(html,/از کجا خریدی؟/);assert.match(html,/مبلغ پرداختی به تومان/);assert.match(html,/خودکار/);
-  assert.doesNotMatch(html,/دسته‌بندی خرید|نام پروژه \(اختیاری\)|گزینه‌های پیشرفته|نرخ رسید را ندارم|اشتراک \/ پرداخت تکرارشونده|مبلغ نهایی خرید در رسید/);
+  assert.doesNotMatch(html,/خلاصه هزینه‌های انتخاب‌شده|خریدهای ثبت‌شده|اشتراک‌های ارزی|ماه شمسی|دسته‌بندی خرید|نام پروژه \(اختیاری\)|گزینه‌های پیشرفته|نرخ رسید را ندارم|اشتراک \/ پرداخت تکرارشونده|مبلغ نهایی خرید در رسید/);
  });
 
+
+test('foreign report route keeps purchase history outside the entry form',()=>{
+ const props={data:fixture(),viewer:'مرزیه',change:()=>{}};
+ const html=renderToStaticMarkup(createElement(FinanceModules,{...props,page:'foreign-reports'}));
+ assert.match(html,/گزارش خریدهای ارزی/);assert.match(html,/خلاصه هزینه‌های انتخاب‌شده/);assert.match(html,/خریدهای ثبت‌شده/);
+ assert.doesNotMatch(html,/چی خریدی؟|مبلغ پرداختی به تومان/);
+});

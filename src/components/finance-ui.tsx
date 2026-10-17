@@ -6,12 +6,22 @@ import { Input } from './ui/input';
 import { Card } from './ui/card';
 import { cn } from '../lib/utils';
 
+function revealFormError(form: HTMLFormElement) {
+  requestAnimationFrame(() => {
+    const invalid = form.querySelector<HTMLElement>(':invalid');
+    const message = form.querySelector<HTMLElement>('.field-error, .form-error, [role="alert"]');
+    if (!invalid && !message) return;
+    invalid?.focus({ preventScroll: true });
+    (invalid?.closest('label, fieldset') ?? message ?? invalid)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+}
+
 /** Native form contracts are preserved, including submit defaults and refs. */
-export function Action({ className = '', ...props }: ComponentProps<'button'>) {
+export function Action({ className = '', onClick, ...props }: ComponentProps<'button'>) {
   const variant = /\b(primary|add-main)\b/.test(className) ? 'default'
     : /\b(danger|plain-danger)\b/.test(className) ? 'destructive'
     : /\boutline\b/.test(className) ? 'outline' : 'ghost';
-  return <Button variant={variant} className={cn('finance-action', className)} {...props}/>;
+  return <Button variant={variant} className={cn('finance-action', className)} {...props} onClick={event => { const form = event.currentTarget.form; onClick?.(event); if (form && event.currentTarget.type === 'submit' && !event.defaultPrevented) revealFormError(form); }}/>;
 }
 
 export function FieldInput({ error, ...props }: ComponentProps<'input'> & { error?: string }) {
@@ -32,14 +42,14 @@ export function FieldInput({ error, ...props }: ComponentProps<'input'> & { erro
   };
   if (['checkbox', 'radio', 'color', 'file', 'range'].includes(props.type ?? ''))
     return <input data-slot="native-input" {...props}/>;
-  return <><Input {...props}
+  return <span className={numeric ? 'input-control numeric-input-control' : 'input-control'}><Input {...props}
     type={numeric ? 'text' : props.type}
     inputMode={numeric ? (props.inputMode ?? 'decimal') : props.inputMode}
     defaultValue={numeric && props.defaultValue !== undefined ? formatNumericInput(String(props.defaultValue)) : props.defaultValue}
     value={numeric && props.value !== undefined ? formatNumericInput(String(props.value)) : props.value}
     aria-invalid={message ? true : props['aria-invalid']}
     aria-describedby={[props['aria-describedby'], message ? errorId : ''].filter(Boolean).join(' ') || undefined}
-    onInvalid={e => { e.preventDefault(); validate(e.currentTarget); if (!e.currentTarget.validity.valid) setValidation(e.currentTarget.validationMessage || 'مقدار معتبر وارد کن.'); props.onInvalid?.(e); }}
+    onInvalid={e => { e.preventDefault(); if(e.currentTarget.form) revealFormError(e.currentTarget.form); validate(e.currentTarget); if (!e.currentTarget.validity.valid) setValidation(e.currentTarget.validationMessage || 'مقدار معتبر وارد کن.'); props.onInvalid?.(e); }}
     onBlur={e => { validate(e.currentTarget); props.onBlur?.(e); }}
     onChange={e => {
       if (numeric) {
@@ -56,7 +66,7 @@ export function FieldInput({ error, ...props }: ComponentProps<'input'> & { erro
       } else props.onChange?.(e);
       if (numeric || validation) validate(e.currentTarget);
       else { e.currentTarget.setCustomValidity(''); setValidation(''); }
-    }}/>{message && <small id={errorId} className="field-error" role="alert">{message}</small>}</>;
+    }}/>{message && <small id={errorId} className="field-error" role="alert">{message}</small>}</span>;
 }
 
 export function FieldSelect({ className, ...props }: ComponentProps<'select'>) {

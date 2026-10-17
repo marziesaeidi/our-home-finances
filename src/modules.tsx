@@ -3,7 +3,7 @@ import { EditorForm as Editor } from './components/editor-form';
 import { Action, Surface, FieldInput } from './components/finance-ui';
 
 import { FinancialReports } from './BudgetReporting';
-import { ForeignExpenses } from './ForeignExpenses';
+import { ForeignExpenses, ForeignExpenseReports } from './ForeignExpenses';
 import { FinancialObligations } from './FinancialObligations';
 import { AssetHoldings } from './SavingsAssets';
 import { useState } from 'react';
@@ -15,12 +15,12 @@ import { migrate, validate } from './store';
 import { categories } from './data';
 import { today } from './utils';
 
-export type ModulePage = 'foreign' | 'folders' | 'assets' | 'obligations' | 'reports' | 'backup' | 'automation';
+export type ModulePage = 'foreign' | 'foreign-reports' | 'folders' | 'assets' | 'obligations' | 'reports' | 'backup' | 'automation';
 type Props = { onSelectLegacy?: (loan:Loan)=>void; page: ModulePage; data: FinanceData; viewer: Transaction['createdBy']; change: (next: FinanceData | ((d:FinanceData)=>FinanceData)) => void };
 
 export function FinanceModules(props: Props) {
   const { page } = props;
-  return page === 'foreign' ? <ForeignExpenses {...props}/> : page === 'assets' ? <AssetHoldings {...props}/> : page === 'obligations' ? <FinancialObligations {...props}/> : page === 'reports' ? <FinancialReports {...props}/> : page === 'backup' ? <Backup {...props}/> : <FinancialObligations {...props} initialTab="recurring"/>;
+  return page === 'foreign-reports' ? <ForeignExpenseReports {...props}/> : page === 'foreign' ? <ForeignExpenses {...props}/> : page === 'assets' ? <AssetHoldings {...props}/> : page === 'obligations' ? <FinancialObligations {...props}/> : page === 'reports' ? <FinancialReports {...props}/> : page === 'backup' ? <Backup {...props}/> : <FinancialObligations {...props} initialTab="recurring"/>;
 }
 export function BudgetHistory({ data, change }: { data: FinanceData; change: (d: FinanceData) => void }) {
   const [month, setMonth] = useState(periodKey(today())), [error, setError] = useState('');

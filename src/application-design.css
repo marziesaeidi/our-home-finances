@@ -409,3 +409,14 @@ small { font-size:var(--type-caption); }
 .member-photo-preview.avatar + .member-photo-actions { margin-block-start:0; }
 .member-card-grid .member-profile { padding-block-end:8px; }
 .member-photo-actions { display:grid; gap:10px; }
+
+/* Keep validation messages outside the editable amount card. */
+.input-control { display:block; min-width:0; width:100%; }
+.numeric-input-control > input { min-height:54px; padding:12px 14px; border:1px solid var(--input); border-radius:12px; background:var(--card); cursor:text; }
+.numeric-input-control > input:not([readonly]):hover { border-color:var(--primary); }
+.numeric-input-control > .field-error { margin-top:6px; }
+.amount-field.field { padding:0; background:transparent; border-radius:0; }
+.amount-field .numeric-input-control > input { min-height:76px; padding:16px; border:2px solid var(--input); border-radius:14px; background:var(--card); font-size:27px; font-weight:800; }
+.amount-field .numeric-input-control > input::placeholder { font-size:16px; font-weight:400; }
+.amount-field .numeric-input-control > input:focus { border-color:var(--primary); box-shadow:0 0 0 3px var(--secondary); }
+.field, .amount-field, .form-error, .field-error { scroll-margin-block:100px; }
