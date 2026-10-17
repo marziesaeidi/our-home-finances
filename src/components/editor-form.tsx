@@ -27,7 +27,7 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
         finally { lock.current=false; }
       }}><ComposerIntro kind={kind}/>{children}
       {error&&<p role="alert" className="form-error">{error}</p>}
-      <div className="planning-footer">{summary&&<p className="composer-receipt" aria-live="polite">{summary}</p>}<Action type="submit" className="primary full">{submitLabel}</Action><Action type="button" className="full" onClick={()=>setOpen(false)}>انصراف</Action></div>
+      <div className="planning-footer">{summary&&<p className="composer-receipt" aria-live="polite">{summary}</p>}<Action type="submit" className="primary full">{submitLabel}</Action><Action type="button" className="outline full" onClick={()=>setOpen(false)}>انصراف</Action></div>
       </form>
     </Dialog>}
   </div>;

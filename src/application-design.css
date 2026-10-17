@@ -538,7 +538,7 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .planning-options>summary:focus-visible { outline:2px solid var(--primary); outline-offset:2px; border-radius:6px; }
 .planning-footer { position:sticky; bottom:-24px; background:var(--card); padding:16px 24px; margin:20px -24px -24px; border-top:1px solid var(--border); display:grid; gap:8px; z-index:2; flex-shrink:0; }
 .planning-footer .composer-receipt { margin:0 0 4px; text-align:center; }
-.planning-footer .primary { min-height:50px; }
+.planning-footer>.finance-action { width:100%; min-height:50px; margin:0; padding:12px 16px; font-size:var(--type-body); line-height:1.5; }
 .planning-success { color:var(--primary); font-size:14px; }
 .planning-account-grid,.planning-asset-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:16px; }
 .planning-account-card { display:flex; flex-direction:column; align-items:stretch; text-align:start; gap:12px; width:100%; cursor:pointer; }
@@ -566,9 +566,10 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .folder-card p { margin:0; }
 .folder-card p:empty { display:none; }
 .folder-card .card-detail-link { margin-top:auto; }
-.asset-toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:10px; margin-block:20px; }
+.asset-toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:8px; margin-block:var(--space-4); }
 .asset-toolbar>.planning-launcher { margin:0; min-width:0; }
-.asset-toolbar>button,.asset-toolbar .planning-launch { width:100%; min-height:44px; height:auto; padding:10px 12px; gap:8px; white-space:normal; }
+.asset-toolbar>button,.asset-toolbar .planning-launch { width:100%; min-height:var(--control-height); height:var(--control-height); margin:0; padding:10px 12px; gap:8px; white-space:normal; }
+.asset-toolbar .planning-launch>span { line-height:1; }
 .folder-editor-dialog .planning-form { box-sizing:border-box; padding-inline:24px; }
 @media(max-width:650px) { .folder-editor-dialog .planning-form { padding-inline:20px; } }
 
