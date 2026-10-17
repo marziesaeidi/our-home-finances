@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
-import { ChevronLeft, FolderOpen, Gem, Wallet } from 'lucide-react';
+import { ChevronLeft, FolderOpen, Gem, Wallet, PiggyBank } from 'lucide-react';
 import { AppIcon } from './app-icon';
 import { Surface } from './finance-ui';
 
-const icons = { account: Wallet, folder: FolderOpen, asset: Gem };
+const icons = { account: Wallet, folder: FolderOpen, asset: Gem, box: PiggyBank };
 
 export function CollectionPreview({ kind, name, amount, footer, symbol, accent, onClick }: {
   kind: keyof typeof icons;

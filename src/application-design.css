@@ -672,3 +672,57 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
 .planning-form .planning-options { min-width:0; }
 .planning-form .planning-options>.field { display:flex; flex-direction:column; gap:var(--space-2); margin-block:var(--space-4); }
 .planning-form .input-control,.planning-form .input-control>input { box-sizing:border-box; width:100%; min-width:0; }
+
+/* One surface for the report disclosure, including its expanded table. */
+.financial-report .report-transactions {
+ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-control);
+ padding:0; box-shadow:none; margin-block:var(--space-4); overflow:hidden;
+}
+.financial-report .report-transactions>summary { background:transparent; border:0; border-radius:0; margin:0; }
+.financial-report .report-transactions[open]>summary { border-block-end:1px solid var(--border); }
+.financial-report .report-transactions>.muted { padding:var(--space-4); margin:0; }
+
+/* Savings uses the same collection previews and detail layout as accounts and loans. */
+.savings-box-heading { align-items:flex-start; gap:var(--space-4); }
+.savings-box-heading h1 { margin:0; }
+.savings-box-heading p { margin:var(--space-2) 0 0; }
+.savings-box-heading>.finance-action { flex-shrink:0; margin:0; }
+.savings-box-detail { display:flex; flex-direction:column; gap:var(--space-4); }
+.savings-box-detail>.ob-detail-hero { margin:0; }
+.savings-box-detail .box-actions { margin:0; gap:var(--space-3); }
+.savings-box-detail>.planning-options { margin:0; }
+.box-option-content { display:grid; gap:var(--space-4); }
+.box-option-content>p { margin:0; }
+.box-option-content>.finance-action { justify-self:start; }
+.box-plan>summary { justify-content:flex-start; flex-wrap:wrap; }
+.box-plan>summary small { margin-inline-start:auto; font-size:var(--type-caption); color:var(--muted-foreground); }
+.box-plan-form { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) auto; gap:var(--space-3); align-items:end; }
+.box-plan-form>.field { margin:0; min-width:0; }
+.box-plan-form>.field-hint { grid-column:1/-1; margin:0; }
+.box-plan-form>.finance-action { min-height:var(--control-height); }
+.savings-box-detail>.box-history { margin:0; min-width:0; }
+.savings-box-detail .box-history h2 { font-size:var(--type-body); margin-block:0 var(--space-4); }
+
+/* Shared dialog insets must remain inside the scroll area on every planning form. */
+.planning-editor-dialog.finance-dialog { --planning-inset:24px; }
+.planning-editor-dialog .modal-head { padding:var(--space-4) var(--planning-inset); }
+.planning-editor-dialog .planning-form {
+ flex:1 1 auto; min-height:0; padding:var(--planning-inset); scroll-padding:var(--planning-inset);
+}
+.planning-form>* { min-width:0; flex-shrink:0; }
+.planning-form .composer-intro { margin:0; }
+.planning-form .planning-footer {
+ bottom:calc(-1 * var(--planning-inset)); margin:0; padding:var(--space-4) 0;
+ gap:var(--space-3); width:100%; box-sizing:border-box;
+}
+.planning-form .planning-options>.finance-form { padding:0; margin-block:var(--space-4) 0; }
+.planning-form :is(fieldset,.input-control,.finance-select,.finance-textarea) { box-sizing:border-box; min-width:0; max-width:100%; }
+@media(max-width:650px) {
+ .planning-editor-dialog.finance-dialog { --planning-inset:20px; }
+ .planning-form .planning-footer { padding-bottom:calc(var(--space-4) + env(safe-area-inset-bottom,0px)); }
+ .box-plan-form { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(max-width:400px) {
+ .savings-box-heading { flex-wrap:wrap; }
+ .box-plan-form { grid-template-columns:minmax(0,1fr); }
+}
