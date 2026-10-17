@@ -449,8 +449,9 @@ small { font-size:var(--type-caption); }
 .composer-transfer-arrow { text-align:center; color:var(--composer-accent); font-size:30px; line-height:1; }
 .composer-goal-preview { display:grid; gap:8px; background:var(--composer-tint); padding:18px; border-radius:16px; color:var(--composer-accent); }
 .composer-goal-preview strong { font-size:16px; }
-.composer-fx-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-items:center; }
+.composer-fx-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-items:start; }
 .composer-fx-pair .field { min-width:0; }
+.composer-fx-pair .field > span:first-child { min-height:2.8em; display:flex; align-items:center; }
 .composer-fx-pair input { min-height:72px; font-size:23px; border-color:var(--composer-accent); background:var(--composer-tint); }
 .composer-fx-connector { color:var(--composer-accent); font-size:24px; }
 .composer-rate { padding:14px; background:var(--composer-tint); border-radius:16px; }
@@ -514,3 +515,9 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
  .composer-footer { right:245px; left:0; bottom:0; padding-bottom:calc(16px + env(safe-area-inset-bottom,0px)); }
  .app-flow .composer-footer { right:0; left:0; }
 }
+
+/* Compact categories are all visible without an extra expansion action. */
+.transaction-composer .category-picker { grid-template-columns:repeat(auto-fit,minmax(76px,1fr)); gap:6px; }
+.transaction-composer .category-picker button { min-height:64px; padding:7px 5px; gap:4px; }
+.transaction-composer .category-picker button .composer-category-label { font-size:12px; line-height:1.5; }
+.composer-date-icon { width:22px; height:22px; flex-shrink:0; color:var(--primary); }

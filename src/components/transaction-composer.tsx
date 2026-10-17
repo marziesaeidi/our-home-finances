@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ArrowUpLeft, ArrowDownRight, ArrowLeftRight, Sprout, BadgeDollarSign, CreditCard, Target, Repeat, Wallet } from 'lucide-react';
+import { ArrowUpLeft, ArrowDownRight, ArrowLeftRight, Sprout, BadgeDollarSign, CreditCard, Target, Repeat, Wallet, CalendarDays } from 'lucide-react';
 import { DateField } from '../DateField';
 import { persianDate, today } from '../utils';
 
@@ -24,5 +24,5 @@ export function ComposerFooter({children,summary}:{children:ReactNode;summary:st
  return <div className="composer-footer-space"><div className="composer-footer"><p className="composer-receipt" aria-live="polite" aria-atomic="true">{summary}</p>{children}</div></div>;
 }
 export function CompactDate({value,onChange,label='تاریخ'}:{value:string;onChange:(value:string)=>void;label?:string}){
- return <details className="composer-date"><summary><span aria-hidden="true">◷</span><span>{label}</span><strong>{value===today()?'امروز':persianDate(value)}</strong><span aria-hidden="true">⌄</span></summary><DateField label={label} value={value} onChange={onChange}/></details>;
+ return <details className="composer-date"><summary><CalendarDays className="composer-date-icon" size={22} aria-hidden="true"/><span>{label}</span><strong>{value===today()?'امروز':persianDate(value)}</strong><span aria-hidden="true">⌄</span></summary><DateField label={label} value={value} onChange={onChange}/></details>;
 }
