@@ -1,3 +1,4 @@
+import { pricePerUnit } from '../src/decimal';
 import { FinanceModules } from '../src/modules';
 import { money } from '../src/utils';
 import test from 'node:test';
@@ -113,3 +114,18 @@ test('foreign debit autofill respects account units, exact rounding and receipt 
   const d=recordForeign(fixture(),input({original:'5',debit:suggest('5','60000'),fee:'1000'}),'مرزیه');
   validate(d);assert.equal(d.accounts[0].balance,9699000);assert.equal(consumption(d.transactions[0]),301000);
 });
+
+ test('paid-total derived FX rate preserves exact debit and expense after reload',()=>{
+  assert.equal(pricePerUnit('۶٬۰۰۰٬۰۰۰','۱۰۰'),'60000');
+  const total='1000000', original='3', rate=pricePerUnit(total,original);
+  const d=recordForeign(fixture(),input({original,quote:{...quote,rate},debit:total,fee:'0',override:total,reason:'محاسبه نرخ از مبلغ پرداختی'}),'مرزیه');
+  validate(d);assert.equal(d.accounts[0].balance,9000000);assert.equal(foreignSummary(d,'مرزیه').total,1000000);
+  const storage=new Memory();saveStore(storage,d);const loaded=loadStore(storage,fixture(),at);
+  assert.equal(loaded.transactions[0].fx?.rate,rate);assert.equal(loaded.transactions[0].amount,1000000);
+ });
+ test('foreign purchase form shows only simple purchase and payment fields',()=>{
+  const html=renderToStaticMarkup(createElement(ForeignExpenses,{data:fixture(),viewer:'مرزیه',change:()=>{}}));
+  assert.match(html,/چی خریدی؟/);assert.match(html,/از کجا خریدی؟/);assert.match(html,/مبلغ پرداختی به تومان/);assert.match(html,/خودکار/);
+  assert.doesNotMatch(html,/گزینه‌های پیشرفته|نرخ رسید را ندارم|اشتراک \/ پرداخت تکرارشونده|مبلغ نهایی خرید در رسید/);
+ });
+
