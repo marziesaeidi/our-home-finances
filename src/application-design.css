@@ -575,3 +575,13 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .route-content .box-card { cursor:pointer; }
 .route-content .box-card:hover { border-color:#2563eb; }
 .route-content .box-card:focus-visible { outline:2px solid #2563eb; outline-offset:3px; }
+
+.collection-preview-icon { background:var(--muted); }
+.collection-preview .loan-preview-name small { overflow-wrap:anywhere; }
+.collection-preview .loan-preview-link { flex-shrink:0; }
+.collection-preview .loan-preview-footer>span { min-width:0; overflow-wrap:anywhere; }
+@media(max-width:380px) {
+ .collection-preview .loan-preview-top { flex-wrap:wrap; }
+ .collection-preview .loan-preview-name { flex-basis:calc(100% - 5rem); }
+ .collection-preview .loan-preview-link { margin-inline-start:auto; }
+}
