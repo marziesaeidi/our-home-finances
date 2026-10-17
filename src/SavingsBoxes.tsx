@@ -7,7 +7,7 @@ import { FlowBack } from './components/flow-navigation';
 import { FormField } from './components/form-fields';
 import { useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Plus, PiggyBank, Settings2 } from 'lucide-react';
-import { Action, FieldInput, FieldSelect, Surface } from './components/finance-ui';
+import { Action, AddAction, FieldInput, FieldSelect, Surface } from './components/finance-ui';
 import { Dialog } from './Dialog';
 import { DateField } from './DateField';
 import type { FinanceData, Goal, Transaction } from './types';
@@ -90,11 +90,11 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
    <section className="box-history"><h2>تراکنش‌های باکس</h2>{(box.openingSaved ?? 0) > 0 && <p className="soft-note">پس‌انداز قبلی: {money(box.openingSaved!)}؛ حساب این مبلغ در سوابق قدیمی مشخص نیست و از اینجا قابل برداشت نیست.</p>}{!events.length && <p className="empty">هنوز واریز یا برداشتی ثبت نشده است.</p>}{events.slice().sort((a,b) => b.date.localeCompare(a.date)).map(t => <div className="payment-row" key={t.id}><span className="box-feature-icon">{t.goalWithdrawal ? <ArrowUpFromLine size={20}/> : <ArrowDownToLine size={20}/>}</span><div className="row-main"><strong>{t.goalWithdrawal ? 'برداشت از باکس' : 'واریز به باکس'}</strong><small>{persianDate(t.date)} · {data.accounts.find(a => a.id === t.accountId)?.name} · {active(t) ? 'ثبت‌شده' : 'لغوشده'}</small></div><strong>{money(t.amount)}</strong>{active(t) && <Action className="outline" onClick={() => { try { change(reverse(data, t.id)); setError(''); } catch(e) { setError((e as Error).message); } }}>لغو ثبت</Action>}</div>)}</section>
    </Surface>
   </> : <>
-   <div className="page-head savings-box-heading"><div><h1>باکس‌های پس‌انداز</h1><p className="muted">برای هر خواسته، یک باکس بساز.</p></div><Action className="primary" onClick={() => open('create')}><Plus size={18}/> باکس جدید</Action></div>
+   <div className="page-head savings-box-heading"><div><h1>باکس‌های پس‌انداز</h1><p className="muted">برای هر خواسته، یک باکس بساز.</p></div><AddAction onClick={() => open('create')}>باکس جدید</AddAction></div>
    <Surface className="box-total"><PiggyBank size={28}/><span>مجموع پس‌انداز</span><strong>{money(sum(goals.map(g => g.saved)))}</strong></Surface>
    <div className="obligation-tabs" aria-label="وضعیت باکس‌ها"><Action aria-pressed={!showArchived} className={!showArchived ? 'primary' : 'outline'} onClick={() => setShowArchived(false)}>باکس‌ها</Action><Action aria-pressed={showArchived} className={showArchived ? 'primary' : 'outline'} onClick={() => setShowArchived(true)}>بایگانی</Action></div>
    <div className="loan-cards">{goals.filter(g => (g.status === 'archived') === showArchived).map(g => <CollectionPreview key={g.id} kind="box" name={g.name} symbol={g.icon??'🌱'} accent={g.color} amount={money(g.saved)} footer={<><span>{g.target>0?`${money(Math.max(0,g.target-g.saved))} مانده تا هدف`:'بدون مبلغ هدف'}</span><span>{g.status==='completed'?'تکمیل‌شده':g.visibility==='shared'?'مشترک':'شخصی'}</span></>} onClick={()=>{setSelected(g.id);setError('');}}/>)}</div>
-   {!goals.filter(g => (g.status === 'archived') === showArchived).length && <div className="box-empty"><PiggyBank size={48}/><h2>{showArchived ? 'باکس بایگانی‌شده‌ای نداری' : 'اولین باکست را بساز'}</h2><p>{showArchived ? 'باکس‌های بایگانی‌شده اینجا می‌آیند.' : 'مثلاً سفر، خرید خانه یا روز مبادا.'}</p>{!showArchived && <Action className="primary" onClick={() => open('create')}>ساخت باکس</Action>}</div>}
+   {!goals.filter(g => (g.status === 'archived') === showArchived).length && <div className="box-empty"><PiggyBank size={48}/><h2>{showArchived ? 'باکس بایگانی‌شده‌ای نداری' : 'اولین باکست را بساز'}</h2><p>{showArchived ? 'باکس‌های بایگانی‌شده اینجا می‌آیند.' : 'مثلاً سفر، خرید خانه یا روز مبادا.'}</p>{!showArchived && <AddAction onClick={() => open('create')}>ساخت باکس</AddAction>}</div>}
   </>)}
   {error && !panel && <p role="alert" className="form-error">{error}</p>}
   {panel && <Dialog title={heading} className="planning-editor-dialog" onClose={() => { setPanel(null); setError(''); if (createOnly) onCancel?.(); }}><form className="finance-form planning-form transaction-composer" onSubmit={e => { e.preventDefault(); submit(); }}><ComposerIntro kind={panel==='create'?'box':panel==='settings'?'box-settings':panel==='deposit'?'box-deposit':panel==='withdraw'?'box-withdraw':'goal'}/>

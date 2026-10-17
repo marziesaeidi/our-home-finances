@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { useId, useState, type ComponentProps, type ElementType } from 'react';
 import { normalizeDigits } from '../decimal';
 import { formatNumericInput, rawNumericInput } from '../input-format';
@@ -24,6 +25,11 @@ export function Action({ className = '', onClick, ...props }: ComponentProps<'bu
     : /\b(danger|plain-danger)\b/.test(className) ? 'destructive'
     : /\boutline\b/.test(className) ? 'outline' : 'ghost';
   return <Button variant={variant} className={cn('finance-action', className)} {...props} onClick={event => { const form = event.currentTarget.form; onClick?.(event); if (form && event.currentTarget.type === 'submit' && !event.defaultPrevented) revealFormError(form); }}/>;
+}
+
+/** Shared entry point for creating a record, matching the new-account action. */
+export function AddAction({ children, className, ...props }: ComponentProps<'button'>) {
+  return <Action type="button" {...props} className={cn('primary small app-add-action', className)}><Plus size={17} aria-hidden="true"/>{children}</Action>;
 }
 
 export function FieldInput({ error, ...props }: ComponentProps<'input'> & { error?: string }) {

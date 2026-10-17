@@ -4,9 +4,9 @@ import { FlowBack } from './components/flow-navigation';
 import { ComposerIntro, ComposerFooter, CompactDate } from './components/transaction-composer';
 import { FormField } from './components/form-fields';
 import { ReportCard, Metric, Empty } from './components/report-card';
-import { Action, FieldSelect, FieldInput, Surface } from './components/finance-ui';
+import { Action, AddAction, FieldSelect, FieldInput, Surface } from './components/finance-ui';
 import { useState } from 'react';
-import { Download, ChevronLeft, Plus } from 'lucide-react';
+import { Download, ChevronLeft } from 'lucide-react';
 import type { FinanceData, Transaction } from './types';
 import { currencies, nativeMoney, minorUnits } from './currencies';
 import { checked, integer, pricePerUnit } from './decimal';
@@ -80,7 +80,7 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
     <div className="composer-rate"><FormField label={`قیمت هر واحد ${currencyLabel} به تومان (خودکار)`}><FieldInput readOnly value={rate} placeholder="پس از وارد کردن مبلغ‌ها محاسبه می‌شود"/><p className="field-hint">مبلغ پرداختی به تومان ÷ مبلغ ارزی خرید. مثلاً ۶٬۰۰۰٬۰۰۰ تومان برای ۱۰۰ دلار، یعنی هر دلار ۶۰٬۰۰۰ تومان.</p></FormField></div>
     <CompactDate value={date} onChange={setDate}/>
     <FormField className="composer-account" label="حساب پرداخت"><FieldSelect required value={account} onChange={e=>setAccount(e.target.value)}><option value="" disabled>حساب پرداخت را انتخاب کن</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name}{a.currency==='IRR'?' (ریالی)':''}</option>)}</FieldSelect><p className="field-hint">همان مبلغ پرداختی از این حساب کم می‌شود؛ برای حساب ریالی، تومان به ریال تبدیل می‌شود.</p></FormField>
-    <Action type="button" className="outline small" onClick={()=>setCreatingAccount(true)}><Plus size={16}/> افزودن حساب</Action>
+    <AddAction onClick={()=>setCreatingAccount(true)}>افزودن حساب</AddAction>
     <Action type="button" className="more-toggle" aria-expanded={more} onClick={()=>setMore(!more)}>افزودن جزئیات <ChevronLeft size={16} className={more?'rotated':''}/></Action>
     {more&&<><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/>{input('یادداشت (اختیاری)',note,setNote)}</>}
     {error&&<p className="form-error" role="alert">{error}</p>}

@@ -4,7 +4,7 @@ import { FormField } from './components/form-fields';
 import { Dialog } from './Dialog';
 import { FlowBack } from './components/flow-navigation';
 
-import { Surface, FieldInput, Action, FieldSelect } from './components/finance-ui';
+import { Surface, FieldInput, Action, AddAction, FieldSelect } from './components/finance-ui';
 import { useState } from 'react';
 import type { Category, FinanceData } from './types';
 import { currencies } from './currencies';
@@ -24,7 +24,7 @@ export function Personalization({ data, change }: { data: FinanceData; change: (
       <FlowBack title={editing ? category ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی' : 'دسته‌بندی‌های درآمد و هزینه'} label={editing ? 'بازگشت به دسته‌بندی‌ها' : 'بازگشت به تنظیمات'} onBack={back}/>
       <h2>{editing ? category ? 'ویرایش دسته‌بندی' : 'افزودن دسته‌بندی' : 'دسته‌بندی‌های درآمد و هزینه'}</h2>
       {editing ? <CategoryEditor key={editingCategory} data={data} change={change} category={category} onDone={() => setEditingCategory(null)}/> : <div className="category-settings-list">
-        <Action className="primary" onClick={() => setEditingCategory('new')}>افزودن دسته‌بندی</Action>
+        <AddAction onClick={() => setEditingCategory('new')}>افزودن دسته‌بندی</AddAction>
         {data.categoryRecords.map(c => <div className="category-settings-row" key={c.id}><span><span style={{color:c.color}}><AppIcon symbol={c.icon}/></span> {c.name}{c.archived ? ' (بایگانی)' : ''}</span><Action className="outline small" aria-label={`ویرایش ${c.name}`} onClick={() => setEditingCategory(c.id)}>ویرایش</Action></div>)}
       </div>}
       <Action className="outline" onClick={back}>{editing ? 'بازگشت به دسته‌بندی‌ها' : 'بازگشت به تنظیمات'}</Action>

@@ -726,3 +726,13 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
  .savings-box-heading { flex-wrap:wrap; }
  .box-plan-form { grid-template-columns:minmax(0,1fr); }
 }
+
+/* All creation entry points follow the compact new-account button. */
+.app-add-action.finance-action { display:inline-flex; align-items:center; justify-content:center; gap:6px; width:auto; min-height:var(--control-height); padding:8px 10px; font-size:var(--type-caption); white-space:nowrap; }
+.app-add-action.finance-action>svg { width:17px; height:17px; flex-shrink:0; }
+.planning-launcher:has(>.app-add-action) { display:flex; flex-wrap:wrap; gap:var(--space-3); align-items:center; }
+.folder-selector>.app-add-action { justify-self:start; }
+.financial-report .financial-report-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--space-4); align-items:end; }
+.financial-report-toolbar>.field { margin:0; min-width:0; }
+.financial-report-toolbar>.finance-action { min-height:var(--control-height); padding-block:.75rem; font-size:var(--type-body); line-height:1.8; margin:0; }
+@media print { .financial-report .report-range-panel { display:none!important; } }

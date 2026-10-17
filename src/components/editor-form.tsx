@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Dialog } from '../Dialog';
 import { ComposerIntro } from './transaction-composer';
-import { Action } from './finance-ui';
+import { Action, AddAction } from './finance-ui';
 import { Card } from './ui/card';
 
 export function EditorForm({ title, children, onSubmit, defaultOpen = false, afterSave = 'stay', onNew, submitLabel = 'ثبت', kind, summary, openRequest = 0 }: {
@@ -17,7 +17,9 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
   const details = useRef<HTMLDetailsElement>(null);
   useEffect(() => { if (openRequest) { setOpen(true); setSaved(false); setError(''); } }, [openRequest]);
   if (kind) return <div className="planning-launcher">
-    <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}{kind!=='opening'&&<span aria-hidden="true">＋</span>}</Action>
+    {/جدید|افزودن|^ثبت (چک|وام|پرداخت دوره‌ای)/.test(title)
+      ? <AddAction onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</AddAction>
+      : <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</Action>}
     {saved&&<p className="planning-success" role="status">ذخیره شد.</p>}
     {open&&<Dialog title={title} className="planning-editor-dialog" onClose={()=>setOpen(false)}>
       <form key={epoch} className="finance-form planning-form transaction-composer" onSubmit={e=>{
