@@ -4,6 +4,20 @@ import { DateField } from '../DateField';
 import { persianDate, today } from '../utils';
 
 const themes:Record<string,{icon:string;title:string;hint:string}>={
+ 'account-edit':{icon:'◈',title:'مشخصات حسابت',hint:'نام و نوع حساب را تغییر بده؛ مانده و سابقه تراکنش‌ها حفظ می‌شوند.'},
+ 'box-settings':{icon:'🌱',title:'باکس به سلیقه تو',hint:'نام، نماد و تنظیمات نمایش باکس را تغییر بده.'},
+ 'box-plan':{icon:'🌱',title:'این ماه چقدر کنار می‌گذاری؟',hint:'برنامه پس‌انداز را مشخص کن؛ واریز پول را جدا ثبت می‌کنی.'},
+ box:{icon:'🌱',title:'برای یک خواسته، یک باکس',hint:'نام باکس را بنویس؛ مبلغ هدف و تاریخ را می‌توانی بعداً مشخص کنی.'},
+ 'box-deposit':{icon:'↙',title:'برای هدفت کنار بگذار',hint:'حساب و مبلغ را انتخاب کن؛ پول در همان حساب می‌ماند.'},
+ 'box-withdraw':{icon:'↗',title:'پول باکس را آزاد کن',hint:'مبلغی از سهم باکس را دوباره برای خرج‌کردن آزاد کن.'},
+ asset:{icon:'◈',title:'یک دارایی تازه',hint:'نوع و محل نگهداری را مشخص کن؛ دارایی قبلی را جدا از خرید تازه ثبت می‌کنی.'},
+ trade:{icon:'↔',title:'خرید یا فروش دارایی',hint:'مقدار معامله و مبلغ واقعی پرداخت یا دریافت را وارد کن.'},
+ valuation:{icon:'◈',title:'دارایی‌ات چقدر می‌ارزد؟',hint:'قیمت هر واحد را ثبت کن؛ موجودی حساب تغییر نمی‌کند.'},
+ opening:{icon:'◈',title:'اصلاح دارایی اولیه',hint:'مقدار و هزینه قبلی را با دلیل اصلاح کن؛ سابقه حفظ می‌شود.'},
+ check:{icon:'▤',title:'یک چک در برنامه',hint:'مبلغ، طرف چک و سررسید را وارد کن؛ پرداخت را پس از انجام ثبت می‌کنی.'},
+ budget:{icon:'◎',title:'سقف خرج این ماه',hint:'کل بودجه را مشخص کن؛ سقف دسته‌ها و پوشه‌ها اختیاری است.'},
+ folder:{icon:'▣',title:'هزینه‌های یک موضوع، کنار هم',hint:'یک نام انتخاب کن؛ مثلاً سفر، خانه یا یک پروژه.'},
+
  expense:{icon:'↗',title:'یک هزینه تازه',hint:'مبلغ را بنویس و بگو بابت چه چیزی پرداخت کردی.'},
  income:{icon:'↙',title:'یک درآمد تازه',hint:'مبلغ دریافتی و حسابی را که پول به آن واریز شده انتخاب کن.'},
  transfer:{icon:'↔',title:'پول را جابه‌جا کن',hint:'از کدام حساب به کدام حساب؟'},
@@ -17,7 +31,7 @@ const themes:Record<string,{icon:string;title:string;hint:string}>={
 };
 export function ComposerIntro({kind}:{kind:string}){
  const theme=themes[kind]??themes.expense;
- const Icon=({expense:ArrowUpLeft,income:ArrowDownRight,transfer:ArrowLeftRight,saving:Sprout,foreign:BadgeDollarSign,installment:CreditCard,loan:CreditCard,goal:Target,recurring:Repeat,account:Wallet} as Record<string,typeof Wallet>)[kind]??ArrowUpLeft;
+ const Icon=({box:Sprout,'box-deposit':Sprout,'box-withdraw':ArrowUpLeft,asset:Wallet,trade:ArrowLeftRight,valuation:Target,opening:Wallet,check:CreditCard,budget:Target,folder:Wallet,expense:ArrowUpLeft,income:ArrowDownRight,transfer:ArrowLeftRight,saving:Sprout,foreign:BadgeDollarSign,installment:CreditCard,loan:CreditCard,goal:Target,recurring:Repeat,account:Wallet} as Record<string,typeof Wallet>)[kind]??ArrowUpLeft;
  return <header className="composer-intro"><span className="composer-emblem" aria-hidden="true"><Icon size={26}/></span><h2>{theme.title}</h2><p>{theme.hint}</p></header>;
 }
 export function ComposerFooter({children,summary}:{children:ReactNode;summary:string}){

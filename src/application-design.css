@@ -521,3 +521,57 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .transaction-composer .category-picker button { min-height:64px; padding:7px 5px; gap:4px; }
 .transaction-composer .category-picker button .composer-category-label { font-size:12px; line-height:1.5; }
 .composer-date-icon { width:22px; height:22px; flex-shrink:0; color:var(--primary); }
+
+/* Focused planning forms share the transaction composer's visual language. */
+.planning-launcher { margin-block:16px; }
+.planning-launch { justify-content:space-between; min-height:54px; text-align:start; border:1px solid var(--border); background:var(--card); padding:14px 18px; }
+.planning-launch>span { color:var(--primary); font-size:22px; }
+.planning-editor-dialog.finance-dialog { display:flex; flex-direction:column; gap:0; padding:0; overflow:hidden; width:min(740px,calc(100vw - 40px)); max-width:none; max-height:90dvh; height:auto; border-radius:var(--radius-card); }
+.planning-editor-dialog .modal-head { padding:16px 24px; margin:0; border-bottom:1px solid var(--border); flex-shrink:0; }
+.planning-editor-dialog .planning-form { display:flex; flex-direction:column; gap:18px; overflow-y:auto; overscroll-behavior:contain; max-height:calc(90dvh - 76px); padding:24px; margin:0; width:100%; max-width:none; scroll-padding-block:24px 150px; }
+.planning-form .composer-intro { margin-bottom:12px; }
+.planning-form .field { width:100%; margin:0; }
+.planning-options { border-block-start:1px solid var(--border); width:100%; }
+.planning-options>summary { cursor:pointer; padding:16px 0; font-weight:600; min-height:50px; color:var(--foreground); }
+.planning-options[open] { display:block; }
+.planning-options>.field,.planning-options>details,.planning-options>.finance-form { margin-block:14px; }
+.planning-options>summary:focus-visible { outline:2px solid var(--primary); outline-offset:2px; border-radius:6px; }
+.planning-footer { position:sticky; bottom:-24px; background:var(--card); padding:16px 24px; margin:20px -24px -24px; border-top:1px solid var(--border); display:grid; gap:8px; z-index:2; flex-shrink:0; }
+.planning-footer .composer-receipt { margin:0 0 4px; text-align:center; }
+.planning-footer .primary { min-height:50px; }
+.planning-success { color:var(--primary); font-size:14px; }
+.planning-account-grid,.planning-asset-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:16px; }
+.planning-account-card { display:flex; flex-direction:column; align-items:stretch; text-align:start; gap:12px; width:100%; cursor:pointer; }
+.planning-account-card>strong { font-size:22px; }
+.planning-account-card>small { color:var(--muted-foreground); }
+.planning-asset-actions { display:flex; flex-wrap:wrap; gap:8px; margin-block:20px; }
+.planning-budget { display:grid; gap:16px; }
+.planning-budget h1,.planning-budget p { margin:0; }
+.account-composer { max-width:740px; margin-inline:auto; }
+@media(max-width:650px) {
+ .planning-editor-dialog.finance-dialog { inset:0; width:100vw; height:100dvh; max-height:100dvh; max-width:none; border-radius:0; transform:none!important; translate:none!important; }
+ .planning-editor-dialog .planning-form { max-height:none; flex:1; min-height:0; padding:20px; }
+ .planning-editor-dialog .modal-head { padding:16px 20px; }
+ .planning-footer { bottom:-20px; margin-inline:-20px; margin-bottom:-20px; padding:14px 20px calc(14px + env(safe-area-inset-bottom,0px)); }
+}
+@media print { .planning-launcher { display:none; } }
+
+/* Compact planning collections and visible detail affordances. */
+.route-content .card-detail-link,.route-content .loan-preview-link { color:#2563eb; font-weight:600; }
+.route-content button:is(.planning-account-card,.folder-card,.loan-preview) { cursor:pointer; transition:border-color .15s,box-shadow .15s; }
+.route-content button:is(.planning-account-card,.folder-card,.loan-preview):hover { border-color:#2563eb; box-shadow:0 2px 8px #2563eb18; }
+.route-content button:is(.planning-account-card,.folder-card,.loan-preview):focus-visible { outline:2px solid #2563eb; outline-offset:3px; }
+.route-content .folder-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:16px; align-items:start; }
+.route-content .folder-grid .folder-card { display:flex; flex-direction:column; gap:10px; padding:20px; min-height:0; margin:0; }
+.folder-card p { margin:0; }
+.folder-card p:empty { display:none; }
+.folder-card .card-detail-link { margin-top:auto; }
+.asset-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-block:20px; }
+.asset-toolbar>.planning-launcher { margin:0; flex:0 1 auto; }
+.asset-toolbar .planning-launch { width:auto; min-height:44px; padding:10px 16px; gap:14px; }
+.folder-editor-dialog .planning-form { box-sizing:border-box; padding-inline:24px; }
+@media(max-width:650px) { .asset-toolbar>* { flex:1 1 160px; } .asset-toolbar .planning-launch { width:100%; } .folder-editor-dialog .planning-form { padding-inline:20px; } }
+
+.route-content .box-card { cursor:pointer; }
+.route-content .box-card:hover { border-color:#2563eb; }
+.route-content .box-card:focus-visible { outline:2px solid #2563eb; outline-offset:3px; }
