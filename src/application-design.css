@@ -524,7 +524,7 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 
 /* Focused planning forms share the transaction composer's visual language. */
 .planning-launcher { margin-block:16px; }
-.planning-launch { justify-content:space-between; min-height:54px; text-align:start; border:1px solid var(--border); background:var(--card); padding:14px 18px; }
+.planning-launch { justify-content:center; gap:8px; min-height:54px; text-align:center; border:1px solid var(--border); background:var(--card); padding:14px 18px; }
 .planning-launch>span { color:var(--primary); font-size:22px; }
 .planning-editor-dialog.finance-dialog { display:flex; flex-direction:column; gap:0; padding:0; overflow:hidden; width:min(740px,calc(100vw - 40px)); max-width:none; max-height:90dvh; height:auto; border-radius:var(--radius-card); }
 .planning-editor-dialog .modal-head { padding:16px 24px; margin:0; border-bottom:1px solid var(--border); flex-shrink:0; }
@@ -604,7 +604,7 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 /* Equal secondary actions share spacing, sizing and alignment. */
 .asset-secondary-actions { display:grid; gap:8px; margin-block:12px; }
 .asset-secondary-actions>.asset-history-link,.asset-secondary-actions>.planning-launcher { margin:0; }
-.asset-secondary-actions .finance-action { justify-content:flex-start; min-height:54px; height:auto; padding:14px 18px; text-align:start; white-space:normal; }
+.asset-secondary-actions .finance-action { justify-content:center; min-height:54px; height:auto; padding:14px 18px; text-align:center; white-space:normal; }
 .foreign-purchases { margin-block:24px; }
 .foreign-export-table { display:none; }
 @media print {
@@ -615,3 +615,11 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
  .foreign-export-table thead { display:table-header-group; }
  .foreign-export-table tr { break-inside:avoid; }
 }
+
+.financial-report-toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; }
+.financial-report-toolbar .chips,.report-breakdown { flex-wrap:wrap; margin-block:0; }
+.financial-report .report-period { margin-block:12px; }
+.report-transactions>summary { cursor:pointer; font-weight:600; padding-block:8px; }
+.report-transactions[open]>summary { margin-bottom:16px; }
+.report-help { margin-block:16px; }
+@media print { .financial-report>.page-head .finance-action,.report-breakdown,.report-help { display:none!important; } }

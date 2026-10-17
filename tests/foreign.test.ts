@@ -22,7 +22,7 @@ test('foreign receipt retains USD, debits actual IRT and includes explicit fee o
   const d=recordForeign(fixture(),input(), 'مرزیه');validate(d);const t=d.transactions[0];
   assert.equal(t.amount,1200000);assert.equal(t.fx?.originalAmount,'20');assert.equal(t.fx?.currency,'USD');assert.equal(d.accounts[0].balance,8740000);
   assert.equal(consumption(t),1210000);
-  assert.ok(renderToStaticMarkup(createElement(FinanceModules,{page:'reports',data:d,viewer:'مرزیه',change:()=>{}})).includes(money(1260000))); assert.equal(foreignSummary(d,'مرزیه','all').total,1210000);assert.equal(foreignSummary(d,'مرزیه').usd,'20');
+  assert.ok(renderToStaticMarkup(createElement(FinanceModules,{page:'reports',data:d,viewer:'مرزیه',change:()=>{}})).includes(money(1210000))); assert.equal(foreignSummary(d,'مرزیه','all').total,1210000);assert.equal(foreignSummary(d,'مرزیه').usd,'20');
   assert.deepEqual(recordForeign(d,input(),'مرزیه'),d);
   const restored=reverse(d,t.id);validate(restored);assert.equal(restored.accounts[0].balance,10000000);assert.equal(foreignSummary(restored,'مرزیه').total,0);
 });
