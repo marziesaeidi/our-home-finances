@@ -68,7 +68,7 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
     <FormField className="composer-account" label="حساب پرداخت"><FieldSelect required value={account} onChange={e=>setAccount(e.target.value)}><option value="" disabled>حساب پرداخت را انتخاب کن</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name}{a.currency==='IRR'?' (ریالی)':''}</option>)}</FieldSelect><p className="field-hint">همان مبلغ پرداختی از این حساب کم می‌شود؛ برای حساب ریالی، تومان به ریال تبدیل می‌شود.</p></FormField>
     <Action type="button" className="outline small" onClick={()=>setCreatingAccount(true)}><Plus size={16}/> افزودن حساب</Action>
     <Action type="button" className="more-toggle" aria-expanded={more} onClick={()=>setMore(!more)}>افزودن جزئیات <ChevronLeft size={16} className={more?'rotated':''}/></Action>
-    {more&&<><FormField label="پوشه (اختیاری)"><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/></FormField>{input('یادداشت (اختیاری)',note,setNote)}</>}
+    {more&&<><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/>{input('یادداشت (اختیاری)',note,setNote)}</>}
     {error&&<p className="form-error" role="alert">{error}</p>}
     <ComposerFooter summary={rate?`${original} ${currency} · ${money(integer(paid))} از ${accounts.find(a=>a.id===account)?.name??'حساب انتخاب‌شده'}`:'مبلغ ارزی و پرداخت تومانی را وارد کن'}><Action className="primary full submit">{initial?'ذخیره تغییرات خرید':'ثبت خرید ارزی'}</Action></ComposerFooter>{initial&&<Action type="button" className="outline" onClick={cancel}>انصراف</Action>}
   </form>;

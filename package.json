@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "rates": "node server/rates.mjs",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node tests/run.mjs && node --test tests/rates.test.mjs && node --test tests/database.test.mjs",
+    "test": "node tests/run.mjs && node --test tests/*.test.mjs",
     "database": "node server/sqlite.mjs",
     "database:init": "node --input-type=module -e \"import { openDatabase } from './server/database.mjs'; const db = openDatabase(); db.close(); console.log('SQLite ready: data/khaneh.sqlite');\""
   },

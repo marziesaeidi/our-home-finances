@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { remoteEnabled } from './remote-store';
 import type { FinanceData } from './types';
 import { Action, Surface } from './components/finance-ui';
 
 export function DatabasePanel({ data }: { data: FinanceData }) {
   const [busy, setBusy] = useState(false), [message, setMessage] = useState('');
+  if(remoteEnabled())return <Surface as="section" className="card module-card"><h2>ذخیره در دیتابیس</h2><p>تغییرات به‌صورت خودکار روی سرور ذخیره می‌شوند. پایان ثبت پس از تأیید سرور مشخص می‌شود.</p></Surface>;
   async function save() {
     setBusy(true); setMessage('');
     try {

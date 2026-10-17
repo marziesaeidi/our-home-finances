@@ -39,6 +39,14 @@ export function openDatabase(filename = resolve('data/khaneh.sqlite')) {
     },
     addOwnerKey(token) { db.prepare('INSERT INTO owner_keys VALUES(?)').run(token); },
     isOwnerKey(token) { return !!db.prepare('SELECT token FROM owner_keys WHERE token = ?').get(token); },
+    emailMember(email, ownerEmail) {
+      const current=this.read();if(!current)return null;
+      const members=JSON.parse(current.payload).settings.members ?? [];
+      const normalized=email.trim().toLowerCase();
+      if(ownerEmail && normalized===ownerEmail.trim().toLowerCase())return members.find(m=>m.role==='owner'&&!m.removed);
+      const request=db.prepare("SELECT member_id FROM access_requests WHERE lower(email)=? AND status='approved' ORDER BY rowid DESC LIMIT 1").get(normalized);
+      return request ? members.find(m=>m.id===request.member_id&&!m.removed) : null;
+    },
     requestAccess(invitation, name, email, token) {
       const invite = db.prepare('SELECT * FROM household_invitations WHERE token = ?').get(invitation);
       if (!invite || invite.used || invite.expires_at < Date.now()) throw new Error('لینک دعوت معتبر نیست یا قبلاً استفاده شده است.');

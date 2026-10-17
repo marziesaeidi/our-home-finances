@@ -11,6 +11,8 @@ function revealFormError(form: HTMLFormElement) {
     const invalid = form.querySelector<HTMLElement>(':invalid');
     const message = form.querySelector<HTMLElement>('.field-error, .form-error, [role="alert"]');
     if (!invalid && !message) return;
+    let parent = (invalid ?? message)?.parentElement;
+    while(parent){ if(parent instanceof HTMLDetailsElement) parent.open=true; parent=parent.parentElement; }
     invalid?.focus({ preventScroll: true });
     (invalid?.closest('label, fieldset') ?? message ?? invalid)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });

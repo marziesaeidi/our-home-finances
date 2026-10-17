@@ -1,8 +1,8 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { FieldInput, FieldSelect } from './finance-ui';
 
-export function FormField({ label, children }: { label: ReactNode; children: ReactNode }) {
-  return <label className="field"><span>{label}</span>{children}</label>;
+export function FormField({ label, children, className = '' }: { label: ReactNode; children: ReactNode; className?: string }) {
+  return <label className={`field ${className}`}><span>{label}</span>{children}</label>;
 }
 
 export function LabeledInput({ label, value, onValueChange, optional = false, required, ...props }: Omit<ComponentProps<typeof FieldInput>, 'onChange'> & { label: string; onValueChange?: (value: string) => void; optional?: boolean }) {
