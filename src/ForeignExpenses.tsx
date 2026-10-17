@@ -1,7 +1,9 @@
+import { ComposerIntro, ComposerFooter, CompactDate } from './components/transaction-composer';
 import { FormField } from './components/form-fields';
 import { ReportCard, Metric, Empty } from './components/report-card';
 import { Action, FieldSelect, FieldInput, Surface } from './components/finance-ui';
 import { useState } from 'react';
+import { ChevronLeft, Plus } from 'lucide-react';
 import type { FinanceData, Transaction } from './types';
 import { currencies, nativeMoney, minorUnits } from './currencies';
 import { checked, integer, pricePerUnit } from './decimal';
@@ -11,13 +13,13 @@ import type { ForeignInput } from './foreignLedger';
 import type { RateQuote } from './exchangeRates';
 import { today, money, persianDate } from './utils';
 import { periodKey } from './calendar';
-import { DateField } from './DateField';
 import { FolderSelector } from './FolderProjects';
+import { ComposerAccountForm } from './components/composer-account-form';
 type Props={data:FinanceData;viewer:Transaction['createdBy'];change:(next:FinanceData|((d:FinanceData)=>FinanceData))=>void};
 export function ForeignExpenses(props:Props){
   const [formKey,setFormKey]=useState(0),[message,setMessage]=useState('');
   return <><div className="page-head"><div><h1>ثبت خرید ارزی</h1><p>جزئیات خرید و مبلغ پرداختی را وارد کن.</p></div></div>
-    <Surface as="section" className="card add-form-card"><ForeignExpenseForm key={formKey} {...props} saved={()=>{setFormKey(k=>k+1);setMessage('خرید ارزی ثبت شد و مبلغ پرداختی از حساب کم شد.')}} cancel={()=>{}}/>{message&&<p role="status">{message}</p>}</Surface>
+    <Surface as="section" className="card add-form-card transaction-composer composer-foreign"><ComposerIntro kind="foreign"/><ForeignExpenseForm key={formKey} {...props} saved={()=>{setFormKey(k=>k+1);setMessage('خرید ارزی ثبت شد و مبلغ پرداختی از حساب کم شد.')}} cancel={()=>{}}/>{message&&<p role="status">{message}</p>}</Surface>
   </>;
 }
 export function ForeignExpenseReports(props:Props){
@@ -36,12 +38,15 @@ export function ForeignExpenseReports(props:Props){
 }
 function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{initial?:Transaction;saved:()=>void;cancel:()=>void}){
   const f=initial?.foreignExpense;
+  const [more,setMore]=useState(false);
+  const [creatingAccount,setCreatingAccount]=useState(false);
   const accounts=data.accounts.filter(a=>allowed(a,viewer)&&['IRT','IRR'].includes(a.currency??'IRT'));
   const [title,setTitle]=useState(initial?.title??''),[merchant,setMerchant]=useState(f?.merchant??''),[currency,setCurrency]=useState(initial?.fx?.currency??data.settings.preferredCurrency??'USD'),[original,setOriginal]=useState(initial?.fx?.originalAmount??''),[paid,setPaid]=useState(initial?String(initial.amount+(f?.feeToman??0)):''),[date,setDate]=useState(initial?.date??today()),[account,setAccount]=useState(initial?.accountId??accounts[0]?.id??''),[category]=useState(initial?.category??'سایر'),[folderId,setFolderId]=useState(initial?.folderId??''),[note,setNote]=useState(initial?.note??''),[error,setError]=useState(''),[requestId]=useState(()=>crypto.randomUUID());
   let rate='';try{integer(paid);if(minorUnits(original,currency,data.currencyDefinitions)>0)rate=pricePerUnit(paid,original);}catch{/* Show no rate until both amounts are valid. */}
   const currencyLabel=[...currencies,...data.currencyDefinitions??[]].find(c=>c.code===currency)?.label??currency;
   const input=(label:string,value:string,set:(s:string)=>void,required=false,numeric=false)=><FormField label={label}><FieldInput required={required} value={value} onChange={e=>set(e.target.value)} inputMode={numeric?'decimal':undefined}/></FormField>;
-  return <form className="finance-form" onSubmit={e=>{e.preventDefault();setError('');try{
+  if(creatingAccount)return <ComposerAccountForm viewer={viewer} onCancel={()=>setCreatingAccount(false)} onSave={newAccount=>{change(d=>({...d,accounts:[newAccount,...d.accounts]}));setAccount(newAccount.id);setCreatingAccount(false)}}/>;
+  return <form className="finance-form foreign-composer-form" onSubmit={e=>{e.preventDefault();setError('');try{
     if(!title.trim()||!merchant.trim())throw new Error('نام خرید و محل خرید را وارد کن.');
     if(date>today())throw new Error('تاریخ خرید نباید در آینده باشد.');
     const total=integer(paid);
@@ -52,18 +57,19 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
     const input:ForeignInput={id:requestId,title,merchant,currency,original,date,quote,accountId:account,debit:String(paymentAccount.currency==='IRR'?checked(BigInt(total)*10n):total),fee:'0',paymentRate:'',category,folderId:folderId||undefined,note,override:String(total),reason:initial?'اصلاح جزئیات خرید و محاسبه نرخ از مبلغ پرداختی':'محاسبه نرخ از مبلغ پرداختی',subscription:f?.subscription??false,correctsId:initial?.id};
     recordForeign(data,input,viewer);change(d=>recordForeign(d,input,viewer));saved();
   }catch(err){setError((err as Error).message)}}}>
-    <p className="field-hint">مبلغ ارزی خرید و کل مبلغی را که به تومان پرداخت کرده‌ای وارد کن؛ قیمت هر واحد ارز خودکار حساب می‌شود.</p>
+
     {input('چی خریدی؟',title,setTitle,true)}
     {input('از کجا خریدی؟',merchant,setMerchant,true)}
-    <FormField label="با چه ارزی خریدی؟"><FieldSelect value={currency} onChange={e=>setCurrency(e.target.value)}>{[...currencies,...data.currencyDefinitions??[]].filter(c=>c.code!=='IRT').map(c=><option key={c.code} value={c.code}>{c.label} · {c.code}</option>)}</FieldSelect></FormField>
-    {input(`مبلغ خرید به ${currencyLabel}`,original,setOriginal,true,true)}
-    {input('مبلغ پرداختی به تومان',paid,setPaid,true,true)}
-    <FormField label={`قیمت هر واحد ${currencyLabel} به تومان (خودکار)`}><FieldInput readOnly value={rate} placeholder="پس از وارد کردن مبلغ‌ها محاسبه می‌شود"/><p className="field-hint">مبلغ پرداختی به تومان ÷ مبلغ ارزی خرید. مثلاً ۶٬۰۰۰٬۰۰۰ تومان برای ۱۰۰ دلار، یعنی هر دلار ۶۰٬۰۰۰ تومان.</p></FormField>
-    <DateField value={date} onChange={setDate}/>
-    <FormField label="از کدام حساب پرداخت کردی؟"><FieldSelect required value={account} onChange={e=>setAccount(e.target.value)}><option value="" disabled>حساب پرداخت را انتخاب کن</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name}{a.currency==='IRR'?' (ریالی)':''}</option>)}</FieldSelect><p className="field-hint">همان مبلغ پرداختی از این حساب کم می‌شود؛ برای حساب ریالی، تومان به ریال تبدیل می‌شود.</p></FormField>
-    <FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/>
-    {input('یادداشت (اختیاری)',note,setNote)}
+    <FormField className="composer-account" label="ارز خرید"><FieldSelect value={currency} onChange={e=>setCurrency(e.target.value)}>{[...currencies,...data.currencyDefinitions??[]].filter(c=>c.code!=='IRT').map(c=><option key={c.code} value={c.code}>{c.label} · {c.code}</option>)}</FieldSelect></FormField>
+    <div className="composer-fx-pair">{input(`مبلغ خرید به ${currencyLabel}`,original,setOriginal,true,true)}
+    {input('مبلغ پرداختی به تومان',paid,setPaid,true,true)}</div>
+    <div className="composer-rate"><FormField label={`قیمت هر واحد ${currencyLabel} به تومان (خودکار)`}><FieldInput readOnly value={rate} placeholder="پس از وارد کردن مبلغ‌ها محاسبه می‌شود"/><p className="field-hint">مبلغ پرداختی به تومان ÷ مبلغ ارزی خرید. مثلاً ۶٬۰۰۰٬۰۰۰ تومان برای ۱۰۰ دلار، یعنی هر دلار ۶۰٬۰۰۰ تومان.</p></FormField></div>
+    <CompactDate value={date} onChange={setDate}/>
+    <FormField className="composer-account" label="حساب پرداخت"><FieldSelect required value={account} onChange={e=>setAccount(e.target.value)}><option value="" disabled>حساب پرداخت را انتخاب کن</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name}{a.currency==='IRR'?' (ریالی)':''}</option>)}</FieldSelect><p className="field-hint">همان مبلغ پرداختی از این حساب کم می‌شود؛ برای حساب ریالی، تومان به ریال تبدیل می‌شود.</p></FormField>
+    <Action type="button" className="outline small" onClick={()=>setCreatingAccount(true)}><Plus size={16}/> افزودن حساب</Action>
+    <Action type="button" className="more-toggle" aria-expanded={more} onClick={()=>setMore(!more)}>افزودن جزئیات <ChevronLeft size={16} className={more?'rotated':''}/></Action>
+    {more&&<><FormField label="پوشه (اختیاری)"><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/></FormField>{input('یادداشت (اختیاری)',note,setNote)}</>}
     {error&&<p className="form-error" role="alert">{error}</p>}
-    <Action className="primary">{initial?'ذخیره تغییرات خرید':'ثبت خرید ارزی'}</Action>{initial&&<Action type="button" className="outline" onClick={cancel}>انصراف</Action>}
+    <ComposerFooter summary={rate?`${original} ${currency} · ${money(integer(paid))} از ${accounts.find(a=>a.id===account)?.name??'حساب انتخاب‌شده'}`:'مبلغ ارزی و پرداخت تومانی را وارد کن'}><Action className="primary full submit">{initial?'ذخیره تغییرات خرید':'ثبت خرید ارزی'}</Action></ComposerFooter>{initial&&<Action type="button" className="outline" onClick={cancel}>انصراف</Action>}
   </form>;
 }
