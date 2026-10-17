@@ -600,3 +600,18 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .folder-editor-dialog .planning-form { flex:1; min-height:0; }
 .folder-editor-dialog .planning-footer { margin-top:auto; }
 @media(max-width:650px) { .folder-editor-dialog.finance-dialog { height:100dvh; } }
+
+/* Equal secondary actions share spacing, sizing and alignment. */
+.asset-secondary-actions { display:grid; gap:8px; margin-block:12px; }
+.asset-secondary-actions>.asset-history-link,.asset-secondary-actions>.planning-launcher { margin:0; }
+.asset-secondary-actions .finance-action { justify-content:flex-start; min-height:54px; height:auto; padding:14px 18px; text-align:start; white-space:normal; }
+.foreign-purchases { margin-block:24px; }
+.foreign-export-table { display:none; }
+@media print {
+ .foreign-report-page>* { display:none!important; }
+ .foreign-report-page>.page-head,.foreign-report-page>.foreign-export-table { display:block!important; }
+ .foreign-export-table table { width:100%; border-collapse:collapse; font-size:10px; }
+ .foreign-export-table th,.foreign-export-table td { border:1px solid #aaa; padding:6px; text-align:start; overflow-wrap:anywhere; }
+ .foreign-export-table thead { display:table-header-group; }
+ .foreign-export-table tr { break-inside:avoid; }
+}

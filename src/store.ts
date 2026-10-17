@@ -82,6 +82,15 @@ export function validate(value: unknown): asserts value is FinanceData {
     decimal(a.quantity); decimal(a.openingQuantity);
     if (a.cost < 0 || a.openingCost < 0 || !['gold','crypto','currency','other'].includes(a.kind) || a.quote && (decimal(a.quote).units <= 0n || !a.quoteDate || !isoDay(a.quoteDate))) throw new Error('دارایی یا قیمت معتبر نیست.');
     if (a.quote) converted(a.quantity,a.quote);
+    if (a.quoteHistory !== undefined) {
+      if (!Array.isArray(a.quoteHistory)) throw new Error('سابقه قیمت معتبر نیست.');
+      for (const q of a.quoteHistory) {
+        if (!q || typeof q.price !== 'string' || decimal(q.price).units <= 0n || !Number.isFinite(Date.parse(q.at)) || !['manual','provider'].includes(q.mode) || typeof q.source !== 'string') throw new Error('سابقه قیمت معتبر نیست.');
+        if ((q.quantity === undefined) !== (q.cost === undefined)) throw new Error('اطلاعات ارزش تاریخی ناقص است.');
+        if (q.quantity !== undefined) { decimal(q.quantity); converted(q.quantity,q.price); }
+        if (q.cost !== undefined && (!Number.isSafeInteger(q.cost) || q.cost < 0)) throw new Error('هزینه تاریخی معتبر نیست.');
+      }
+    }
   }
   for (const o of data.obligations) if (o.amount <= 0 || !isoDay(o.date) || !['pending','cleared','canceled','bounced'].includes(o.status) || !data.accounts.some(a => a.id === o.accountId)) throw new Error('تعهد معتبر نیست.');
   if (!['light','dark'].includes(data.settings.theme) || typeof data.settings.name !== 'string' || data.settings.currency !== 'IRT' || data.settings.timezone !== 'Asia/Tehran') throw new Error('تنظیمات معتبر نیست.');

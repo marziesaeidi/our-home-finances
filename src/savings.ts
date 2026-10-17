@@ -12,7 +12,16 @@ export function setValuation(data: FinanceData, assetId: string, quote: Valuatio
   if (!a || quote.identifier !== (a.identifier ?? a.name) || quote.unit !== a.unit || quote.purity !== a.purity || quote.currency !== 'IRT') throw new Error('واحد، نماد یا عیار قیمت با دارایی یکسان نیست.');
   if (decimal(quote.price).units <= 0n || !Number.isFinite(Date.parse(quote.timestamp)) || !quote.source.trim() || Date.parse(quote.timestamp) > Date.now()) throw new Error('قیمت، زمان و منبع معتبر لازم است.');
   converted(a.quantity, quote.price);
-  return { ...data, assets: data.assets.map(x => x.id === a.id ? { ...x, quote: quote.price, quoteDate: quote.timestamp.slice(0,10), quoteTimestamp: quote.timestamp, quoteSource: quote.source, quoteMode: mode, quoteHistory: [...(x.quoteHistory ?? []), { price: quote.price, at: quote.timestamp, source: quote.source, mode }] } : x) };
+  const day = quote.timestamp.slice(0,10);
+  let quantity = a.openingQuantity, cost = a.openingCost;
+  const known = !!a.acquisitionDate && a.acquisitionDate <= day;
+  if (known) for (const t of data.transactions.filter(t => active(t) && t.assetId === a.id && t.date <= day).reverse().sort((a,b) => a.date.localeCompare(b.date))) {
+    if (t.type === 'asset-buy') { quantity = quantityAdd(quantity,t.quantity!); cost = add(cost,t.amount); }
+    else if (t.type === 'asset-sell') { const basis = proportional(cost,t.quantity!,quantity); quantity = quantityAdd(quantity,t.quantity!,true); cost = add(cost,-basis); }
+  }
+  const snapshot = known ? { quantity, cost } : day === new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Tehran'}) ? { quantity: a.quantity, cost: a.cost } : {};
+  const latest = !a.quoteTimestamp || quote.timestamp >= a.quoteTimestamp;
+  return { ...data, assets: data.assets.map(x => x.id === a.id ? { ...x, ...(latest ? {quote: quote.price, quoteDate: day, quoteTimestamp: quote.timestamp, quoteSource: quote.source, quoteMode: mode} : {}), quoteHistory: [...(x.quoteHistory ?? []), { price: quote.price, at: quote.timestamp, source: quote.source, mode, ...snapshot, recordedAt: new Date().toISOString() }] } : x) };
 }
 export const staleValuation = (a: Asset, now = Date.now()) => !a.quoteTimestamp || now - Date.parse(a.quoteTimestamp) > 86400000;
 export function saveGoal(data: FinanceData, goal: Goal): FinanceData {

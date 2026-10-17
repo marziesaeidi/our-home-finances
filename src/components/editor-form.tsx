@@ -17,7 +17,7 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
   const details = useRef<HTMLDetailsElement>(null);
   useEffect(() => { if (openRequest) { setOpen(true); setSaved(false); setError(''); } }, [openRequest]);
   if (kind) return <div className="planning-launcher">
-    <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}<span aria-hidden="true">＋</span></Action>
+    <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}{kind!=='opening'&&<span aria-hidden="true">＋</span>}</Action>
     {saved&&<p className="planning-success" role="status">ذخیره شد.</p>}
     {open&&<Dialog title={title} className="planning-editor-dialog" onClose={()=>setOpen(false)}>
       <form key={epoch} className="finance-form planning-form transaction-composer" onSubmit={e=>{

@@ -1,3 +1,4 @@
+import './asset-history.test';
 import './household.test';
 import { deleteCategory } from '../src/personalization';
 import './reporting.test';
@@ -210,7 +211,7 @@ test('manual valuations preserve timestamps and history, reject mismatched purit
  const quote={identifier:'GOLD',unit:'گرم',purity:'18K',price:'300',currency:'IRT' as const,timestamp:at,source:'ورود دستی'};
  d=setValuation(d,'gold',quote,'manual');assert.equal(converted(d.assets[0].quantity,d.assets[0].quote!),600);assert.equal(d.assets[0].cost,400);assert.equal(balance(d,'a'),600);assert.equal(d.assets[0].quoteMode,'manual');assert.equal(staleValuation(d.assets[0]),false);
  assert.throws(()=>setValuation(d,'gold',{...quote,purity:'24K'},'manual'));assert.throws(()=>setValuation(d,'gold',{...quote,timestamp:'2027-01-01T00:00:00Z'},'provider'));
- d=setValuation(d,'gold',{...quote,price:'250',timestamp:'2026-10-01T00:00:00Z'},'manual');assert.equal(staleValuation(d.assets[0]),true);assert.equal(d.assets[0].quoteHistory!.length,2);validate(d);
+ d=setValuation(d,'gold',{...quote,price:'250',timestamp:'2026-10-01T00:00:00Z'},'manual');assert.equal(staleValuation(d.assets[0]),false);assert.equal(d.assets[0].quote,'300');assert.equal(d.assets[0].quoteHistory!.length,2);validate(d);
 });
 test('unpriced assets remain unavailable and corrupted holding projections are rejected',()=>{
  const d=savingsAssetFixture();assert.equal(savingsSummary(d,'مرزیه','1405-07').missing,1);assert.throws(()=>validate({...d,assets:d.assets.map(a=>({...a,quantity:'10'}))}));
