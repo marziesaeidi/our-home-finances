@@ -566,11 +566,11 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .folder-card p { margin:0; }
 .folder-card p:empty { display:none; }
 .folder-card .card-detail-link { margin-top:auto; }
-.asset-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-block:20px; }
-.asset-toolbar>.planning-launcher { margin:0; flex:0 1 auto; }
-.asset-toolbar .planning-launch { width:auto; min-height:44px; padding:10px 16px; gap:14px; }
+.asset-toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:10px; margin-block:20px; }
+.asset-toolbar>.planning-launcher { margin:0; min-width:0; }
+.asset-toolbar>button,.asset-toolbar .planning-launch { width:100%; min-height:44px; height:auto; padding:10px 12px; gap:8px; white-space:normal; }
 .folder-editor-dialog .planning-form { box-sizing:border-box; padding-inline:24px; }
-@media(max-width:650px) { .asset-toolbar>* { flex:1 1 160px; } .asset-toolbar .planning-launch { width:100%; } .folder-editor-dialog .planning-form { padding-inline:20px; } }
+@media(max-width:650px) { .folder-editor-dialog .planning-form { padding-inline:20px; } }
 
 .route-content .box-card { cursor:pointer; }
 .route-content .box-card:hover { border-color:#2563eb; }
