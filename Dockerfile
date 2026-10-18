@@ -3,8 +3,7 @@ FROM node:24-slim
 
 WORKDIR /app
 
-# vite and esbuild are needed at runtime: vite preview serves the app and
-# the database server bundles src/store.ts with esbuild on startup.
+# esbuild is needed at runtime: the server bundles src/store.ts's validator on startup.
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -19,4 +18,4 @@ ENV NODE_ENV=production
 
 EXPOSE 4173
 
-CMD ["sh", "./docker/start.sh"]
+CMD ["node", "server/app.mjs"]

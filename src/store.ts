@@ -166,3 +166,10 @@ export function saveStore(storage: StorageLike, data: FinanceData, expected?: Fi
   storage.setItem(STORE_KEY, JSON.stringify(data));
 }
 
+// A new personal space or household starts empty, owned by the account that created it.
+export function createSpaceData(name: string, owner: { id: string; name: string }, at: string): FinanceData {
+  const data = migrate({ transactions: [], accounts: [], loans: [], goals: [], recurring: [], budget: { total: 0, categories: {} } }, at);
+  data.settings = { ...data.settings, name, members: [{ id: owner.id, name: owner.name, role: 'owner' }] };
+  data.migrationWarnings = [];
+  validate(data); return data;
+}

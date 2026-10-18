@@ -8,7 +8,7 @@ import { Dialog } from './Dialog';
 import type { FinanceData, HouseholdMember } from './types';
 
 import { membersOf } from './household-access';
-import { remoteEnabled, remoteRequest } from './remote-store';
+import { activeSpace, remoteRequest } from './remote-store';
 export function Household({data,viewer,change}:{data:FinanceData;viewer:string;change:(fn:(d:FinanceData)=>FinanceData)=>void}) {
  const [editingName,setEditingName]=useState<HouseholdMember|null>(null),[name,setName]=useState(''),[inviteLink,setInviteLink]=useState(''),[inviting,setInviting]=useState(false),[message,setMessage]=useState(''),[removing,setRemoving]=useState<HouseholdMember|null>(null);
  const [editingPhoto,setEditingPhoto]=useState<HouseholdMember|null>(null);
@@ -17,26 +17,8 @@ export function Household({data,viewer,change}:{data:FinanceData;viewer:string;c
  function update(fn:(members:HouseholdMember[])=>HouseholdMember[]) { try { change(d=>({...d,settings:{...d.settings,members:fn(membersOf(d))}}));setMessage('تغییرات ذخیره شد.'); } catch(e) {setMessage((e as Error).message);} }
  async function createInvitation() {
   setInviting(true);setMessage('');setInviteLink('');
-  try {
-   if(remoteEnabled()){
-    const result=await remoteRequest('invite');
-    const url=new URL(result.publicOrigin||location.href);url.hash='';url.searchParams.set('invite',result.token);
-    setInviteLink(url.href);setMessage('لینک دعوت ساخته شد.');return;
-   }
-   for(let attempt=0;attempt<3;attempt++){
-    const snapshot=await fetch('/api/database',{cache:'no-store'});
-    if(!snapshot.ok)throw new Error('سرویس دعوت در دسترس نیست.');
-    const {revision}=await snapshot.json();
-    const response=await fetch('/api/database/invitations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data,viewer,revision})});
-    const result=await response.json();
-    if(response.status===409&&attempt<2)continue;
-    if(!response.ok)throw new Error(result.error||'ساخت لینک انجام نشد.');
-    localStorage.setItem('khaneh-owner-key',result.ownerKey);
-    if(JSON.stringify(membersOf(data))!==JSON.stringify(result.members))change(d=>({...d,settings:{...d.settings,members:result.members}}));
-    const url=new URL(result.publicOrigin||location.href);url.hash='';url.searchParams.set('invite',result.token);
-    setInviteLink(url.href);setMessage('لینک دعوت ساخته شد.');return;
-   }
-  }catch(e){setMessage(e instanceof Error?e.message:'ساخت لینک انجام نشد.');}
+  try { const result=await remoteRequest('invitations');setInviteLink(result.url);setMessage('لینک دعوت ساخته شد.'); }
+  catch(e){setMessage(e instanceof Error?e.message:'ساخت لینک انجام نشد.');}
   finally{setInviting(false);}
  }
  async function photo(member:HouseholdMember,file?:File) {
@@ -54,12 +36,12 @@ export function Household({data,viewer,change}:{data:FinanceData;viewer:string;c
  }
  return <><div className="page-head"><div><h1>فضای مشترک</h1><p>اعضا و دسترسی‌های فضای مالی را مدیریت کن.</p></div></div>
  <Surface as="section" className="card module-card collection-card household-summary"><span className="navigation-card-icon"><Users/></span><div><h2>{data.settings.name}</h2><p>{members.filter(m=>!m.removed).length.toLocaleString('fa-IR')} عضو · حساب‌ها و برنامه‌های مشترک در یک جا</p></div></Surface>
- <AccessRequests owner={owner}/><div className="section-heading"><h2>اعضای فضای مشترک</h2>{owner&&!remoteEnabled()&&<Action className="outline small" onClick={async()=>{try{const response=await fetch('/api/database',{cache:'no-store'});if(!response.ok)throw new Error('سرویس دیتابیس در دسترس نیست.');const result=await response.json();if(!result.data)throw new Error('هنوز دعوتی در دیتابیس ثبت نشده است.');const remote=membersOf(result.data);if(!remote.some(m=>m.id===viewer&&m.role==='owner'&&!m.removed))throw new Error('فضای دیتابیس با این مرورگر یکسان نیست.');update(rows=>[...rows,...remote.filter(m=>!rows.some(row=>row.id===m.id))]);}catch(e){setMessage(e instanceof Error?e.message:'دریافت اعضا انجام نشد.');}}}>دریافت اعضای دعوت‌شده</Action>}</div><div className="member-card-grid">{members.filter(m=>!m.removed).map(m=><Surface as="section" className="card module-card collection-card" key={m.id}><div className="member-profile"><button type="button" className="avatar member-avatar-button" disabled={!owner&&viewer!==m.id} aria-label={`ویرایش عکس ${m.name}`} onClick={()=>setEditingPhoto(m)}>{m.avatar?<img src={m.avatar} alt=""/>:m.name.slice(0,1)}{(owner||viewer===m.id)&&<span className="member-avatar-camera"><Camera size={14}/></span>}</button><div><h3>{viewer===m.id?<button type="button" className="member-name-button" aria-label="ویرایش نام" onClick={()=>{setEditingName(m);setName(m.name);}}>{m.name}<Pencil size={15}/></button>:m.name}</h3><small>{m.role==='owner'?'مالک':m.role==='reader'?'فقط مشاهده':'ثبت و ویرایش'}</small></div></div>
+ <AccessRequests owner={owner}/><div className="section-heading"><h2>اعضای فضای مشترک</h2></div><div className="member-card-grid">{members.filter(m=>!m.removed).map(m=><Surface as="section" className="card module-card collection-card" key={m.id}><div className="member-profile"><button type="button" className="avatar member-avatar-button" disabled={!owner&&viewer!==m.id} aria-label={`ویرایش عکس ${m.name}`} onClick={()=>setEditingPhoto(m)}>{m.avatar?<img src={m.avatar} alt=""/>:m.name.slice(0,1)}{(owner||viewer===m.id)&&<span className="member-avatar-camera"><Camera size={14}/></span>}</button><div><h3>{viewer===m.id?<button type="button" className="member-name-button" aria-label="ویرایش نام" onClick={()=>{setEditingName(m);setName(m.name);}}>{m.name}<Pencil size={15}/></button>:m.name}</h3><small>{m.role==='owner'?'مالک':m.role==='reader'?'فقط مشاهده':'ثبت و ویرایش'}</small></div></div>
  <MemberCalendarEmail member={m} email={m.calendarEmail ?? (m.role==='owner' ? data.settings.calendarEmail : undefined)} editable={owner||viewer===m.id} save={email=>change(d=>({...d,settings:{...d.settings,members:membersOf(d).map(row=>row.id===m.id?{...row,calendarEmail:email}:row)}}))}/>{viewer===m.id&&<div id="member-calendar-connection"/>}
  {owner&&m.role!=='owner'&&<><FormField label="دسترسی"><FieldSelect value={m.role} onChange={e=>update(rows=>rows.map(row=>row.id===m.id?{...row,role:e.target.value as 'editor'|'reader'}:row))}><option value="editor">ثبت و ویرایش</option><option value="reader">فقط مشاهده</option></FieldSelect></FormField><Action className="danger" onClick={()=>setRemoving(m)}>حذف عضو</Action></>}
  </Surface>)}</div>
- {owner&&<DatabasePanel data={data}/> }
- {owner&&<Surface as="section" className="card module-card collection-card"><h2>دعوت عضو</h2><p>لینک دعوت را بفرست؛ عضو جدید نام و ایمیلش را می‌فرستد و تنها پس از تأیید تو می‌تواند وارد شود. لینک یک بار مصرف است و تا ۷ روز اعتبار دارد.</p><AddAction disabled={inviting} onClick={createInvitation}>ساخت لینک دعوت</AddAction>{inviteLink&&<><FormField label="لینک دعوت"><FieldInput readOnly value={inviteLink} onFocus={e=>e.target.select()}/></FormField><Action className="outline" onClick={async()=>{try{await navigator.clipboard.writeText(inviteLink);setMessage('لینک کپی شد.');}catch{setMessage('لینک را از کادر بالا کپی کن.');}}}>کپی لینک</Action></>}<p className="field-hint">تغییرات پس از تأیید سرور ذخیره می‌شوند و اعضای تأییدشده آخرین اطلاعات فضای مشترک را دریافت می‌کنند.</p></Surface>}
+ {owner&&<DatabasePanel/>}
+ {owner&&activeSpace()?.kind==='household'&&<Surface as="section" className="card module-card collection-card"><h2>دعوت عضو</h2><p>لینک دعوت را بفرست؛ عضو جدید پس از ورود یا ثبت‌نام درخواست می‌فرستد و تنها پس از تأیید تو می‌تواند وارد شود. لینک یک بار مصرف است و تا ۷ روز اعتبار دارد.</p><AddAction disabled={inviting} onClick={createInvitation}>ساخت لینک دعوت</AddAction>{inviteLink&&<><FormField label="لینک دعوت"><FieldInput readOnly value={inviteLink} onFocus={e=>e.target.select()}/></FormField><Action className="outline" onClick={async()=>{try{await navigator.clipboard.writeText(inviteLink);setMessage('لینک کپی شد.');}catch{setMessage('لینک را از کادر بالا کپی کن.');}}}>کپی لینک</Action></>}<p className="field-hint">تغییرات پس از تأیید سرور ذخیره می‌شوند و اعضای تأییدشده آخرین اطلاعات فضای مشترک را دریافت می‌کنند.</p></Surface>}
  <input ref={photoInput} type="file" hidden accept="image/png,image/jpeg,image/webp" aria-label="انتخاب عکس پروفایل" onChange={e=>{const file=e.target.files?.[0];if(file&&editingPhoto){void photo(editingPhoto,file);setEditingPhoto(null);}e.target.value='';}}/>
  {editingPhoto&&<Dialog sheet title="عکس پروفایل" onClose={()=>setEditingPhoto(null)}><div className="member-photo-preview avatar">{editingPhoto.avatar?<img src={editingPhoto.avatar} alt={`عکس ${editingPhoto.name}`}/>:editingPhoto.name.slice(0,1)}</div><div className="member-photo-actions"><Action className="outline full" onClick={()=>photoInput.current?.click()}><Camera size={20}/>{editingPhoto.avatar?'تغییر عکس':'انتخاب عکس'}</Action>{editingPhoto.avatar&&<Action className="danger full" onClick={()=>{update(rows=>rows.map(m=>m.id===editingPhoto.id?{...m,avatar:undefined}:m));setEditingPhoto(null);}}><Trash2 size={20}/>حذف عکس</Action>}<Action className="outline full" onClick={()=>setEditingPhoto(null)}>انصراف</Action></div></Dialog>}
  {editingName&&<Dialog title="ویرایش نام" onClose={()=>setEditingName(null)}><form className="finance-form" onSubmit={e=>{e.preventDefault();const trimmed=name.trim();if(!trimmed)return;update(rows=>rows.map(m=>m.id===editingName.id?{...m,name:trimmed}:m));setEditingName(null);}}><FormField label="نام نمایشی"><FieldInput autoFocus required maxLength={60} value={name} onChange={e=>setName(e.target.value)}/></FormField><div className="detail-actions"><Action type="button" className="outline" onClick={()=>setEditingName(null)}>انصراف</Action><Action className="primary" disabled={!name.trim()}>ذخیره</Action></div></form></Dialog>}
