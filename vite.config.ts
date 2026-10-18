@@ -1,6 +1,10 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+// Same public origin the database server accepts; Vite's preview host check must allow it too.
+const { APP_PUBLIC_ORIGIN } = loadEnv(mode, process.cwd(), 'APP_');
+const allowedHosts = APP_PUBLIC_ORIGIN ? [new URL(APP_PUBLIC_ORIGIN).hostname] : [];
+return {
   resolve: { alias: { '@': decodeURIComponent(new URL('./src', import.meta.url).pathname).replace(/^\/(\w:)/, '$1') } },
   plugins: [tailwindcss(), {
     name: 'local-offline-shell',
@@ -26,5 +30,6 @@ self.addEventListener('fetch', event => {
     },
   }],
   server:{proxy:{'/api/database':'http://127.0.0.1:8789','/api/exchange-rates':'http://127.0.0.1:8788'}},
-  preview:{proxy:{'/api/database':'http://127.0.0.1:8789','/api/exchange-rates':'http://127.0.0.1:8788'}},
+  preview:{allowedHosts,proxy:{'/api/database':'http://127.0.0.1:8789','/api/exchange-rates':'http://127.0.0.1:8788'}},
+};
 });
