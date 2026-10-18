@@ -3,6 +3,7 @@ import type { Account } from '../types';
 import { integer } from '../decimal';
 import { Action, FieldInput, FieldSelect } from './finance-ui';
 import { FormField } from './form-fields';
+import { FlowBack } from './flow-navigation';
 import { ComposerIntro, ComposerFooter } from './transaction-composer';
 
 export function ComposerAccountForm({viewer,onSave,onCancel,cancelLabel='بازگشت به خرید ارزی'}:{viewer:string;onSave:(account:Account)=>void;onCancel?:()=>void;cancelLabel?:string}) {
@@ -19,7 +20,7 @@ export function ComposerAccountForm({viewer,onSave,onCancel,cancelLabel='باز�
    onSave({id,name:name.trim(),type,balance,openingBalance:balance,baselineAt:new Date().toISOString(),currency:'IRT',visibility,owner:viewer});
   } catch(cause) { submitted.current=false;setError((cause as Error).message); }
  }}>
-  <ComposerIntro kind="account"/>
+  <>{onCancel&&<FlowBack label={cancelLabel} onBack={onCancel}/>}<ComposerIntro kind="account"/></>
   <FormField label="نام حساب"><FieldInput required placeholder="مثلاً حساب بلو یا پول نقد" value={name} onChange={e=>setName(e.target.value)}/></FormField>
   <FormField label="موجودی اولیه به تومان"><FieldInput required inputMode="numeric" min={0} value={amount} onChange={e=>setAmount(e.target.value)}/></FormField>
   <p className="field-hint">موجودی فعلی حساب را وارد کن؛ این مبلغ درآمد جدید نیست. حساب بدون موجودی را با صفر ثبت کن.</p>
@@ -27,7 +28,6 @@ export function ComposerAccountForm({viewer,onSave,onCancel,cancelLabel='باز�
   <FormField label="نمایش"><FieldSelect value={visibility} onChange={e=>setVisibility(e.target.value as Account['visibility'])}><option value="shared">مشترک</option><option value="private">خصوصی</option></FieldSelect></FormField>
   </details>
   {error&&<p className="form-error" role="alert">{error}</p>}
-  {onCancel&&<Action type="button" className="outline" onClick={onCancel}>{cancelLabel}</Action>}
-  <ComposerFooter summary={`${name||'حساب جدید'} · ${visibility==='shared'?'مشترک':'شخصی'} · موجودی اولیه به تومان`}><Action type="submit" className="primary full submit">ثبت حساب</Action></ComposerFooter>
+  <ComposerFooter summary={`${name||'حساب جدید'} · ${visibility==='shared'?'مشترک':'شخصی'} · موجودی اولیه به تومان`}><Action type="submit" className="primary full submit">ثبت حساب</Action>{onCancel&&<Action type="button" className="outline full" onClick={onCancel}>انصراف</Action>}</ComposerFooter>
  </form>;
 }

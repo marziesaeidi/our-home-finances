@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { ChevronLeft, Plus } from 'lucide-react';
 import { useId, useState, type ComponentProps, type ElementType } from 'react';
 import { normalizeDigits } from '../decimal';
 import { formatNumericInput, rawNumericInput } from '../input-format';
@@ -23,13 +23,19 @@ function revealFormError(form: HTMLFormElement) {
 export function Action({ className = '', onClick, ...props }: ComponentProps<'button'>) {
   const variant = /\b(primary|add-main)\b/.test(className) ? 'default'
     : /\b(danger|plain-danger)\b/.test(className) ? 'destructive'
-    : /\boutline\b/.test(className) ? 'outline' : 'ghost';
+    : /\boutline\b/.test(className) ? 'outline'
+    : /\bsecondary\b/.test(className) ? 'secondary' : 'ghost';
   return <Button variant={variant} className={cn('finance-action', className)} {...props} onClick={event => { const form = event.currentTarget.form; onClick?.(event); if (form && event.currentTarget.type === 'submit' && !event.defaultPrevented) revealFormError(form); }}/>;
 }
 
+/** Uniform back control; the destination remains available to assistive technology. */
+export function BackButton({ label = 'بازگشت', className, ...props }: ComponentProps<'button'> & { label?: string }) {
+  return <Action type="button" {...props} className={cn('outline top-back', className)} aria-label={label} title={label}><ChevronLeft className="back-arrow" size={18}/>بازگشت</Action>;
+}
+
 /** Shared entry point for creating a record, matching the new-account action. */
-export function AddAction({ children, className, ...props }: ComponentProps<'button'>) {
-  return <Action type="button" {...props} className={cn('primary small app-add-action', className)}><Plus size={17} aria-hidden="true"/>{children}</Action>;
+export function AddAction({ children, className, variant = 'primary', ...props }: ComponentProps<'button'> & { variant?: 'primary' | 'secondary' }) {
+  return <Action type="button" {...props} className={cn(variant, 'small app-add-action', className)}><Plus size={17} aria-hidden="true"/>{children}</Action>;
 }
 
 export function FieldInput({ error, ...props }: ComponentProps<'input'> & { error?: string }) {

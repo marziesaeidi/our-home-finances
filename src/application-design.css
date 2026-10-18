@@ -58,6 +58,11 @@ button.finance-surface:disabled { opacity:.5; cursor:not-allowed; }
 .amount-field > div { margin-block-start:var(--space-3); gap:var(--space-4); }
 .amount-field input { padding:var(--space-3) var(--space-4); }
 .searchbox input { height:var(--control-height); border:0; background:transparent; }
+.searchbox { min-width:0; cursor:text; }
+.searchbox>.input-control { flex:1; min-width:0; }
+.searchbox:focus-within { border-color:var(--ring); outline:2px solid var(--ring); outline-offset:2px; }
+.searchbox input:focus-visible { outline:none; box-shadow:none; border:0; }
+.searchbox input { border-radius:0; }
 input[inputmode=numeric],input[inputmode=decimal],bdi,.ds-amount,.row-end,.stat-card strong { font-variant-numeric:tabular-nums; }
 input[type=checkbox],input[type=radio],progress { accent-color:var(--primary); }
 .row-icon,.row-icon.warm,.row-icon.lilac,.row-icon.mint,.avatar,.avatar.second { background:var(--secondary); color:var(--primary); }
@@ -205,7 +210,7 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
 .app-flow .desktop-side,.app-flow .bottom-nav,.app-flow .topbar .mobile-logo,.app-flow .top-actions { display:none; }
 .app-flow main { margin-inline:auto; padding-bottom:24px; }
 .app-flow .topbar { position:sticky; top:0; z-index:20; background:var(--background); }
-.top-back { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.top-back { display:inline-flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-sans); font-size:var(--type-body); font-weight:500; line-height:1.8; }
 .transaction-filter-flow { display:flex; flex-direction:column; min-height:calc(100dvh - 210px); gap:24px; }
 .transaction-filter-flow .filter-panel { display:grid; grid-template-columns:minmax(0,1fr); gap:24px; margin:0; padding:24px; }
 .transaction-filter-flow .field { gap:10px; margin:0; }
@@ -646,6 +651,23 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 }
 .planning-options[open]>summary { margin-block-end:var(--space-4); }
 
+/* Disclosure copy needs breathing room below its bordered heading. */
+details:not(.composer-date)[open]>summary+* { margin-block-start:var(--space-4); }
+details:not(.composer-date)>p {
+ padding-inline:var(--space-4); line-height:1.9; overflow-wrap:anywhere;
+}
+details:not(.composer-date)>p+p { margin-block-start:var(--space-3); }
+details:not(.composer-date)>p:last-child { margin-block-end:var(--space-4); }
+
+/* Check, loan and recurring detail sections share the same vertical rhythm. */
+.route-content .ob-detail { display:flex; flex-direction:column; gap:var(--space-6); }
+.route-content .ob-detail>:is(.ob-detail-hero,.ob-payment-panel,details,.module-card,.module-editor,.obligation-tabs,.detail-actions,.recurring-actions) {
+ margin-block:0;
+}
+.ob-detail-hero h2 { line-height:1.8; overflow-wrap:anywhere; }
+.ob-detail-hero>.ob-detail-amount+p { margin-block:var(--space-3) 0; }
+.ob-detail .ob-payment-panel>h3 { line-height:1.8; }
+
 /* Select fields retain native keyboard/form behavior and share one control style. */
 select.finance-select,.field select.finance-select,.composer-account select.finance-select {
  box-sizing:border-box; width:100%; min-width:0; min-height:var(--control-height);
@@ -706,6 +728,9 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
 /* Shared dialog insets must remain inside the scroll area on every planning form. */
 .planning-editor-dialog.finance-dialog { --planning-inset:24px; }
 .planning-editor-dialog .modal-head { padding:var(--space-4) var(--planning-inset); }
+.planning-editor-dialog .modal-head { display:grid; grid-template-columns:auto minmax(0,1fr); direction:rtl; gap:var(--space-4); }
+.planning-editor-dialog .modal-head>.top-back { grid-column:1; justify-self:start; margin:0; }
+.planning-editor-dialog .modal-head>[data-slot=dialog-title] { grid-column:2; text-align:end; min-width:0; }
 .planning-editor-dialog .planning-form {
  flex:1 1 auto; min-height:0; padding:var(--planning-inset); scroll-padding:var(--planning-inset);
 }
@@ -732,7 +757,123 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
 .app-add-action.finance-action>svg { width:17px; height:17px; flex-shrink:0; }
 .planning-launcher:has(>.app-add-action) { display:flex; flex-wrap:wrap; gap:var(--space-3); align-items:center; }
 .folder-selector>.app-add-action { justify-self:start; }
+.app-add-action.finance-action.secondary {
+ display:flex; width:100%; max-width:none; height:var(--control-height);
+ min-height:var(--control-height); padding:8px 12px; margin-inline:0;
+ align-self:stretch; justify-self:stretch; flex-shrink:0;
+}
 .financial-report .financial-report-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--space-4); align-items:end; }
 .financial-report-toolbar>.field { margin:0; min-width:0; }
 .financial-report-toolbar>.finance-action { min-height:var(--control-height); padding-block:.75rem; font-size:var(--type-body); line-height:1.8; margin:0; }
 @media print { .financial-report .report-range-panel { display:none!important; } }
+
+/* Give creation forms the same outer breathing room as the account composer. */
+.planning-editor-dialog.finance-dialog { --planning-inset:40px; }
+.planning-editor-dialog .modal-head .finance-action,
+.planning-editor-dialog .modal-head button { gap:8px; flex-shrink:0; }
+.planning-editor-dialog .planning-form { overflow-y:auto; }
+.asset-toolbar { align-items:stretch; }
+.asset-toolbar .asset-flow-launcher { display:contents; }
+.asset-toolbar .asset-flow-launcher>.planning-launch { font-size:var(--type-body); }
+.asset-toolbar .asset-flow-editor {
+ grid-column:1/-1; order:10; min-width:0; margin:16px 0 0;
+ padding:var(--space-card); background:var(--card); border:1px solid var(--border);
+ border-radius:var(--radius-card);
+}
+.asset-flow-editor .planning-form { padding:24px; }
+.asset-flow-editor .planning-footer { position:static; margin:0; padding:16px 0 0; }
+@media(max-width:650px) {
+ .planning-editor-dialog.finance-dialog { --planning-inset:24px; }
+ .planning-editor-dialog.folder-editor-dialog .planning-form { padding-inline:var(--planning-inset); }
+ .asset-flow-editor .planning-form { padding:18px; }
+}
+
+/* Folder details and new boxes share the account card's content width and insets. */
+.account-layout-dialog.planning-editor-dialog .planning-form {
+ width:100%; max-width:650px; margin-inline:auto;
+ padding:calc(var(--space-card) + 24px); gap:var(--space-4);
+}
+@media(max-width:650px) {
+ .account-layout-dialog.planning-editor-dialog .planning-form {
+  padding:calc(var(--space-card) + 18px);
+ }
+}
+
+/* Keep folder actions at the bottom while only the fields scroll. */
+.folder-editor-dialog.account-layout-dialog .planning-form {
+ max-width:none; max-height:none; overflow:hidden; padding:0; gap:0;
+}
+.folder-editor-dialog .folder-editor-fields {
+ display:flex; flex-direction:column; gap:var(--space-4);
+ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+ width:100%; max-width:650px; margin-inline:auto; box-sizing:border-box;
+ padding:calc(var(--space-card) + 24px);
+}
+.folder-editor-dialog .planning-form>.planning-footer {
+ position:sticky; bottom:0; flex:0 0 auto; margin:0;
+ padding:16px 40px calc(16px + env(safe-area-inset-bottom,0px));
+ width:100%; box-shadow:0 -8px 18px -14px var(--foreground);
+}
+.folder-editor-dialog .planning-footer>.finance-action { max-width:570px; margin-inline:auto; }
+@media(max-width:650px) {
+ .folder-editor-dialog .folder-editor-fields { padding:calc(var(--space-card) + 18px); }
+ .folder-editor-dialog .planning-form>.planning-footer { padding-inline:calc(var(--space-card) + 18px); }
+}
+
+/* Shared navigation controls and bottom action bars. */
+.top-back.finance-action {
+ box-sizing:border-box; width:112px; min-width:112px; max-width:112px;
+ height:44px; min-height:44px; padding:10px 14px; margin:0;
+ flex:none; white-space:nowrap; font:500 14px/1.5 var(--font-sans);
+ border:1px solid var(--border); border-radius:var(--radius-control);
+}
+.app .topbar,.planning-editor-dialog .modal-head {
+ position:sticky; top:0; z-index:20; background:var(--card);
+}
+.planning-editor-dialog.finance-dialog { height:min(760px,90dvh); }
+.planning-editor-dialog.finance-dialog .planning-form {
+ flex:1 1 auto; min-height:0; max-height:none; max-width:none;
+ overflow:hidden; padding:0; margin:0; gap:0;
+}
+.planning-editor-dialog .planning-fields {
+ display:flex; flex-direction:column; gap:var(--space-4);
+ flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+ box-sizing:border-box; width:100%; max-width:650px; margin-inline:auto;
+ padding:40px; scroll-padding:24px;
+}
+.finance-form .app-action-footer.app-action-footer,
+.transaction-filter-flow .app-action-footer.app-action-footer {
+ box-sizing:border-box; display:grid; grid-template-columns:minmax(0,1fr);
+ gap:12px; border:0; border-top:1px solid var(--border); border-radius:0;
+ background:#fff; color:#0f172a; --card:#fff; --foreground:#0f172a;
+ width:auto; max-width:none; margin:0; padding:16px 24px calc(16px + env(safe-area-inset-bottom,0px));
+ box-shadow:0 -8px 18px -14px #0f172a; z-index:15;
+}
+.finance-form .app-action-footer.app-action-footer>.finance-action,
+.transaction-filter-flow .app-action-footer.app-action-footer>.finance-action {
+ box-sizing:border-box; display:flex; align-items:center; justify-content:center;
+ width:100%; max-width:738px; height:52px; min-height:52px; margin:0 auto;
+ padding:12px 16px; font:500 14px/1.5 var(--font-sans);
+ border-radius:var(--radius-control); gap:8px;
+}
+.app-action-footer>.composer-receipt { width:100%; max-width:738px; margin:0 auto; text-align:center; }
+.planning-editor-dialog .planning-form>.app-action-footer {
+ position:relative; inset:auto; width:100%; flex:0 0 auto;
+}
+.asset-flow-editor .planning-form { padding-bottom:240px; }
+.asset-flow-editor .planning-form>.app-action-footer,
+.transaction-filter-flow>.app-action-footer {
+ position:fixed; bottom:0; left:0; right:0;
+}
+.transaction-filter-flow { padding-bottom:160px; }
+.app:not(.app-flow) .composer-footer.app-action-footer { padding-bottom:calc(96px + env(safe-area-inset-bottom,0px)); }
+@media(min-width:900px) {
+ .app:not(.app-flow) .composer-footer.app-action-footer { padding-bottom:calc(16px + env(safe-area-inset-bottom,0px)); }
+ .app:not(.app-flow) .asset-flow-editor .app-action-footer,
+ .app:not(.app-flow) .transaction-filter-flow>.app-action-footer { right:245px; }
+}
+@media(max-width:650px) {
+ .planning-editor-dialog.finance-dialog { height:100dvh; }
+ .planning-editor-dialog .planning-fields { padding:34px; }
+}
+@media print { .app-action-footer { display:none!important; } }
