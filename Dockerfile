@@ -15,13 +15,8 @@ ARG VITE_GOOGLE_CLIENT_ID=
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 RUN npm run build
 
-ENV NODE_ENV=production \
-    DATABASE_PATH=/app/data/khaneh.sqlite
+ENV NODE_ENV=production
 
-RUN mkdir -p /app/data && chown -R node:node /app/data
-USER node
-
-VOLUME ["/app/data"]
 EXPOSE 4173
 
 CMD ["sh", "./docker/start.sh"]
