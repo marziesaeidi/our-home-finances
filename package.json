@@ -11,7 +11,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node tests/run.mjs && node --test tests/*.test.mjs",
     "database": "node server/sqlite.mjs",
-    "database:init": "node --input-type=module -e \"import { openDatabase } from './server/database.mjs'; const db = openDatabase(); db.close(); console.log('SQLite ready: data/khaneh.sqlite');\""
+    "database:init": "node --input-type=module -e \"import { openDatabase } from './server/database.mjs'; const db = openDatabase(); db.close(); console.log('SQLite ready');\""
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

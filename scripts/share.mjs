@@ -4,6 +4,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { startDatabaseServer } from '../server/sqlite.mjs';
+import { databasePath } from '../server/database.mjs';
 import { startRateServer } from '../server/rates.mjs';
 import { startShareGateway } from '../server/share-gateway.mjs';
 import { DatabaseSync } from 'node:sqlite';
@@ -15,8 +16,8 @@ const ownerEmail = process.env.SHARE_OWNER_EMAIL || 'marzieh.s.miss@gmail.com';
 // Preserve access for approved, active members when restarting the tunnel.
 // The OAuth allowlist and the application's membership checks both remain enforced.
 const memberEmails = [];
-if (existsSync(resolve('data/khaneh.sqlite'))) {
-  const saved = new DatabaseSync(resolve('data/khaneh.sqlite'), {readOnly:true});
+if (existsSync(databasePath)) {
+  const saved = new DatabaseSync(databasePath, {readOnly:true});
   try {
     const snapshot=saved.prepare('SELECT payload FROM finance_snapshots ORDER BY revision DESC LIMIT 1').get();
     const active=new Set((snapshot?JSON.parse(snapshot.payload).settings.members??[]:[]).filter(m=>!m.removed).map(m=>m.id));
@@ -47,7 +48,7 @@ const app = await preview({ preview: {
 // Only available behind the email allowlist; never enable this fallback for an unrestricted tunnel.
 const getInvitation = () => {
   if (invitationMode) return null;
-  const db = new DatabaseSync(resolve('data/khaneh.sqlite'), {readOnly:true});
+  const db = new DatabaseSync(databasePath, {readOnly:true});
   try { return db.prepare('SELECT token FROM household_invitations WHERE used = 0 AND expires_at > ? ORDER BY rowid DESC LIMIT 1').get(Date.now())?.token ?? null; }
   finally { db.close(); }
 };

@@ -2,7 +2,9 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
-export function openDatabase(filename = resolve('data/khaneh.sqlite')) {
+export const databasePath = resolve(process.env.DATABASE_PATH || './data/khaneh.sqlite');
+
+export function openDatabase(filename = databasePath) {
   if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true });
   const db = new DatabaseSync(filename);
   db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;

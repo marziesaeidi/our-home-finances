@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
-import { resolve } from 'node:path';
+import { databasePath } from './database.mjs';
 
-export function getEmailSession(email, filename = resolve('data/khaneh.sqlite'), ownerEmail) {
+export function getEmailSession(email, filename = databasePath, ownerEmail) {
   const db = new DatabaseSync(filename, {readOnly:true});
   try {
     if (ownerEmail && email.trim().toLowerCase() === ownerEmail.trim().toLowerCase()) {
