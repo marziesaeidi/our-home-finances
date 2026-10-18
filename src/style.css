@@ -7,6 +7,10 @@ h1,h2,h3,p{margin-top:0}
 .app{min-height:100vh}
 .desktop-side{display:none}
 main{max-width:770px;margin:auto;padding:0 20px 110px}
+/* Extend the top navigation surface across the available page width. */
+.app .topbar{position:sticky;top:0;z-index:20;isolation:isolate;height:auto;min-height:88px;padding-block:calc(16px + env(safe-area-inset-top,0px)) 16px;background:#fff}
+.app .topbar::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:50%;width:100vw;transform:translateX(-50%);background:#fff;border-bottom:1px solid var(--border);pointer-events:none}
+@media(min-width:900px){.app:not(.app-flow) .topbar::before{width:calc(100vw - 245px)}}
 .topbar{height:72px;display:flex;align-items:center;justify-content:space-between}
 .mobile-logo,.brand{display:flex;align-items:center;gap:9px;color:var(--foreground);font-size:19px}
 .brand-mark{display:inline-flex;align-items:center;justify-content:center;background:var(--brand);color:var(--primary-foreground);border-radius:var(--radius-control);width:34px;height:34px;font-size:26px;line-height:1}
