@@ -28,6 +28,16 @@ export function validate(value: unknown): asserts value is FinanceData {
     }
   }
   const data = value as unknown as FinanceData;
+  if(data.spaceTransfers!==undefined){
+    if(!Array.isArray(data.spaceTransfers))throw new Error('سابقه انتقال فضا معتبر نیست.');
+    const ids=new Set<string>();
+    for(const a of data.spaceTransfers){
+      if(!a||typeof a.id!=='string'||!a.id||ids.has(a.id)||!Number.isFinite(Date.parse(a.at))||typeof a.sourceId!=='string'||typeof a.targetId!=='string'||a.sourceId===a.targetId||!record(a.selection)||typeof a.selection.kind!=='string'||typeof a.selection.id!=='string'||!Array.isArray(a.items)||!Array.isArray(a.baselines)||!record(a.originals)||!record(a.accountMap)||!Array.isArray(a.accountEntries)||!Array.isArray(a.assetOpeningRevisions))throw new Error('سابقه انتقال فضا معتبر نیست.');
+      ids.add(a.id);
+      for(const b of a.baselines)if(!b||typeof b.space!=='string'||typeof b.accountId!=='string'||!Number.isSafeInteger(b.before)||!Number.isSafeInteger(b.after))throw new Error('سابقه مبنای حساب در انتقال معتبر نیست.');
+    }
+  }
+
   if (data.settings.calendarEmail !== undefined && (typeof data.settings.calendarEmail !== 'string' || data.settings.calendarEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.settings.calendarEmail))) throw new Error('ایمیل تقویم معتبر نیست.');
   if(data.settings.members !== undefined) {
     if(!Array.isArray(data.settings.members)||data.settings.members.length>100)throw new Error('فهرست اعضا معتبر نیست.');

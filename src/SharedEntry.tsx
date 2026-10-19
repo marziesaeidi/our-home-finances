@@ -31,7 +31,7 @@ export function AppEntry({ children }: { children: (data: FinanceData) => ReactN
 }
 
 // Lists the personal space and every household the user belongs to; switching reloads the app for that space.
-export function SpaceSwitcher() {
+export function SpaceSwitcher({ beforeCreate }: { beforeCreate?: ReactNode } = {}) {
  const [creating, setCreating] = useState(false), [name, setName] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
  const current = activeSpace();
  if (!session || !current) return null;
@@ -47,6 +47,7 @@ export function SpaceSwitcher() {
   <FieldSelect aria-label="انتخاب فضای مالی" value={current.id} onChange={e => { const next = session!.spaces.find(s => s.id === e.target.value); if (next) { setActiveSpace(user.id, next); location.reload(); } }}>
    {session.spaces.map(s => <option key={s.id} value={s.id}>{label(s.kind, s.name)}</option>)}
   </FieldSelect>
+  {beforeCreate}
   {creating ? <form style={{ display: 'grid', gap: 8 }} onSubmit={e => { e.preventDefault(); void create(); }}><FieldInput aria-label="نام فضای مشترک" autoFocus required maxLength={60} placeholder="مثلاً خانه ما" value={name} onChange={e => setName(e.target.value)}/><Action className="primary small" disabled={busy || !name.trim()}>ساخت فضای مشترک</Action><Action type="button" className="outline small" onClick={() => setCreating(false)}>انصراف</Action></form>
    : <Action className="outline small" onClick={() => setCreating(true)}><Plus size={16}/> فضای مشترک تازه</Action>}
   <Action className="outline small" onClick={() => void logout()}><LogOut size={16}/> خروج از حساب</Action>

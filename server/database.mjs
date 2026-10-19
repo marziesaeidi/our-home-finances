@@ -73,6 +73,14 @@ export function openDatabase(filename = databasePath) {
       INSERT INTO schema_migrations VALUES(2);`);
   });
 
+  if (!db.prepare('SELECT version FROM schema_migrations WHERE version = 3').get()) transaction(() => {
+  db.exec(`CREATE TABLE IF NOT EXISTS space_transfer_operations(
+    user_id TEXT NOT NULL REFERENCES users(id), request_id TEXT NOT NULL,
+    fingerprint TEXT NOT NULL, result TEXT NOT NULL CHECK(json_valid(result)),
+    PRIMARY KEY(user_id, request_id)
+  ); INSERT INTO schema_migrations VALUES(3);`);
+  });
+
   const createSpace = (kind, data, userId, memberId) => {
     const id = randomUUID();
     db.prepare('INSERT INTO spaces(id, kind) VALUES(?, ?)').run(id, kind);
@@ -122,6 +130,19 @@ export function openDatabase(filename = databasePath) {
       return transaction(() => {
         if ((read(spaceId)?.revision ?? 0) !== expectedRevision) throw new Error('REVISION_CONFLICT');
         return insertSnapshot(spaceId, data);
+      });
+    },
+
+    transferSpaces(userId, requestId, fingerprint, sourceId, targetId, sourceRevision, targetRevision, transform) {
+      return transaction(() => {
+        const old = db.prepare('SELECT fingerprint, result FROM space_transfer_operations WHERE user_id=? AND request_id=?').get(userId, requestId);
+        if (old) { if (old.fingerprint !== fingerprint) throw new Error('TRANSFER_REQUEST_CONFLICT'); return JSON.parse(old.result); }
+        const source = read(sourceId), target = read(targetId);
+        if (!source || !target || source.revision !== sourceRevision || target.revision !== targetRevision) throw new Error('REVISION_CONFLICT');
+        const next = transform(JSON.parse(source.payload), JSON.parse(target.payload));
+        const result = { sourceRevision: insertSnapshot(sourceId, next.source), targetRevision: insertSnapshot(targetId, next.target), items: next.items };
+        db.prepare('INSERT INTO space_transfer_operations VALUES(?,?,?,?)').run(userId, requestId, fingerprint, JSON.stringify(result));
+        return result;
       });
     },
 

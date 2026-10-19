@@ -25,7 +25,7 @@ export async function api(path: string, body: unknown = {}) {
   const response = await fetch(path, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(20000), body: JSON.stringify(body) });
   const result = await response.json().catch(() => ({ error: 'پاسخ سرور قابل خواندن نیست.' }));
   if (response.status === 401 && !path.startsWith('/api/auth/')) { location.assign('/login?next=' + encodeURIComponent(location.pathname)); throw new Error(result.error || 'ابتدا وارد شو.'); }
-  if (!response.ok) throw new Error(result.error || 'ارتباط برقرار نشد. دوباره تلاش کن.');
+  if (!response.ok) throw Object.assign(new Error(result.error || 'ارتباط برقرار نشد. دوباره تلاش کن.'), {status:response.status});
   return result;
 }
 export async function fetchSession(): Promise<Session | null> {

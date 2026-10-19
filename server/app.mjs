@@ -26,6 +26,7 @@ const unknownUserHash = await hashPassword(randomBytes(16).toString('hex'));
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const errors = {
+  TRANSFER_REQUEST_CONFLICT: [409, 'شناسه درخواست قبلاً برای انتقال دیگری استفاده شده است.'],
   EMAIL_TAKEN: [409, 'این ایمیل قبلاً ثبت شده است.'],
   REVISION_CONFLICT: [409, 'اطلاعات دستگاه دیگری تغییر کرده است. تغییر ثبت نشد؛ صفحه را تازه‌سازی کن و دوباره ثبت کن.'],
   INVITATION_INVALID: [400, 'لینک دعوت معتبر نیست، منقضی شده یا قبلاً استفاده شده است.'],
@@ -48,8 +49,8 @@ export async function startAppServer({ filename, port = 4173, host = '127.0.0.1'
     throw new Error('APP_PUBLIC_ORIGIN must be an HTTPS origin without a trailing slash');
   }
   // Reuse the application's complete financial validator and member rules on the server.
-  const bundle = await build({ stdin: { contents: "export { validate, createSpaceData } from './src/store'; export { assertMemberChange, membersOf } from './src/household-access';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) }, bundle: true, write: false, platform: 'node', format: 'esm' });
-  const { validate, createSpaceData, assertMemberChange, membersOf } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+  const bundle = await build({ stdin: { contents: "export { validate, createSpaceData } from './src/store'; export { assertMemberChange, membersOf } from './src/household-access'; export { transferPlan, moveBetweenSpaces } from './src/space-transfer';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) }, bundle: true, write: false, platform: 'node', format: 'esm' });
+  const { validate, createSpaceData, assertMemberChange, membersOf, transferPlan, moveBetweenSpaces } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
   const database = openDatabase(filename);
   const rateServer = rates ? startRateServer() : null;
   const ratePort = Number(process.env.FX_PORT ?? 8788);
@@ -134,6 +135,25 @@ export async function startAppServer({ filename, port = 4173, host = '127.0.0.1'
           if (typeof body.token !== 'string' || !/^[a-f0-9]{64}$/.test(body.token)) return send(400, { error: errors.INVITATION_INVALID[1] });
           if (path.endsWith('/join')) return send(200, database.joinRequest(body.token, user.id));
           return send(200, database.joinStatus(body.token, user.id) ?? { status: 'none' });
+        }
+
+        const transferMatch = path.match(/^\/api\/spaces\/([0-9a-f-]{36})\/(transfer-preview|transfer)$/);
+        if (transferMatch) {
+          const [, sourceId, action] = transferMatch;
+          const spaces = database.spaces(user.id), sourceSpace = spaces.find(s => s.id === sourceId), targetSpace = spaces.find(s => s.id === body.targetId);
+          if (!sourceSpace || !targetSpace) return send(404, {error:'فضای مبدأ یا مقصد پیدا نشد.'});
+          if (sourceId === targetSpace.id || sourceSpace.kind === targetSpace.kind) return send(400, {error:'یک فضای شخصی و یک فضای مشترک انتخاب کن.'});
+          if ([sourceSpace.role,targetSpace.role].includes('reader')) return send(403, {error:'دسترسی ویرایش در هر دو فضا لازم است.'});
+          if (!body.selection || typeof body.selection.id !== 'string' || typeof body.selection.kind !== 'string') return send(400,{error:'مورد انتقال را انتخاب کن.'});
+          try {
+            const sourceRow=database.read(sourceId), targetRow=database.read(targetSpace.id);
+            const source=JSON.parse(sourceRow.payload), target=JSON.parse(targetRow.payload);
+            if(action==='transfer-preview') { const plan=transferPlan(source,body.selection,sourceSpace.memberId); return send(200,{sourceRevision:sourceRow.revision,targetRevision:targetRow.revision,items:plan.items,requiredAccounts:plan.requiredAccounts.map(a=>({id:a.id,name:a.name,currency:a.currency??'IRT'})),targetAccounts:target.accounts.filter(a=>a.visibility==='shared'||a.owner===targetSpace.memberId).map(a=>({id:a.id,name:a.name,currency:a.currency??'IRT'}))}); }
+            if(typeof body.requestId!=='string'||!/^[0-9a-f-]{36}$/.test(body.requestId)||!Number.isSafeInteger(body.sourceRevision)||!Number.isSafeInteger(body.targetRevision)||!body.accountMap||typeof body.accountMap!=='object'||Array.isArray(body.accountMap)||Object.values(body.accountMap).some(v=>typeof v!=='string'))return send(400,{error:'درخواست انتقال معتبر نیست.'});
+            const fingerprint=JSON.stringify({sourceId,targetId:targetSpace.id,selection:body.selection,accountMap:Object.entries(body.accountMap).sort(),sourceRevision:body.sourceRevision,targetRevision:body.targetRevision});
+            const result=database.transferSpaces(user.id,body.requestId,fingerprint,sourceId,targetSpace.id,body.sourceRevision,body.targetRevision,(before,after)=>moveBetweenSpaces(before,after,{selection:body.selection,accountMap:body.accountMap,requestId:body.requestId,sourceId,targetId:targetSpace.id,sourceMember:sourceSpace.memberId,targetMember:targetSpace.memberId,targetKind:targetSpace.kind,at:new Date().toISOString()}));
+            return send(200,result);
+          }catch(error){if(errors[error.message])throw error;return send(400,{error:error.message});}
         }
 
         const match = path.match(/^\/api\/spaces\/([0-9a-f-]{36})\/(read|write|invitations|requests|decide)$/);
