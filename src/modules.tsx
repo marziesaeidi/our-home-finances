@@ -21,7 +21,7 @@ type Props = { onSelectLegacy?: (loan:Loan)=>void; page: ModulePage; data: Finan
 
 export function FinanceModules(props: Props) {
   const { page } = props;
-  return page === 'foreign-reports' ? <ForeignExpenseReports {...props}/> : page === 'foreign' ? <ForeignExpenses {...props}/> : page === 'assets' ? <AssetHoldings {...props}/> : page === 'obligations' ? <FinancialObligations {...props}/> : page === 'reports' ? <FinancialReports {...props}/> : page === 'backup' ? <Backup {...props}/> : <FinancialObligations {...props} initialTab="recurring"/>;
+  return page === 'foreign-reports' ? <ForeignExpenseReports {...props}/> : page === 'foreign' ? <ForeignExpenses {...props}/> : page === 'assets' ? <AssetHoldings {...props}/> : page === 'obligations' ? <FinancialObligations key={page} {...props}/> : page === 'reports' ? <FinancialReports {...props}/> : page === 'backup' ? <Backup {...props}/> : <FinancialObligations key={page} {...props} initialTab="recurring"/>;
 }
 export function BudgetHistory({ data, change }: { data: FinanceData; change: (d: FinanceData) => void }) {
   const [month, setMonth] = useState(periodKey(today())), [error, setError] = useState('');

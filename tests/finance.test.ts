@@ -175,7 +175,7 @@ test('folder persistence retains optional fields and rejects invalid budgets and
  assert.throws(()=>saveFolder(d,{...d.folders[0],budget:-1},'مرزیه'));assert.throws(()=>linkFolder(d,'event','missing','مرزیه'));assert.throws(()=>linkFolder(d,'event','f','علی'));assert.throws(()=>validate({...d,folders:[]}));
 });
 
-import { assetTrade, correctAssetOpening, correctAssetTrade, saveGoal, savingsSummary, setValuation, staleValuation } from '../src/savings';
+import { assetAmounts, assetTrade, correctAssetOpening, correctAssetTrade, saveGoal, savingsSummary, setValuation, staleValuation } from '../src/savings';
 test('optional savings targets and monthly plans are projections, not cash events',()=>{
  let d=saveGoal(fixture(),{id:'monthly',name:'پس‌انداز ماهانه',target:0,targetDate:'',saved:999,visibility:'shared',monthlyTarget:300,status:'active',monthlyPlans:{'1405-07':450}});
  assert.equal(d.goals.find(g=>g.id==='monthly')!.saved,0);assert.equal(d.transactions.length,0);assert.equal(balance(d,'a'),1000);
@@ -288,4 +288,23 @@ test('cashless fee error explains both corrections and leaves all records unchan
  assert.throws(()=>post(d,tx({type:'asset-buy',assetId:'gold',allocationOnly:true,quantity:'1',fee:10})),{message:cashlessFeeError});
  assert.match(cashlessFeeError,/کارمزد را صفر کن/);assert.match(cashlessFeeError,/این حالت را خاموش کن/);
  assert.deepEqual(d,before);
+});
+
+
+test('per-asset amounts separate lifetime purchases from remaining basis and unavailable prices',()=>{
+ let d=savingsAssetFixture();
+ assert.deepEqual(assetAmounts(d,d.assets[0]),{totalPurchases:0,value:null,profitLoss:null});
+ d=post(d,tx({id:'buy',type:'asset-buy',assetId:'gold',quantity:'2',amount:400,fee:10}));
+ d=post(d,tx({id:'sell',type:'asset-sell',assetId:'gold',quantity:'0.5',amount:150}));
+ d.assets[0].quote='300';d.assets[0].quoteDate='2026-10-01';
+ assert.deepEqual(assetAmounts(d,d.assets[0]),{totalPurchases:400,value:450,profitLoss:150});
+ d=correctAssetTrade(d,'buy',tx({id:'buy',type:'asset-buy',assetId:'gold',quantity:'2',amount:600}));
+ assert.deepEqual(assetAmounts(d,d.assets[0]),{totalPurchases:600,value:450,profitLoss:0});
+ d.assets[0].quote='200';
+ assert.deepEqual(assetAmounts(JSON.parse(JSON.stringify(d)),d.assets[0]),{totalPurchases:600,value:300,profitLoss:-150});
+ d=post(d,tx({id:'adjust',type:'asset-buy',assetId:'gold',allocationOnly:true,quantity:'0.25',amount:50}));
+ assert.equal(assetAmounts(d,d.assets[0]).totalPurchases,600);
+ d=correctAssetOpening(d,'gold',{openingQuantity:'1',openingCost:100},'opening correction');
+ assert.equal(assetAmounts(d,d.assets[0]).totalPurchases,700);
+ validate(d);
 });

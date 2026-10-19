@@ -30,6 +30,13 @@ export function saveGoal(data: FinanceData, goal: Goal): FinanceData {
   const next = existing ? { ...goal, saved: existing.saved, openingSaved: existing.openingSaved } : { ...goal, saved: 0, openingSaved: 0 };
   return { ...data, goals: existing ? data.goals.map(g => g.id === next.id ? next : g) : [...data.goals, next] };
 }
+// Purchase totals preserve recorded opening cost and active acquisitions; fees stay separate.
+export function assetAmounts(data: FinanceData, asset: Asset) {
+  const purchases = data.transactions.filter(t => active(t) && t.assetId === asset.id && t.type === 'asset-buy' && !t.allocationOnly);
+  const totalPurchases = sum([asset.openingCost, ...purchases.map(t => t.amount)]);
+  const value = asset.quote ? converted(asset.quantity, asset.quote) : null;
+  return { totalPurchases, value, profitLoss: value === null ? null : add(value, -asset.cost) };
+}
 export function savingsSummary(data: FinanceData, viewer: string, month: string) {
   const goals = data.goals.filter(g => allowed(g, viewer));
   const assets = data.assets.filter(a => allowed(a, viewer));

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { FinancialObligations } from '../src/FinancialObligations';
+import { DateInput, FinancialObligations } from '../src/FinancialObligations';
 import { installmentPaymentParts, resizeInstallment, adjustInstallment, createLoan, deleteRecurring, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from '../src/obligations';
 import { consumption, earnedIncome, post, remainingLoan, reverse } from '../src/finance';
 import { expensePayments, payExpenseObligation } from '../src/expense-payments';
@@ -276,4 +276,27 @@ test('interest-free uneven installments conserve exact principal and partial all
  assert.ok(d.installments.slice(1,11).every(i=>i.amount===1000000));
  assert.deepEqual(installmentPaymentParts(d.installments[0],123),{principal:123,interest:0,fees:0});
  assert.throws(()=>installmentPaymentParts(d.installments[0],1500001));validate(d);
+});
+
+
+test('obligation date fields preserve canonical dates with numeric entry only',()=>{
+ const day=fromJalali('1405/01/01');
+ const html=renderToStaticMarkup(createElement(DateInput,{name:'next',label:'سررسید بعدی',value:day}));
+ assert.match(html,new RegExp(`type="hidden" name="next" value="${day}"`));
+ assert.doesNotMatch(html,/<button|انتخاب از تقویم/);
+ assert.match(html,/۱۴۰۵/);
+ assert.match(html,/سررسید بعدی، روز/);
+});
+
+test('overdue legacy recurring dates can be completed without moving the opening date to today',()=>{
+ const data=fixture();
+ const old={...template({nextDate:'2026-09-08'}),startDate:undefined,transactionType:undefined};
+ data.recurring=[old];
+ const repaired=saveRecurring(data,{...old,startDate:old.nextDate,transactionType:'expense'},who);
+ const paid=settleRecurring(repaired,old.id,old.nextDate,opts({date:date,value:120}),who);
+ assert.equal(paid.recurring[0].nextDate,nextDate(old.nextDate,'ماهانه'));
+ assert.equal(paid.transactions[0].date,date);
+ assert.equal(balance(paid),9880);
+ const reloaded=JSON.parse(JSON.stringify(paid));validate(reloaded);
+ assert.deepEqual(settleRecurring(reloaded,old.id,old.nextDate,opts({date:date,value:120}),who),reloaded);
 });

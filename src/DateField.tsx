@@ -14,7 +14,10 @@ export function DateField({ value, onChange, label }: { value: string; onChange:
   const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const hint = useId();
   useEffect(() => {
-    if (!group.current?.contains(document.activeElement)) setParts(format(value));
+    if (!group.current?.contains(document.activeElement)) {
+      setParts(format(value));
+      if (isoDay(value)) { inputs.current[0]?.setCustomValidity('');setError(''); }
+    }
   }, [value, gregorian]);
   const update = (next: string[]) => {
     setParts(next);
