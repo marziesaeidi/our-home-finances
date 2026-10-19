@@ -33,7 +33,7 @@ button.finance-surface:disabled { opacity:.5; cursor:not-allowed; }
 .primary,.outline,.danger { min-height:var(--control-height); font-size:var(--type-body); font-weight:500; }
 .primary { background:var(--primary); color:var(--primary-foreground); border-color:var(--primary); }
 .primary:hover { background:var(--brand-dark); }
-.outline { background:var(--card); color:var(--foreground); border-color:var(--border); }
+.outline { background:var(--card); color:var(--foreground); border:1px solid var(--primary); }
 .danger,.plain-danger,.form-error { color:var(--destructive); }
 .danger { background:var(--destructive-soft); border-color:var(--destructive); }
 .finance-action { height:auto; white-space:normal; }
