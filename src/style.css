@@ -260,8 +260,14 @@ main{margin-right:calc(245px + max(20px,(100vw - 245px - 770px)/2));margin-left:
 .asset-chart-open{display:flex;justify-content:flex-end;margin-bottom:12px}.asset-chart-dialog{position:fixed;inset:0;width:100vw;max-width:none;height:100dvh;max-height:none;margin:0;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:0;background:var(--background,#fff);color:var(--foreground,#172b29);box-sizing:border-box;overflow:auto}.asset-chart-dialog[open]{display:flex;flex-direction:column;gap:12px}.asset-chart-dialog::backdrop{background:rgba(0,0,0,.6)}.asset-chart-dialog-header{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-shrink:0}.asset-chart-workspace{min-width:0}.asset-chart-dialog .asset-chart-workspace{flex:1;display:flex;flex-direction:column;min-height:0}.asset-chart-dialog .asset-price-chart{flex:1;min-height:240px;height:100%;max-height:calc(100dvh - 230px)}.asset-chart-dialog .history-readout{flex-shrink:0;margin:12px 0 0}.asset-chart-dialog button,.asset-chart-open button{padding:10px 16px;border:1px solid var(--border,#ccc);border-radius:10px;color:inherit;background:transparent;cursor:pointer}.asset-chart-dialog .history-controls{flex-shrink:0}@media(max-width:600px){.asset-chart-dialog-header{font-size:13px}.asset-chart-dialog .asset-price-chart{min-height:280px}.asset-chart-dialog .history-readout{font-size:12px;gap:8px}.asset-chart-dialog .field-hint{font-size:11px}}
 
 .asset-amounts{display:grid;gap:8px;width:100%;text-align:start}
-.asset-amounts .detail-row{gap:12px;flex-wrap:wrap}
+.asset-amounts .detail-row{gap:12px}
 .asset-profit{color:var(--success)}
 .asset-loss{color:var(--danger, #c0392b)}
 
 .loan-payment-panel .loan-delete-action{display:flex;width:100%;min-height:3rem;margin-block-start:12px;padding:12px 20px;font-size:var(--type-label);}
+
+.planning-budget .budget-page-head{align-items:flex-start}
+.planning-budget .budget-page-head .app-add-action{flex-shrink:0;margin-inline-start:auto}
+
+
+.space-transfer-items{max-height:230px;overflow:auto;padding-inline-start:24px}

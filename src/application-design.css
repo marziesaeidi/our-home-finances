@@ -586,6 +586,10 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 .collection-preview .loan-preview-name small { overflow-wrap:anywhere; }
 .collection-preview .loan-preview-link { flex-shrink:0; }
 .collection-preview .loan-preview-footer>span { min-width:0; overflow-wrap:anywhere; }
+.detail-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:baseline; text-align:start; }
+.detail-row > :is(span,strong) { min-width:0; overflow-wrap:anywhere; }
+.detail-row > strong { text-align:end; font-variant-numeric:tabular-nums; }
+.asset-amounts { min-width:0; }
 @media(max-width:380px) {
  .collection-preview .loan-preview-top { flex-wrap:wrap; }
  .collection-preview .loan-preview-name { flex-basis:calc(100% - 5rem); }

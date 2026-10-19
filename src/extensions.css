@@ -125,7 +125,7 @@
 .loan-preview-name small { color:var(--muted-foreground); }
 .loan-preview-link { display:flex; align-items:center; color:var(--primary); gap:.25rem; }
 .loan-preview-footer { display:flex; flex-wrap:wrap; gap:1rem; justify-content:space-between; border-block-start:1px dashed var(--border); margin-block-start:1.25rem; padding-block-start:1rem; font-size:.875rem; color:var(--muted-foreground); }
-.loan-preview-footer>span { display:flex; align-items:center; gap:.4rem; }
+.loan-preview-footer>span:not(.asset-amounts) { display:flex; align-items:center; gap:.4rem; }
 .loan-preview-footer .loan-paid-count { color:var(--success); }
 .loan-summary-amounts { display:flex; flex-wrap:wrap; gap:1.5rem; padding-block:1rem; border-block:1px solid var(--border); }
 .loan-summary-amounts>div { display:grid; gap:.5rem; flex:1; }

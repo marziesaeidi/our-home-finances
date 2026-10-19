@@ -1,3 +1,4 @@
+import './space-transfer.test';
 import './error-guidance.test';
 import { assetAccountFunds, cashlessFeeError } from '../src/finance';
 import './removal.test';

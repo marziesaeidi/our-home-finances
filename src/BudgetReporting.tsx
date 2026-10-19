@@ -4,7 +4,7 @@ import { EditorForm } from './components/editor-form';
 import { CollectionHeading } from './components/collection-heading';
 import { FormField } from './components/form-fields';
 import { persianDigits } from './input-format';
-import { Surface, FieldSelect, Action, FieldInput } from './components/finance-ui';
+import { Surface, FieldSelect, Action, AddAction, FieldInput } from './components/finance-ui';
 import { useState } from 'react';
 import { Download, SlidersHorizontal } from 'lucide-react';
 import { Dialog } from './Dialog';
@@ -51,15 +51,15 @@ export { UnifiedDashboard } from './Dashboard';
 function BudgetStatus({budget,result,data}:{budget?:Budget;result:ReturnType<typeof report>;data:FinanceData}){if(!budget)return <p>بودجه‌ای برای این ماه تنظیم نشده.</p>;const rows:[string,number,number][]=[['کل ماه',budget.total,result.expense],...Object.entries(budget.categories).map(([n,v])=>[n,v,result.categories.find(([x])=>x===n)?.[1]??0] as [string,number,number]),...Object.entries(budget.folders??{}).map(([id,v])=>{const name=data.folders.find(f=>f.id===id)?.name??id;return [name,v,result.folderIds.find(([x])=>x===id)?.[1]??0] as [string,number,number];})];return <>{rows.map(([name,limit,spent])=>{const u=budgetUsage(limit,spent,budget.warningThreshold,budget.exceededThreshold);return <Surface as="div" className={`budget-status collection-card ${u.state}`} key={name}><CollectionHeading kind="budget">{name}</CollectionHeading><p>{money(spent)} از {money(limit)} · {fa(u.percentage)}٪</p><Progress aria-label={name} className={`ds-${u.state}`} value={Math.max(0,Math.min(100,limit?spent/limit*100:0))}/><p>{u.remaining<0?'بیشتر از بودجه':'باقی‌مانده'}: {money(Math.abs(u.remaining))}</p>{u.state==='warning'&&<p role="status">نزدیک سقف بودجه</p>}{u.state==='exceeded'&&<p role="alert">هزینه از سقف بودجه گذشته است</p>}{u.state==='unset'&&<small>سقف تنظیم نشده</small>}</Surface>;})}</>;}
 export function MonthlyBudgets({data,viewer,change}:Props){
  const empty=():Budget=>({total:0,categories:{},folders:{},warningThreshold:80,exceededThreshold:100});
- const [month,setMonth]=useState(periodKey(today())),[error,setError]=useState('');
+ const [month,setMonth]=useState(periodKey(today())),[error,setError]=useState(''),[openRequest,setOpenRequest]=useState(0);
  let key='';try{key=normalizePeriod(month);}catch{/* Invalid month remains visible. */}
  const current=data.monthlyBudgets[key];
  const [draft,setDraft]=useState<Budget>(current??empty());
  const setNumber=(raw:string,fn:(n:number)=>void)=>{try{fn(integer(raw,true));setError('');}catch(e){setError((e as Error).message);}};
  const first=key?fromJalali(`${key.replace('-','/')}/1`):'',last=first?new Date(Date.parse(nextDate(first,'ماهانه')+'T12:00:00Z')-86400000).toISOString().slice(0,10):'';
  const exact=report(data,viewer,{start:first,end:last},today());
- return <div className="planning-budget"><h1>بودجه ماهانه</h1><p className="muted">سقف خرج را برای ماه انتخاب‌شده تنظیم کن.</p><FormField label="سال / ماه شمسی"><FieldInput value={persianDigits(month)} onChange={e=>{setMonth(e.target.value);try{const k=normalizePeriod(e.target.value);setDraft(data.monthlyBudgets[k]??empty());setError('');}catch{setError('ماه معتبر مانند ۱۴۰۵/۰۷ وارد کن.');}}}/></FormField>{error&&<ErrorNotice message={error}/>}
- {key&&<EditorForm key={key} kind="budget" title={current?'ویرایش بودجه این ماه':'تنظیم بودجه این ماه'} submitLabel="ذخیره بودجه" summary={`سقف ماه ${persianDigits(key)}: ${money(draft.total)}`} onSubmit={()=>{
+ return <div className="planning-budget"><div className="page-head budget-page-head"><div><h1>بودجه ماهانه</h1><p>سقف خرج را برای ماه انتخاب‌شده تنظیم کن.</p></div><AddAction disabled={!key} onClick={()=>{setDraft(current??empty());setError('');setOpenRequest(n=>n+1)}}>ایجاد بودجه</AddAction></div><FormField label="سال / ماه شمسی"><FieldInput value={persianDigits(month)} onChange={e=>{setMonth(e.target.value);setOpenRequest(0);try{const k=normalizePeriod(e.target.value);setDraft(data.monthlyBudgets[k]??empty());setError('');}catch{setError('ماه معتبر مانند ۱۴۰۵/۰۷ وارد کن.');}}}/></FormField>{error&&<ErrorNotice message={error}/>}
+ {key&&<EditorForm key={key} kind="budget" openRequest={openRequest} title={current?'ویرایش بودجه این ماه':'تنظیم بودجه این ماه'} submitLabel="ذخیره بودجه" summary={`سقف ماه ${persianDigits(key)}: ${money(draft.total)}`} onSubmit={()=>{
  const k=normalizePeriod(month);if(error)throw new Error(error);
  if((draft.warningThreshold??80)>=(draft.exceededThreshold??100)||(draft.exceededThreshold??100)>1000)throw new Error('آستانه هشدار باید کمتر از آستانه سقف باشد (حداکثر ۱۰۰۰٪).');
  change({...data,monthlyBudgets:{...data.monthlyBudgets,[k]:draft},budget:k===periodKey(today())?draft:data.budget});

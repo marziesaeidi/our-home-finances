@@ -6,10 +6,10 @@ import { Action, AddAction } from './finance-ui';
 import { FlowBack } from './flow-navigation';
 import { Card } from './ui/card';
 
-export function EditorForm({ title, children, onSubmit, defaultOpen = false, afterSave = 'stay', onNew, submitLabel = 'ثبت', kind, summary, openRequest = 0, flow }: {
+export function EditorForm({ title, children, onSubmit, defaultOpen = false, afterSave = 'stay', onNew, submitLabel = 'ثبت', kind, summary, openRequest = 0, flow, hideLauncher = false }: {
   title: string; children: ReactNode; onSubmit: (data: FormData) => void;
   defaultOpen?: boolean; afterSave?: 'stay' | 'close'; onNew?: () => void; submitLabel?: string;
-  kind?: string; summary?: string; openRequest?: number;
+  kind?: string; summary?: string; openRequest?: number; hideLauncher?: boolean;
   flow?: { active: boolean; select: () => void; close: () => void };
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -33,9 +33,9 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
     {flow.active&&<section className="card asset-flow-editor"><FlowBack title={title} label="بازگشت به نمای کلی دارایی‌ها" onBack={flow.close}/>{editor}</section>}
   </div>;
   if (kind) return <div className="planning-launcher">
-    {/جدید|افزودن|^ثبت (چک|وام|پرداخت دوره‌ای)/.test(title)
+    {!hideLauncher && (/جدید|افزودن|^ثبت (چک|وام|پرداخت دوره‌ای)/.test(title)
       ? <AddAction onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</AddAction>
-      : <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</Action>}
+      : <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</Action>)}
     {saved&&<p className="planning-success" role="status">ذخیره شد.</p>}
     {open&&<Dialog title={title} className="planning-editor-dialog" onClose={()=>setOpen(false)}>
       {editor}
