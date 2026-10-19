@@ -7,7 +7,7 @@ export function EmojiPicker({ value, onChange, label = 'آیکن دلخواه', 
 }) {
   const hint = useId();
   return <fieldset className="emoji-picker"><legend>{label}</legend>
-    <div className="emoji-presets">{choices.map(symbol => <Action type="button" key={symbol}
+    <div className="emoji-presets">{choices.map(symbol => <Action variant={value === symbol ? "outline" : "outline"} type="button" key={symbol}
       className={value === symbol ? 'outline selected' : 'outline'} aria-pressed={value === symbol}
       aria-label={`انتخاب ${iconLabel(symbol)}`} onClick={() => onChange(symbol)}><AppIcon symbol={symbol} size={26}/></Action>)}</div>
     <label className="field"><span>ایموجی دلخواه از کیبورد گوشی</span><FieldInput type="text" inputMode="text"

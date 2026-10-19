@@ -29,6 +29,6 @@ export function ComposerAccountForm({viewer,onSave,onCancel,cancelLabel='باز�
   <FormField label="نمایش"><FieldSelect value={visibility} onChange={e=>setVisibility(e.target.value as Account['visibility'])}><option value="shared">مشترک</option><option value="private">خصوصی</option></FieldSelect></FormField>
   </details>
   {error&&<ErrorNotice message={error}/>}
-  <ComposerFooter summary={`${name||'حساب جدید'} · ${visibility==='shared'?'مشترک':'شخصی'} · موجودی اولیه به تومان`}><Action type="submit" className="primary full submit">ثبت حساب</Action>{onCancel&&<Action type="button" className="outline full" onClick={onCancel}>انصراف</Action>}</ComposerFooter>
+  <ComposerFooter summary={`${name||'حساب جدید'} · ${visibility==='shared'?'مشترک':'شخصی'} · موجودی اولیه به تومان`}><Action variant="default" type="submit" className="primary full submit">ثبت حساب</Action>{onCancel&&<Action variant="outline" type="button" className="outline full" onClick={onCancel}>انصراف</Action>}</ComposerFooter>
  </form>;
 }

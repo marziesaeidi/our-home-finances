@@ -1,3 +1,4 @@
+import { StatusBadge } from './components/action-layout';
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { dueItems, type DueItem } from './obligations';
@@ -11,7 +12,7 @@ function ReminderCard({ row, past = false }: { row: DueItem; past?: boolean }) {
   return <Surface as="article" className="card module-card collection-card reminder-card">
     <span className="navigation-card-icon"><Bell size={20}/></span>
     <div><h2>{row.name}</h2><p>{obligationMoney(row.amount, row.currency)} · {persianDate(row.date)}</p>
-      <span className="badge">{past ? 'سررسید گذشته' : 'نزدیک به موعد'}</span>
+      <StatusBadge className="badge">{past ? 'سررسید گذشته' : 'نزدیک به موعد'}</StatusBadge>
     </div>
   </Surface>;
 }
@@ -30,13 +31,13 @@ export function Reminders({ data, viewer }: { data: FinanceData; viewer: string 
   const past = rows.filter(row => row.date < day).sort((a, b) => b.date.localeCompare(a.date));
   return <div className="reminder-card-list">
     {upcoming.length ? upcoming.map(row => <ReminderCard key={row.kind + row.id} row={row}/>)
-      : <Empty title="یادآوری تازه‌ای نداری" desc="وقتی موعد پرداختی نزدیک شود، اینجا نمایش داده می‌شود."/>}
+      : <Empty variant="panel" title="یادآوری تازه‌ای نداری" desc="وقتی موعد پرداختی نزدیک شود، اینجا نمایش داده می‌شود."/>}
     <Surface as="section" className="card module-card">
       <details>
         <summary>یادآوری‌های گذشته ({fa(past.length)})</summary>
         <p className="field-hint">یادآوری‌هایی که تاریخشان گذشته است؛ گذشتن تاریخ به معنی ثبت پرداخت نیست.</p>
         {past.length ? <div className="reminder-card-list">{past.map(row => <ReminderCard key={row.kind + row.id} row={row} past/>)}</div>
-          : <Empty title="یادآوری گذشته‌ای نداری"/>}
+          : <Empty variant="panel" title="یادآوری گذشته‌ای نداری"/>}
       </details>
     </Surface>
   </div>;

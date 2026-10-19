@@ -57,7 +57,7 @@ function Button({
       data-slot="button"
       data-variant={variant}
       data-size={size}
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn('app-button', buttonVariants({ variant, size, className }))}
       {...props}
     />
   )

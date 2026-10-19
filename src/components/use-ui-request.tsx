@@ -1,3 +1,4 @@
+import { ActionGroup } from './action-layout';
 import { useEffect, useRef, useState } from 'react';
 import { Dialog } from '../Dialog';
 import { Action, FieldInput } from './finance-ui';
@@ -14,7 +15,7 @@ export function useUIRequest() {
   const requestDialog = request && <Dialog title={request.title} onClose={() => finish(null)}>
     <form className="finance-form" onSubmit={event => { event.preventDefault(); finish(request.value); }}>
       {request.confirm ? <p className="confirm-copy">{request.title}</p> : <label className="field">{request.title}<FieldInput autoFocus value={request.value} onChange={event => setRequest({ ...request, value: event.target.value })}/></label>}
-      <div className="confirm-actions"><Action type="submit" className={request.confirm ? 'danger' : 'primary'}>تأیید</Action><Action type="button" className="outline" onClick={() => finish(null)}>انصراف</Action></div>
+      <ActionGroup className="confirm-actions"><Action variant={request.confirm ? "destructive" : "default"} type="submit" className={request.confirm ? 'danger' : 'primary'}>تأیید</Action><Action variant="outline" type="button" className="outline" onClick={() => finish(null)}>انصراف</Action></ActionGroup>
     </form>
   </Dialog>;
   return { requestText: (title: string, value = '') => ask(title, value), requestConfirmation: async (title: string) => (await ask(title, '', true)) !== null, requestDialog };

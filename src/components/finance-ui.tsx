@@ -20,22 +20,18 @@ function revealFormError(form: HTMLFormElement) {
 }
 
 /** Native form contracts are preserved, including submit defaults and refs. */
-export function Action({ className = '', onClick, ...props }: ComponentProps<'button'>) {
-  const variant = /\b(primary|add-main)\b/.test(className) ? 'default'
-    : /\b(danger|plain-danger)\b/.test(className) ? 'destructive'
-    : /\boutline\b/.test(className) ? 'outline'
-    : /\bsecondary\b/.test(className) ? 'secondary' : 'ghost';
+export function Action({ className = '', onClick, variant = 'ghost', ...props }: ComponentProps<typeof Button>) {
   return <Button variant={variant} className={cn('finance-action', className)} {...props} onClick={event => { const form = event.currentTarget.form; onClick?.(event); if (form && event.currentTarget.type === 'submit' && !event.defaultPrevented) revealFormError(form); }}/>;
 }
 
 /** Uniform back control; the destination remains available to assistive technology. */
 export function BackButton({ label = 'بازگشت', className, ...props }: ComponentProps<'button'> & { label?: string }) {
-  return <Action type="button" {...props} className={cn('outline top-back', className)} aria-label={label} title={label}><ChevronLeft className="back-arrow" size={18}/>بازگشت</Action>;
+  return <Action type="button" {...props} variant="outline" className={cn('outline top-back', className)} aria-label={label} title={label}><ChevronLeft className="back-arrow" size={18}/>بازگشت</Action>;
 }
 
 /** Shared entry point for creating a record, matching the new-account action. */
 export function AddAction({ children, className, variant = 'primary', ...props }: ComponentProps<'button'> & { variant?: 'primary' | 'secondary' }) {
-  return <Action type="button" {...props} className={cn(variant, 'small app-add-action', className)}><Plus size={17} aria-hidden="true"/>{children}</Action>;
+  return <Action type="button" {...props} size="sm" variant={variant === 'primary' ? 'default' : 'secondary'} className={cn(variant, 'small app-add-action', className)}><Plus size={17} aria-hidden="true"/>{children}</Action>;
 }
 
 export function FieldInput({ error, ...props }: ComponentProps<'input'> & { error?: string }) {

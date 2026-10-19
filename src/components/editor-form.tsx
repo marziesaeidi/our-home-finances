@@ -1,3 +1,4 @@
+import { ActionFooter } from './action-layout';
 import { ErrorNotice } from './error-notice';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Dialog } from '../Dialog';
@@ -26,16 +27,16 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
     finally { lock.current=false; }
   }}><div className="planning-fields"><ComposerIntro kind={kind ?? 'expense'}/>{children}
     {error&&<ErrorNotice message={error}/>}
-    </div><div className="planning-footer app-action-footer">{summary&&<p className="composer-receipt" aria-live="polite">{summary}</p>}<Action type="submit" className="primary full">{submitLabel}</Action><Action type="button" className="outline full" onClick={()=>{setOpen(false);flow?.close();}}>انصراف</Action></div>
+    </div><ActionFooter className="planning-footer app-action-footer">{summary&&<p className="composer-receipt" aria-live="polite">{summary}</p>}<Action variant="default" type="submit" className="primary full">{submitLabel}</Action><Action variant="outline" type="button" className="outline full" onClick={()=>{setOpen(false);flow?.close();}}>انصراف</Action></ActionFooter>
   </form>;
   if (kind && flow) return <div className="planning-launcher asset-flow-launcher">
-    <Action type="button" className={flow.active?'primary planning-launch':'outline planning-launch'} aria-pressed={flow.active} onClick={()=>{if(saved){onNew?.();setEpoch(n=>n+1);}setSaved(false);setError('');flow.select();}}>{title}</Action>
+    <Action variant={flow.active ? "default" : "outline"} type="button" className={flow.active?'primary planning-launch':'outline planning-launch'} aria-pressed={flow.active} onClick={()=>{if(saved){onNew?.();setEpoch(n=>n+1);}setSaved(false);setError('');flow.select();}}>{title}</Action>
     {flow.active&&<section className="card asset-flow-editor"><FlowBack title={title} label="بازگشت به نمای کلی دارایی‌ها" onBack={flow.close}/>{editor}</section>}
   </div>;
   if (kind) return <div className="planning-launcher">
     {!hideLauncher && (/جدید|افزودن|^ثبت (چک|وام|پرداخت دوره‌ای)/.test(title)
       ? <AddAction onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</AddAction>
-      : <Action type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</Action>)}
+      : <Action variant="outline" type="button" className="outline full planning-launch" onClick={() => { if(saved) { onNew?.();setEpoch(n=>n+1); } setSaved(false);setError('');setOpen(true); }}>{title}</Action>)}
     {saved&&<p className="planning-success" role="status">ذخیره شد.</p>}
     {open&&<Dialog title={title} className="planning-editor-dialog" onClose={()=>setOpen(false)}>
       {editor}
@@ -56,8 +57,8 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
       {children}
       {error && <ErrorNotice message={error}/>}
       {saved && <p role="status">ثبت شد.</p>}
-      <Action type="submit" className="primary" disabled={saved}>{submitLabel}</Action>
-      {saved && <Action type="button" className="outline" onClick={() => { onNew?.(); setEpoch(n => n + 1); setSaved(false); setError(''); }}>{onNew ? 'ثبت مورد جدید' : 'ویرایش دوباره'}</Action>}
+      <Action variant="default" type="submit" className="primary" disabled={saved}>{submitLabel}</Action>
+      {saved && <Action variant="outline" type="button" className="outline" onClick={() => { onNew?.(); setEpoch(n => n + 1); setSaved(false); setError(''); }}>{onNew ? 'ثبت مورد جدید' : 'ویرایش دوباره'}</Action>}
     </form>
   </details></Card>;
 }

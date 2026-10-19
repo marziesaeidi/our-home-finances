@@ -29,6 +29,17 @@ The Dashboard palette in `src/dashboard-tokens.css` is the application-wide sour
 
 ## Shared components
 
+### Application-wide component consistency (2026-10-19)
+
+- `Action` accepts the same explicit `variant` and `size` props as `Button`. Every application call site declares its variant; CSS class names no longer select behavior. Use `default` for the primary submission/action, `outline` for neutral supporting actions/cancellation, `secondary` for a subordinate creation action, and `destructive` for deletion/reversal. `ghost` remains appropriate for navigation and filter options.
+- `shared-controls.css` supplies the common surfaces, hover/focus/disabled states and 44px default action size for both entry points. `AddAction` explicitly uses the compact size; form footers retain their 52px action layout, and icon/calendar controls retain their explicit sizes.
+- `ActionFooter` and `ActionGroup` own shared operation layouts. `ConfirmationDialog` standardizes confirmation/cancellation ordering while preserving each caller's callbacks and warning copy. `ChoiceGroup` groups repeated filter controls; selected choices expose `aria-pressed`.
+- `Empty` has explicit `inline` and `panel` presentations. Repeated empty panels, label/value rows, status badges and native progress controls use `Empty`, `Detail`, `StatusBadge` and `Meter`. `Detail` isolates its value with `bdi`.
+- Asset-chart selects and fullscreen buttons, plus the shared-entry retry action, now use the common controls. The fullscreen chart keeps its specialized native dialog, gesture handling and layout.
+- Intentionally retained: native photo/file/color inputs, segmented date input, contextual layouts, user-selected accent colors, and the existing fixed white header/action-footer treatment.
+
+Verification: production build and the full automated suite pass. An isolated browser gallery checks matching computed size/color/radius for `Button` and `Action` across all four action variants, light/dark themes, 390px layout, confirmation dismissal and fullscreen-chart open/close. The gallery uses synthetic data and does not modify application records. The authentication test's file URL conversion uses `fileURLToPath` so its existing static-page check also runs on Windows with non-ASCII project paths.
+
 `Action` uses shadcn Button variants while preserving native button submit defaults. `FieldInput` uses shadcn Input for text, numeric and currency fields. Checkbox, radio, file and color controls preserve native contracts. `FieldSelect` and `FieldTextarea` share the same token-based control surface while retaining existing native change/validation behavior. `Surface` uses shadcn Card with `asChild` to preserve div/section semantics and existing content layouts.
 
 `Dialog` uses shadcn/Radix portal, focus management, dismissal and title semantics, with a compact-screen sheet variant. `useUIRequest` replaces browser prompt/confirm windows for transaction editing, category changes and account deletion. `DateField` retains Jalali parsing, validation and calendar preference while using the shared input. Tables, chart meters, progress bars, badges, tabs, filters, navigation, error/empty states and toast use shared application selectors and the Dashboard semantic palette. Existing Dashboard tooltip, skeleton, Select, Tabs and Calendar primitives remain shared.

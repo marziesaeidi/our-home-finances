@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { startTestServer } from './app-helpers.mjs';
 
 test('sign up, log in, log out and reject bad credentials', async () => {
@@ -54,7 +55,7 @@ test('cookie requests from other origins or without JSON are rejected', async ()
 });
 
 test('pages redirect by session; unknown and removed API routes answer JSON 404', async () => {
-  const app = await startTestServer({ directory: new URL('../dist', import.meta.url).pathname });
+  const app = await startTestServer({ directory: fileURLToPath(new URL('../dist', import.meta.url)) });
   try {
     const visitor = app.client();
     const landing = await visitor.get('/');

@@ -27,7 +27,7 @@ export function AppEntry({ children }: { children: (data: FinanceData) => ReactN
   } catch (e) { if (active) setError((e as Error).message); }
  })(); return () => { active = false; }; }, []);
  if (data) return children(data);
- return <main dir="rtl" className="access-page"><section className="card module-card"><h1>اتصال به فضای مالی</h1><p role="status">{error || 'در حال دریافت اطلاعات…'}</p>{error && <button type="button" onClick={() => location.reload()}>تلاش دوباره</button>}</section></main>;
+ return <main dir="rtl" className="access-page"><section className="card module-card"><h1>اتصال به فضای مالی</h1><p role="status">{error || 'در حال دریافت اطلاعات…'}</p>{error && <Action variant="outline" className="outline" type="button" onClick={() => location.reload()}>تلاش دوباره</Action>}</section></main>;
 }
 
 // Lists the personal space and every household the user belongs to; switching reloads the app for that space.
@@ -48,9 +48,9 @@ export function SpaceSwitcher({ beforeCreate }: { beforeCreate?: ReactNode } = {
    {session.spaces.map(s => <option key={s.id} value={s.id}>{label(s.kind, s.name)}</option>)}
   </FieldSelect>
   {beforeCreate}
-  {creating ? <form style={{ display: 'grid', gap: 8 }} onSubmit={e => { e.preventDefault(); void create(); }}><FieldInput aria-label="نام فضای مشترک" autoFocus required maxLength={60} placeholder="مثلاً خانه ما" value={name} onChange={e => setName(e.target.value)}/><Action className="primary small" disabled={busy || !name.trim()}>ساخت فضای مشترک</Action><Action type="button" className="outline small" onClick={() => setCreating(false)}>انصراف</Action></form>
-   : <Action className="outline small" onClick={() => setCreating(true)}><Plus size={16}/> فضای مشترک تازه</Action>}
-  <Action className="outline small" onClick={() => void logout()}><LogOut size={16}/> خروج از حساب</Action>
+  {creating ? <form style={{ display: 'grid', gap: 8 }} onSubmit={e => { e.preventDefault(); void create(); }}><FieldInput aria-label="نام فضای مشترک" autoFocus required maxLength={60} placeholder="مثلاً خانه ما" value={name} onChange={e => setName(e.target.value)}/><Action variant="default" className="primary small" disabled={busy || !name.trim()}>ساخت فضای مشترک</Action><Action variant="outline" type="button" className="outline small" onClick={() => setCreating(false)}>انصراف</Action></form>
+   : <Action variant="outline" className="outline small" onClick={() => setCreating(true)}><Plus size={16}/> فضای مشترک تازه</Action>}
+  <Action variant="outline" className="outline small" onClick={() => void logout()}><LogOut size={16}/> خروج از حساب</Action>
   {error && <ErrorNotice message={error}/>}
  </div>;
 }

@@ -21,7 +21,7 @@ export function Welcome() {
  const createHousehold = () => run(async () => { const result = await api('/api/spaces', { name: name.trim() }); setSpace(result.space); setStep('invite'); });
  const createLink = () => run(async () => { const result = await api(`/api/spaces/${space!.id}/invitations`); setLink(result.url); setMessage(''); });
  const copy = async () => { try { await navigator.clipboard.writeText(link); setMessage('لینک کپی شد.'); } catch { setMessage('لینک را از کادر بالا کپی کن.'); } };
- const choice = (icon: ReactNode, title: string, text: string, onClick: () => void) => <Action className="outline full" style={{ height: 'auto', padding: 16, justifyContent: 'flex-start', textAlign: 'right', gap: 14, whiteSpace: 'normal' }} disabled={busy} onClick={onClick}>{icon}<span style={{ display: 'grid', gap: 4 }}><b>{title}</b><small style={{ color: 'var(--muted-foreground)' }}>{text}</small></span></Action>;
+ const choice = (icon: ReactNode, title: string, text: string, onClick: () => void) => <Action variant="outline" className="outline full" style={{ height: 'auto', padding: 16, justifyContent: 'flex-start', textAlign: 'right', gap: 14, whiteSpace: 'normal' }} disabled={busy} onClick={onClick}>{icon}<span style={{ display: 'grid', gap: 4 }}><b>{title}</b><small style={{ color: 'var(--muted-foreground)' }}>{text}</small></span></Action>;
 
  return <AccessShell><section className="access-card" aria-labelledby="welcome-title">
   {step === 'choose' && <><div className="access-icon"><Home/></div><span className="access-eyebrow">خوش آمدی، {user.name}</span><h2 id="welcome-title">می‌خواهی از برنامه چطور استفاده کنی؟</h2><p className="access-description">بعداً هم می‌توانی از بخش «مدیریت» فضای مشترک بسازی یا به فضای دیگران بپیوندی.</p>
@@ -31,13 +31,13 @@ export function Welcome() {
    </div></>}
   {step === 'household' && <><div className="access-icon"><Users/></div><span className="access-eyebrow">مرحلهٔ ۱ از ۲</span><h2 id="welcome-title">نام فضای مشترک</h2><p className="access-description">این نام برای همهٔ اعضا نمایش داده می‌شود و بعداً قابل تغییر است.</p>
    <form onSubmit={e => { e.preventDefault(); void createHousehold(); }}><FormField label="نام فضا"><FieldInput autoFocus required maxLength={60} placeholder="مثلاً خانه ما" value={name} onChange={e => setName(e.target.value)}/></FormField>
-    <Action className="primary full access-submit" disabled={busy || !name.trim()}>{busy ? 'در حال ساخت…' : 'ساخت فضای مشترک'}<ArrowLeft size={18}/></Action>
-    <Action type="button" className="outline full" onClick={() => setStep('choose')}>بازگشت</Action></form></>}
+    <Action variant="default" className="primary full access-submit" disabled={busy || !name.trim()}>{busy ? 'در حال ساخت…' : 'ساخت فضای مشترک'}<ArrowLeft size={18}/></Action>
+    <Action variant="outline" type="button" className="outline full" onClick={() => setStep('choose')}>بازگشت</Action></form></>}
   {step === 'invite' && space && <><div className="access-icon"><Link2/></div><span className="access-eyebrow">مرحلهٔ ۲ از ۲</span><h2 id="welcome-title">اعضا را دعوت کن</h2><p className="access-description">لینک را برای هر عضو بفرست. لینک یک‌بارمصرف است و ۷ روز اعتبار دارد؛ هر عضو پس از ورود یا ثبت‌نام درخواست می‌فرستد و تو آن را تأیید می‌کنی.</p>
    <div style={{ display: 'grid', gap: 12 }}>
-    {link ? <><FormField label="لینک دعوت"><FieldInput readOnly dir="ltr" value={link} onFocus={e => e.target.select()}/></FormField><Action className="outline full" onClick={() => void copy()}><Copy size={18}/> کپی لینک</Action><Action className="outline full" disabled={busy} onClick={() => void createLink()}>لینک برای عضو دیگر</Action></>
-     : <Action className="outline full" disabled={busy} onClick={() => void createLink()}><Link2 size={18}/> ساخت لینک دعوت</Action>}
-    <Action className="primary full access-submit" onClick={() => enter(space)}>ورود به {space.name}<ArrowLeft size={18}/></Action>
+    {link ? <><FormField label="لینک دعوت"><FieldInput readOnly dir="ltr" value={link} onFocus={e => e.target.select()}/></FormField><Action variant="outline" className="outline full" onClick={() => void copy()}><Copy size={18}/> کپی لینک</Action><Action variant="outline" className="outline full" disabled={busy} onClick={() => void createLink()}>لینک برای عضو دیگر</Action></>
+     : <Action variant="outline" className="outline full" disabled={busy} onClick={() => void createLink()}><Link2 size={18}/> ساخت لینک دعوت</Action>}
+    <Action variant="default" className="primary full access-submit" onClick={() => enter(space)}>ورود به {space.name}<ArrowLeft size={18}/></Action>
     {!link && <p className="access-consent">می‌توانی دعوت را بعداً از صفحهٔ «فضای مشترک» هم انجام دهی.</p>}
    </div></>}
   {message && <p role="status">{message}</p>}{error && <ErrorNotice message={error}/>}

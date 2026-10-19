@@ -25,8 +25,8 @@ export function AuthPage() {
  const field = (label: string, icon: ReactNode, input: ReactNode) => <FormField label={label}><div className="access-input">{icon}{input}</div></FormField>;
  return <AccessShell><section className="access-card" aria-labelledby="auth-title"><div className="access-icon"><KeyRound/></div><span className="access-eyebrow">{invited ? 'برای پیوستن به فضای مشترک، اول وارد شو' : 'حساب کاربری'}</span><h2 id="auth-title">{signup ? 'ساخت حساب تازه' : 'ورود به حساب'}</h2>
   <div role="tablist" aria-label="ورود یا ثبت‌نام" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:20}}>
-   <Action role="tab" aria-selected={!signup} className={!signup ? 'primary' : 'outline'} onClick={() => { setMode('login'); setError(''); }}>ورود</Action>
-   <Action role="tab" aria-selected={signup} className={signup ? 'primary' : 'outline'} onClick={() => { setMode('signup'); setError(''); }}>ثبت‌نام</Action>
+   <Action variant={!signup ? "default" : "outline"} role="tab" aria-selected={!signup} className={!signup ? 'primary' : 'outline'} onClick={() => { setMode('login'); setError(''); }}>ورود</Action>
+   <Action variant={signup ? "default" : "outline"} role="tab" aria-selected={signup} className={signup ? 'primary' : 'outline'} onClick={() => { setMode('signup'); setError(''); }}>ثبت‌نام</Action>
   </div>
   <form onSubmit={submit}>
    {signup && field('نام و نام خانوادگی', <UserRound size={18}/>, <FieldInput autoComplete="name" required maxLength={60} placeholder="مثلاً سارا احمدی" value={name} onChange={e => setName(e.target.value)}/>)}
@@ -34,7 +34,7 @@ export function AuthPage() {
    {field('رمز عبور', <Lock size={18}/>, <FieldInput type="password" dir="ltr" autoComplete={signup ? 'new-password' : 'current-password'} required minLength={signup ? 8 : undefined} maxLength={200} value={password} onChange={e => setPassword(e.target.value)}/>)}
    {signup && field('تکرار رمز عبور', <Lock size={18}/>, <FieldInput type="password" dir="ltr" autoComplete="new-password" required minLength={8} maxLength={200} value={repeat} aria-invalid={!!repeat && repeat !== password} onChange={e => setRepeat(e.target.value)}/>)}
    {signup && <p className="access-consent">رمز عبور دست‌کم ۸ نویسه. فعلاً امکان بازیابی رمز وجود ندارد؛ آن را جایی امن نگه دار.</p>}
-   <Action className="primary full access-submit" disabled={busy}>{busy ? 'لطفاً صبر کن…' : signup ? 'ساخت حساب' : 'ورود'}<ArrowLeft size={18}/></Action>
+   <Action variant="default" className="primary full access-submit" disabled={busy}>{busy ? 'لطفاً صبر کن…' : signup ? 'ساخت حساب' : 'ورود'}<ArrowLeft size={18}/></Action>
   </form>
   {error && <ErrorNotice message={error}/>}
  </section></AccessShell>;

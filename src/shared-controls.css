@@ -1,0 +1,19 @@
+/* Button and Action share the same surface and states. Size is explicit;
+   feature action bars may still provide their intentional full-width layout. */
+.app-button[data-size=default]:is([data-variant=default],[data-variant=outline],[data-variant=secondary],[data-variant=destructive]) {
+ height:auto; min-height:var(--control-height); padding:10px 17px;
+ border-radius:var(--radius-control); gap:6px; white-space:normal;
+ font:500 var(--type-body)/1.5 var(--font-sans);
+}
+.app-button[data-size=default] > svg { width:18px; height:18px; }
+.app-button[data-variant=default] { background:var(--primary); color:var(--primary-foreground); border-color:var(--primary); }
+.app-button[data-variant=default]:hover { background:var(--brand-dark); }
+.app-button[data-variant=outline] { background:var(--card); color:var(--foreground); border-color:var(--border); }
+.app-button[data-variant=outline]:hover { background:var(--muted); color:var(--foreground); }
+.app-button[data-variant=secondary] { background:var(--secondary); color:var(--secondary-foreground); border-color:transparent; }
+.app-button[data-variant=secondary]:hover { background:color-mix(in srgb,var(--secondary),var(--foreground) 5%); }
+.app-button[data-variant=destructive] { background:var(--destructive-soft); color:var(--destructive); border-color:var(--destructive); }
+.app-button[data-variant=destructive]:hover { background:color-mix(in srgb,var(--destructive),var(--card) 84%); }
+.app-button:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.app-button:disabled { opacity:.5; cursor:not-allowed; }
+.app-meter { width:100%; height:7px; accent-color:var(--primary); }
