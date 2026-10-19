@@ -6,6 +6,11 @@ export function ActionGroup({ className, ...props }: ComponentProps<'div'>) {
   return <div className={cn('detail-actions', className)} {...props}/>;
 }
 
+/** Compact detail actions stay together, including on narrow screens. */
+export function DetailActionBar({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('detail-action-bar', className)} {...props}/>;
+}
+
 export function ActionFooter({ className, children, ...props }: ComponentProps<'div'>) {
   return <div className={cn('app-action-footer', className)} {...props}>{children}</div>;
 }

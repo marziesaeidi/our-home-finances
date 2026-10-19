@@ -37,6 +37,7 @@ export function AddAction({ children, className, variant = 'primary', ...props }
 export function FieldInput({ error, ...props }: ComponentProps<'input'> & { error?: string }) {
   const errorId = useId();
   const [validation, setValidation] = useState('');
+  const [numericDraft, setNumericDraft] = useState<string | null>(null);
   const numeric = typeof props.value === 'number' || typeof props.defaultValue === 'number' || props.type === 'number' || props.inputMode === 'numeric' || props.inputMode === 'decimal';
   const message = error || validation;
   const validate = (node: HTMLInputElement) => {
@@ -62,17 +63,19 @@ export function FieldInput({ error, ...props }: ComponentProps<'input'> & { erro
     type={numeric ? 'text' : props.type}
     inputMode={numeric ? (props.inputMode ?? 'decimal') : props.inputMode}
     defaultValue={numeric && props.defaultValue !== undefined ? formatNumericInput(String(props.defaultValue)) : props.defaultValue}
-    value={numeric && props.value !== undefined ? formatNumericInput(String(props.value)) : props.value}
+    value={numeric && props.value !== undefined ? formatNumericInput(numericDraft ?? String(props.value)) : props.value}
     aria-invalid={message ? true : props['aria-invalid']}
     aria-describedby={[props['aria-describedby'], message ? errorId : ''].filter(Boolean).join(' ') || undefined}
     onInvalid={e => { e.preventDefault(); if(e.currentTarget.form) revealFormError(e.currentTarget.form); validate(e.currentTarget); if (!e.currentTarget.validity.valid) setValidation(e.currentTarget.validationMessage || 'مقدار معتبر وارد کن.'); props.onInvalid?.(e); }}
-    onBlur={e => { validate(e.currentTarget); props.onBlur?.(e); }}
+    onFocus={e => { if (numeric) setNumericDraft(rawNumericInput(e.currentTarget.value)); props.onFocus?.(e); }}
+    onBlur={e => { validate(e.currentTarget); setNumericDraft(null); props.onBlur?.(e); }}
     onChange={e => {
       if (numeric) {
         const node = e.currentTarget;
         const position = node.selectionStart ?? node.value.length;
         const prefix = normalizeDigits(node.value.slice(0, position)).replace(/[,٬،]/g, '');
         node.value = rawNumericInput(node.value);
+        setNumericDraft(node.value);
         props.onChange?.(e);
         const formatted = formatNumericInput(node.value);
         node.value = formatted;

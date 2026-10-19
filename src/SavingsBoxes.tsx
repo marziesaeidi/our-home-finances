@@ -1,5 +1,5 @@
 import { Empty } from './components/content-state';
-import { ChoiceGroup } from './components/action-layout';
+import { DetailActionBar, ChoiceGroup } from './components/action-layout';
 import { ActionFooter } from './components/action-layout';
 import { ErrorNotice } from './components/error-notice';
 import { removeGoal } from './removal';
@@ -17,7 +17,7 @@ import { Action, AddAction, FieldInput, FieldSelect, Surface } from './component
 import { Dialog } from './Dialog';
 import { DateField } from './DateField';
 import type { FinanceData, Goal, Transaction } from './types';
-import { active, allowed, post, reverse } from './finance';
+import { active, allowed, post } from './finance';
 import { add, integer, normalizeDigits, sum } from './decimal';
 import { saveGoal } from './savings';
 import { periodKey } from './calendar';
@@ -84,7 +84,7 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
    <Surface as="section" className="card module-card ob-detail savings-box-detail">
    <DetailHero title={box.name} symbol={box.icon ?? '🌱'} amount={money(box.saved)} caption={box.description || 'موجودی باکس'} progress={progress(box)/100} metrics={[["هدف باکس",box.target>0?money(box.target):'بدون مبلغ هدف'],["مانده تا هدف",box.target>0?money(Math.max(0,box.target-box.saved)):'—']]}/>
    {box.status && box.status !== 'active' && <p className="muted">{statuses[box.status]}</p>}
-   <div className="box-actions"><Action variant="default" className="primary" disabled={(box.status ?? 'active') !== 'active'} onClick={() => open('deposit')}><Plus size={18}/> واریز</Action><Action variant="outline" className="outline" disabled={box.saved <= 0} onClick={() => open('withdraw')}><ArrowUpFromLine size={18}/> برداشت</Action><Action variant="outline" className="outline" aria-label="تنظیمات باکس" onClick={() => open('settings')}><Settings2 size={18}/></Action></div>
+   <DetailActionBar className="box-actions"><Action variant="default" className="primary" disabled={(box.status ?? 'active') !== 'active'} onClick={() => open('deposit')}><Plus size={18}/> واریز</Action><Action variant="outline" className="outline" disabled={box.saved <= 0} onClick={() => open('withdraw')}><ArrowUpFromLine size={18}/> برداشت</Action><Action variant="outline" className="outline" aria-label="تنظیمات باکس" onClick={() => open('settings')}><Settings2 size={18}/></Action></DetailActionBar>
    <details className="planning-options"><summary>هدف باکس{box.targetDate ? ` · تا ${persianDate(box.targetDate)}` : ''}</summary><div className="box-option-content"><p>{box.target>0 ? `${money(Math.max(0,box.target-box.saved))} مانده تا هدف` : 'برای باکس خود هدف بگذار'}</p>{box.target>0&&<Progress aria-label="پیشرفت هدف باکس" value={progress(box)}/>}<Action variant="outline" className="outline" onClick={()=>open('goal')}>ویرایش هدف باکس</Action></div></details>
    <details className="planning-options box-plan" onToggle={e=>{if(e.currentTarget.open){setMonth(periodKey(today()));setPlan(String(box.monthlyPlans?.[periodKey(today())]??box.monthlyTarget??0));setMonthly(String(box.monthlyTarget??0));}}}><summary><span>برنامه پس‌انداز</span><small>{money(box.monthlyPlans?.[periodKey(today())]??box.monthlyTarget??0)} این ماه</small></summary>
     <form className="box-plan-form" onSubmit={e=>{e.preventDefault();try{if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw new Error('ماه را مثل ۱۴۰۵/۰۷ وارد کن.');change(saveGoal(data,{...box,monthlyTarget:integer(monthly,true),monthlyPlans:{...box.monthlyPlans,[month]:integer(plan,true)}}));setError('');}catch(err){setError((err as Error).message);}}}>
@@ -94,8 +94,8 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
      <Action variant="default" type="submit" className="primary">ذخیره برنامه</Action><p className="field-hint">این فقط برنامه است؛ واریز را خودت ثبت می‌کنی.</p>
     </form>
    </details>
-   <section className="box-history"><h2>تراکنش‌های باکس</h2>{(box.openingSaved ?? 0) > 0 && <p className="soft-note">پس‌انداز قبلی: {money(box.openingSaved!)}؛ حساب این مبلغ در سوابق قدیمی مشخص نیست و از اینجا قابل برداشت نیست.</p>}{!events.length && <Empty variant="panel">هنوز واریز یا برداشتی ثبت نشده است.</Empty>}{events.slice().sort((a,b) => b.date.localeCompare(a.date)).map(t => <div className="payment-row" key={t.id}><span className="box-feature-icon">{t.goalWithdrawal ? <ArrowUpFromLine size={20}/> : <ArrowDownToLine size={20}/>}</span><div className="row-main"><strong>{t.goalWithdrawal ? 'برداشت از باکس' : 'واریز به باکس'}</strong><small>{persianDate(t.date)} · {data.accounts.find(a => a.id === t.accountId)?.name} · {active(t) ? 'ثبت‌شده' : 'لغوشده'}</small></div><strong>{money(t.amount)}</strong>{active(t) && <Action variant="outline" className="outline" onClick={() => { try { change(reverse(data, t.id)); setError(''); } catch(e) { setError((e as Error).message); } }}>لغو ثبت</Action>}</div>)}</section>
    <Action variant="destructive" className="danger" onClick={async()=>{if(!await requestConfirmation(`باکس «${box.name}» در صورت خالی بودن و نداشتن سابقه حذف شود؟`))return;try{change(removeGoal(data,box.id,viewer));setSelected('');setError('')}catch(e){setError((e as Error).message)}}}>حذف باکس</Action>
+   <section className="box-history"><h2>تراکنش‌های باکس</h2>{(box.openingSaved ?? 0) > 0 && <p className="soft-note">پس‌انداز قبلی: {money(box.openingSaved!)}؛ حساب این مبلغ در سوابق قدیمی مشخص نیست و از اینجا قابل برداشت نیست.</p>}{!events.length && <Empty variant="panel">هنوز واریز یا برداشتی ثبت نشده است.</Empty>}{events.slice().sort((a,b) => b.date.localeCompare(a.date)).map(t => <div className="payment-row box-transaction-row" key={t.id}><span className="box-feature-icon">{t.goalWithdrawal ? <ArrowUpFromLine size={20}/> : <ArrowDownToLine size={20}/>}</span><div className="row-main"><strong>{t.goalWithdrawal ? 'برداشت از باکس' : 'واریز به باکس'}</strong><small>{persianDate(t.date)} · {data.accounts.find(a => a.id === t.accountId)?.name} · {active(t) ? 'ثبت‌شده' : 'لغوشده'}</small></div><strong>{money(t.amount)}</strong></div>)}</section>
    </Surface>
   </> : <>
    <div className="page-head savings-box-heading"><div><h1>باکس‌های پس‌انداز</h1><p className="muted">برای هر خواسته، یک باکس بساز.</p></div><AddAction onClick={() => open('create')}>باکس جدید</AddAction></div>
