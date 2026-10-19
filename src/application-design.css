@@ -927,33 +927,3 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
 .error-help-dialog > .error-help-actions { margin-top:var(--space-6); }
 .error-help-actions button,.error-notice > button { height:auto; min-height:44px; padding:10px 14px; white-space:normal; line-height:1.8; }
 @media(max-width:650px) { .error-help-dialog .error-help-actions { flex-direction:column; } .error-help-dialog .error-help-actions button { width:100%; } }
-
-/* Consistent label/value columns across asset cards and other detail summaries. */
-.detail-row {
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  align-items:baseline;
-  text-align:start;
-}
-.detail-row > :first-child { min-width:0; text-align:start; }
-.detail-row > strong { min-width:0; text-align:end; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
-.asset-amounts, .collection-preview .loan-preview-footer > .asset-amounts { display:grid; min-width:0; align-self:stretch; }
-.asset-amounts .detail-row { width:100%; margin:0; }
-.asset-amounts .detail-row > span { text-align:start; }
-.collection-preview .loan-preview-footer:has(.asset-amounts) { flex-direction:column; align-items:stretch; }
-
-/* A fine blue stroke makes secondary actions visibly clickable in both themes. */
-[data-slot="button"]:is([data-variant="outline"],[data-variant="secondary"]),
-.finance-action[data-variant="ghost"]:not(.transaction-row,.row-main,.report-metric-button) {
-  border:0.5px solid #3b82f6;
-}
-
-/* Keep the complete amount on its own line when a narrow screen needs more room. */
-.transaction-row .row-end { max-width:none; min-width:0; }
-.transaction-row .row-end strong { font-size:clamp(0.75rem,2.8vw,0.875rem); white-space:nowrap; direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums; }
-@media(max-width:480px) {
-  .transaction-row { display:grid; grid-template-columns:auto minmax(0,1fr); }
-  .transaction-row .row-icon { grid-column:1; grid-row:1 / 3; }
-  .transaction-row .row-main { grid-column:2; }
-  .transaction-row .row-end { grid-column:2; justify-self:end; }
-}
