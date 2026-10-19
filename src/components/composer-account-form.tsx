@@ -1,3 +1,4 @@
+import { ErrorNotice } from './error-notice';
 import { useRef, useState } from 'react';
 import type { Account } from '../types';
 import { integer } from '../decimal';
@@ -27,7 +28,7 @@ export function ComposerAccountForm({viewer,onSave,onCancel,cancelLabel='باز�
   <details className="planning-options"><summary>نوع حساب و دسترسی اعضا</summary><FormField label="نوع حساب"><FieldSelect value={type} onChange={e=>setType(e.target.value)}>{['حساب بانکی','نقدی','حساب پس‌انداز','حساب مشترک','سایر'].map(item=><option key={item}>{item}</option>)}</FieldSelect></FormField>
   <FormField label="نمایش"><FieldSelect value={visibility} onChange={e=>setVisibility(e.target.value as Account['visibility'])}><option value="shared">مشترک</option><option value="private">خصوصی</option></FieldSelect></FormField>
   </details>
-  {error&&<p className="form-error" role="alert">{error}</p>}
+  {error&&<ErrorNotice message={error}/>}
   <ComposerFooter summary={`${name||'حساب جدید'} · ${visibility==='shared'?'مشترک':'شخصی'} · موجودی اولیه به تومان`}><Action type="submit" className="primary full submit">ثبت حساب</Action>{onCancel&&<Action type="button" className="outline full" onClick={onCancel}>انصراف</Action>}</ComposerFooter>
  </form>;
 }

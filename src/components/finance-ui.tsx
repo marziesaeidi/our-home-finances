@@ -44,9 +44,15 @@ export function FieldInput({ error, ...props }: ComponentProps<'input'> & { erro
   const numeric = typeof props.value === 'number' || typeof props.defaultValue === 'number' || props.type === 'number' || props.inputMode === 'numeric' || props.inputMode === 'decimal';
   const message = error || validation;
   const validate = (node: HTMLInputElement) => {
+    node.setCustomValidity('');
     const raw = rawNumericInput(node.value);
     let next = '';
     if (props.required && !node.value.trim()) next = 'این فیلد را تکمیل کن.';
+    else if (node.validity.typeMismatch && props.type === 'email') next = 'ایمیل را کامل وارد کن؛ مثلاً name@example.com.';
+    else if (node.validity.typeMismatch && props.type === 'url') next = 'نشانی کامل را وارد کن؛ مثلاً https://example.com.';
+    else if (props.minLength && node.value && node.value.length < props.minLength) next = `حداقل ${formatNumericInput(String(props.minLength))} نویسه وارد کن.`;
+    else if (props.maxLength && node.value.length > props.maxLength) next = `حداکثر ${formatNumericInput(String(props.maxLength))} نویسه مجاز است.`;
+    else if (node.validity.patternMismatch) next = props.title || 'قالب مقدار واردشده درست نیست؛ طبق نمونه یا راهنمای این فیلد وارد کن.';
     else if (numeric && raw && !/^-?\d+(\.\d+)?$/.test(raw)) next = 'یک عدد معتبر وارد کن.';
     else if (numeric && raw && props.min !== undefined && Number(raw) < Number(props.min)) next = `حداقل مقدار ${formatNumericInput(String(props.min))} است.`;
     else if (numeric && raw && props.max !== undefined && Number(raw) > Number(props.max)) next = `حداکثر مقدار ${formatNumericInput(String(props.max))} است.`;
@@ -83,12 +89,20 @@ export function FieldInput({ error, ...props }: ComponentProps<'input'> & { erro
     }}/>{message && <small id={errorId} className="field-error" role="alert">{message}</small>}</span>;
 }
 
-export function FieldSelect({ className, ...props }: ComponentProps<'select'>) {
-  return <select data-slot="select-trigger" className={cn('finance-select', className)} {...props}/>;
+export function FieldSelect({ className, onInvalid, onChange, ...props }: ComponentProps<'select'>) {
+  const errorId=useId(),[message,setMessage]=useState('');
+  return <span className="input-control"><select data-slot="select-trigger" className={cn('finance-select', className)} {...props}
+    aria-invalid={message?true:props['aria-invalid']} aria-describedby={[props['aria-describedby'],message?errorId:''].filter(Boolean).join(' ')||undefined}
+    onInvalid={event=>{event.preventDefault();setMessage('یکی از گزینه‌های این فهرست را انتخاب کن.');if(event.currentTarget.form)revealFormError(event.currentTarget.form);onInvalid?.(event);}}
+    onChange={event=>{setMessage('');onChange?.(event);}}/>{message&&<small id={errorId} className="field-error" role="alert">{message}</small>}</span>;
 }
 
-export function FieldTextarea({ className, ...props }: ComponentProps<'textarea'>) {
-  return <textarea data-slot="textarea" className={cn('finance-textarea', className)} {...props}/>;
+export function FieldTextarea({ className, onInvalid, onChange, ...props }: ComponentProps<'textarea'>) {
+  const errorId=useId(),[message,setMessage]=useState('');
+  return <span className="input-control"><textarea data-slot="textarea" className={cn('finance-textarea', className)} {...props}
+    aria-invalid={message?true:props['aria-invalid']} aria-describedby={[props['aria-describedby'],message?errorId:''].filter(Boolean).join(' ')||undefined}
+    onInvalid={event=>{event.preventDefault();setMessage(event.currentTarget.validity.valueMissing?'متن این بخش را وارد کن.':'طول متن را طبق راهنمای این بخش اصلاح کن.');if(event.currentTarget.form)revealFormError(event.currentTarget.form);onInvalid?.(event);}}
+    onChange={event=>{setMessage('');onChange?.(event);}}/>{message&&<small id={errorId} className="field-error" role="alert">{message}</small>}</span>;
 }
 
 export function Surface<T extends ElementType = 'div'>({ as, className, ...props }: { as?: T; className?: string } & Omit<ComponentProps<T>, 'as' | 'className'>) {

@@ -1,3 +1,4 @@
+import { ErrorNotice } from './components/error-notice';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { ArrowLeft, KeyRound, Lock, Mail, UserRound } from 'lucide-react';
 import { Action, FieldInput } from './components/finance-ui';
@@ -35,6 +36,6 @@ export function AuthPage() {
    {signup && <p className="access-consent">رمز عبور دست‌کم ۸ نویسه. فعلاً امکان بازیابی رمز وجود ندارد؛ آن را جایی امن نگه دار.</p>}
    <Action className="primary full access-submit" disabled={busy}>{busy ? 'لطفاً صبر کن…' : signup ? 'ساخت حساب' : 'ورود'}<ArrowLeft size={18}/></Action>
   </form>
-  {error && <p role="alert" className="form-error">{error}</p>}
+  {error && <ErrorNotice message={error}/>}
  </section></AccessShell>;
 }

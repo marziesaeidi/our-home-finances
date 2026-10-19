@@ -1,3 +1,4 @@
+import { ErrorNotice } from './components/error-notice';
 import { useEffect, useState, type ReactNode } from 'react';
 import { ArrowLeft, Copy, Home, Link2, UserRound, Users } from 'lucide-react';
 import { Action, FieldInput } from './components/finance-ui';
@@ -39,6 +40,6 @@ export function Welcome() {
     <Action className="primary full access-submit" onClick={() => enter(space)}>ورود به {space.name}<ArrowLeft size={18}/></Action>
     {!link && <p className="access-consent">می‌توانی دعوت را بعداً از صفحهٔ «فضای مشترک» هم انجام دهی.</p>}
    </div></>}
-  {message && <p role="status">{message}</p>}{error && <p role="alert" className="form-error">{error}</p>}
+  {message && <p role="status">{message}</p>}{error && <ErrorNotice message={error}/>}
  </section></AccessShell>;
 }

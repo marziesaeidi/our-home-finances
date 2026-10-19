@@ -1,3 +1,4 @@
+import { ErrorNotice } from './components/error-notice';
 import { CollectionPreview } from './components/collection-preview';
 import { CollectionHeading } from './components/collection-heading';
 import { FlowBack } from './components/flow-navigation';
@@ -83,7 +84,7 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
     <AddAction variant="secondary" onClick={()=>setCreatingAccount(true)}>افزودن حساب</AddAction>
     <Action type="button" className="more-toggle" aria-expanded={more} onClick={()=>setMore(!more)}>افزودن جزئیات <ChevronLeft size={16} className={more?'rotated':''}/></Action>
     {more&&<><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/>{input('یادداشت (اختیاری)',note,setNote)}</>}
-    {error&&<p className="form-error" role="alert">{error}</p>}
+    {error&&<ErrorNotice message={error}/>}
     <ComposerFooter summary={rate?`${original} ${currency} · ${money(integer(paid))} از ${accounts.find(a=>a.id===account)?.name??'حساب انتخاب‌شده'}`:'مبلغ ارزی و پرداخت تومانی را وارد کن'}><Action className="primary full submit">{initial?'ذخیره تغییرات خرید':'ثبت خرید ارزی'}</Action>{initial&&<Action type="button" className="outline full" onClick={cancel}>انصراف</Action>}</ComposerFooter>
   </form>;
 }

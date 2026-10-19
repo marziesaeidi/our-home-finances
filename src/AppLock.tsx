@@ -1,3 +1,4 @@
+import { ErrorNotice } from './components/error-notice';
 import { FormField } from './components/form-fields';
 import { Surface, FieldInput, Action } from './components/finance-ui';
 import { useEffect, useState } from 'react';
@@ -37,5 +38,5 @@ export function AppLock({ children }: { children: ReactNode }) {
     e.preventDefault(); if (busy || Date.now() < retryAt) return; setBusy(true);
     try { if (!await verifyLock(localStorage, password)) throw new Error('رمز نادرست است؛ چند ثانیه بعد دوباره تلاش کن.'); setLocked(false); setPassword(''); setMessage(''); }
     catch (error) { setMessage((error as Error).message); setRetryAt(Date.now() + 3000); } finally { setBusy(false); }
-  }}><FormField label="رمز دستگاه"><FieldInput type="password" required autoFocus autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}/></FormField><Action className="primary" disabled={busy}>بازکردن قفل</Action>{message && <p role="alert">{message}</p>}</form><p className="field-hint">این قفل رمزگذاری داده نیست. برای بازیابی رمز فراموش‌شده، راهنمای برنامه را بخوان.</p></Surface></main>}</>;
+  }}><FormField label="رمز دستگاه"><FieldInput type="password" required autoFocus autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}/></FormField><Action className="primary" disabled={busy}>بازکردن قفل</Action>{message && <ErrorNotice message={message}/>}</form><p className="field-hint">این قفل رمزگذاری داده نیست. برای بازیابی رمز فراموش‌شده، راهنمای برنامه را بخوان.</p></Surface></main>}</>;
 }

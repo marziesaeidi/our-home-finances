@@ -1,3 +1,4 @@
+import { ErrorNotice } from './components/error-notice';
 import { useEffect, useState, type ReactNode } from 'react';
 import { LogOut, Plus } from 'lucide-react';
 import type { FinanceData } from './types';
@@ -49,6 +50,6 @@ export function SpaceSwitcher() {
   {creating ? <form style={{ display: 'grid', gap: 8 }} onSubmit={e => { e.preventDefault(); void create(); }}><FieldInput aria-label="نام فضای مشترک" autoFocus required maxLength={60} placeholder="مثلاً خانه ما" value={name} onChange={e => setName(e.target.value)}/><Action className="primary small" disabled={busy || !name.trim()}>ساخت فضای مشترک</Action><Action type="button" className="outline small" onClick={() => setCreating(false)}>انصراف</Action></form>
    : <Action className="outline small" onClick={() => setCreating(true)}><Plus size={16}/> فضای مشترک تازه</Action>}
   <Action className="outline small" onClick={() => void logout()}><LogOut size={16}/> خروج از حساب</Action>
-  {error && <p role="alert">{error}</p>}
+  {error && <ErrorNotice message={error}/>}
  </div>;
 }

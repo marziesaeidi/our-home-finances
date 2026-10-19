@@ -1,3 +1,6 @@
+import { ErrorNotice } from './components/error-notice';
+import { removeGoal } from './removal';
+import { useUIRequest } from './components/use-ui-request';
 import { CollectionPreview } from './components/collection-preview';
 import { DetailHero } from './components/detail-hero';
 import { Progress } from './components/ui/progress';
@@ -23,6 +26,7 @@ const statuses = { active: 'فعال', completed: 'تکمیل‌شده', archive
 const icons = ['🌱', '🏠', '✈️', '🚗', '💅', '🎓', '🎁', '🛟'];
 
 export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreated, onCancel }: Props) {
+ const {requestConfirmation,requestDialog}=useUIRequest();
  const [selected, setSelected] = useState('');
  const [panel, setPanel] = useState<Panel>(createOnly ? 'create' : null);
  const [error, setError] = useState('');
@@ -71,7 +75,7 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
  };
  const progress = (g: Goal) => Math.max(0, Math.min(100, g.target ? g.saved / g.target * 100 : 0));
  const heading = panel === 'create' ? 'باکس جدید' : panel === 'settings' ? 'تنظیمات باکس' : panel === 'goal' ? 'هدف باکس' : panel === 'withdraw' ? 'برداشت از باکس' : 'واریز به باکس';
- return <div className="savings-boxes">{!createOnly&&box&&<FlowBack label="بازگشت" onBack={()=>{setSelected('');setError('')}}/>}
+ return <div className="savings-boxes">{requestDialog}{!createOnly&&box&&<FlowBack label="بازگشت" onBack={()=>{setSelected('');setError('')}}/>}
   {!createOnly && (box ? <>
 
    <Surface as="section" className="card module-card ob-detail savings-box-detail">
@@ -88,6 +92,7 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
     </form>
    </details>
    <section className="box-history"><h2>تراکنش‌های باکس</h2>{(box.openingSaved ?? 0) > 0 && <p className="soft-note">پس‌انداز قبلی: {money(box.openingSaved!)}؛ حساب این مبلغ در سوابق قدیمی مشخص نیست و از اینجا قابل برداشت نیست.</p>}{!events.length && <p className="empty">هنوز واریز یا برداشتی ثبت نشده است.</p>}{events.slice().sort((a,b) => b.date.localeCompare(a.date)).map(t => <div className="payment-row" key={t.id}><span className="box-feature-icon">{t.goalWithdrawal ? <ArrowUpFromLine size={20}/> : <ArrowDownToLine size={20}/>}</span><div className="row-main"><strong>{t.goalWithdrawal ? 'برداشت از باکس' : 'واریز به باکس'}</strong><small>{persianDate(t.date)} · {data.accounts.find(a => a.id === t.accountId)?.name} · {active(t) ? 'ثبت‌شده' : 'لغوشده'}</small></div><strong>{money(t.amount)}</strong>{active(t) && <Action className="outline" onClick={() => { try { change(reverse(data, t.id)); setError(''); } catch(e) { setError((e as Error).message); } }}>لغو ثبت</Action>}</div>)}</section>
+   <Action className="danger" onClick={async()=>{if(!await requestConfirmation(`باکس «${box.name}» در صورت خالی بودن و نداشتن سابقه حذف شود؟`))return;try{change(removeGoal(data,box.id,viewer));setSelected('');setError('')}catch(e){setError((e as Error).message)}}}>حذف باکس</Action>
    </Surface>
   </> : <>
    <div className="page-head savings-box-heading"><div><h1>باکس‌های پس‌انداز</h1><p className="muted">برای هر خواسته، یک باکس بساز.</p></div><AddAction onClick={() => open('create')}>باکس جدید</AddAction></div>
@@ -96,13 +101,13 @@ export function SavingsBoxes({ data, viewer, change, createOnly = false, onCreat
    <div className="loan-cards">{goals.filter(g => (g.status === 'archived') === showArchived).map(g => <CollectionPreview key={g.id} kind="box" name={g.name} symbol={g.icon??'🌱'} accent={g.color} amount={money(g.saved)} footer={<><span>{g.target>0?`${money(Math.max(0,g.target-g.saved))} مانده تا هدف`:'بدون مبلغ هدف'}</span><span>{g.status==='completed'?'تکمیل‌شده':g.visibility==='shared'?'مشترک':'شخصی'}</span></>} onClick={()=>{setSelected(g.id);setError('');}}/>)}</div>
    {!goals.filter(g => (g.status === 'archived') === showArchived).length && <div className="box-empty"><PiggyBank size={48}/><h2>{showArchived ? 'باکس بایگانی‌شده‌ای نداری' : 'اولین باکست را بساز'}</h2><p>{showArchived ? 'باکس‌های بایگانی‌شده اینجا می‌آیند.' : 'مثلاً سفر، خرید خانه یا روز مبادا.'}</p>{!showArchived && <AddAction onClick={() => open('create')}>ساخت باکس</AddAction>}</div>}
   </>)}
-  {error && !panel && <p role="alert" className="form-error">{error}</p>}
+  {error && !panel && <ErrorNotice message={error}/>}
   {panel && <Dialog title={heading} hideTitle={panel === 'create'} className={`planning-editor-dialog ${panel === 'create' ? 'account-layout-dialog' : ''}`} onClose={() => { setPanel(null); setError(''); if (createOnly) onCancel?.(); }}><form className="finance-form planning-form transaction-composer" onSubmit={e => { e.preventDefault(); submit(); }}><div className="planning-fields"><ComposerIntro kind={panel==='create'?'box':panel==='settings'?'box-settings':panel==='deposit'?'box-deposit':panel==='withdraw'?'box-withdraw':'goal'}/>
    {(panel === 'create' || panel === 'settings') && <><FormField label="نام باکس"><FieldInput required placeholder="مثلاً سفر" value={name} onChange={e => setName(e.target.value)}/></FormField><EmojiPicker label="نماد باکس" value={icon} onChange={setIcon} choices={icons}/><details className="planning-options"><summary>تنظیمات بیشتر</summary><div className="finance-form"><FormField label="توضیح (اختیاری)"><FieldInput value={description} onChange={e => setDescription(e.target.value)}/></FormField><FormField label="رنگ باکس"><FieldInput type="color" value={color} onChange={e => setColor(e.target.value)}/></FormField><FormField label="نمایش باکس"><FieldSelect value={visibility} onChange={e => setVisibility(e.target.value as Goal['visibility'])}><option value="private">شخصی</option><option value="shared">مشترک</option></FieldSelect></FormField>{panel === 'settings' && <FormField label="وضعیت"><FieldSelect value={status} onChange={e => setStatus(e.target.value as typeof status)}>{Object.entries(statuses).map(([v,n]) => <option value={v} key={v}>{n}</option>)}</FieldSelect></FormField>}</div></details></>}
    {(panel === 'create' || panel === 'goal') && <><label className="check-row"><FieldInput type="checkbox" checked={targetEnabled} onChange={e => setTargetEnabled(e.target.checked)}/> برای این باکس هدف دارم</label>{targetEnabled && <><FormField label="مبلغ هدف (تومان)"><FieldInput required inputMode="numeric" value={target} onChange={e => setTarget(e.target.value)}/></FormField><label className="check-row"><FieldInput type="checkbox" checked={hasDate} onChange={e => { setHasDate(e.target.checked); if (!targetDate) setTargetDate(today()); }}/> تاریخ هدف را مشخص می‌کنم</label>{hasDate && <DateField label="تاریخ هدف" value={targetDate} onChange={setTargetDate}/>}</>}</>}
    {(panel === 'deposit' || panel === 'withdraw') && <><p className="field-hint">{panel === 'deposit' ? 'این مبلغ از پول آزاد حساب برای باکس کنار گذاشته می‌شود.' : 'این مبلغ از باکس آزاد می‌شود و دوباره قابل خرج‌کردن است.'} پول در همان حساب می‌ماند.</p><label className="field">{panel === 'deposit' ? 'از کدام حساب؟' : 'پول باکس در کدام حساب است؟'}<FieldSelect required value={account} onChange={e => setAccount(e.target.value)}><option value="">انتخاب حساب</option>{fundingAccounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</FieldSelect></label>{account && <p className="field-hint">{panel === 'deposit' ? 'پول آزاد حساب' : 'قابل برداشت از این حساب'}: {money(available(account))}</p>}{!fundingAccounts.length && <p role="status">{panel === 'deposit' ? 'ابتدا یک حساب تومانی ثبت کن.' : 'واریز قابل برداشت در حساب‌های شما ثبت نشده است.'}</p>}<FormField label="مبلغ (تومان)"><FieldInput required inputMode="numeric" value={amount} onChange={e => setAmount(e.target.value)}/></FormField><DateField value={day} onChange={setDay}/></>}
 
-   {error && <p className="form-error" role="alert">{error}</p>}</div><div className="planning-footer app-action-footer"><p className="composer-receipt">{panel==='deposit'?'کنارگذاشتن پول در همین حساب':panel==='withdraw'?'آزادشدن پول باکس در همین حساب':'تنظیمات و برنامه باکس'}</p><Action className="primary full" disabled={(panel === 'deposit' || panel === 'withdraw') && !fundingAccounts.length}>{panel === 'create' ? 'ساخت باکس' : panel === 'deposit' ? 'ثبت واریز' : panel === 'withdraw' ? 'ثبت برداشت' : 'ذخیره'}</Action></div>
+   {error && <ErrorNotice message={error}/>}</div><div className="planning-footer app-action-footer"><p className="composer-receipt">{panel==='deposit'?'کنارگذاشتن پول در همین حساب':panel==='withdraw'?'آزادشدن پول باکس در همین حساب':'تنظیمات و برنامه باکس'}</p><Action className="primary full" disabled={(panel === 'deposit' || panel === 'withdraw') && !fundingAccounts.length}>{panel === 'create' ? 'ساخت باکس' : panel === 'deposit' ? 'ثبت واریز' : panel === 'withdraw' ? 'ثبت برداشت' : 'ذخیره'}</Action></div>
   </form></Dialog>}
  </div>;
 }

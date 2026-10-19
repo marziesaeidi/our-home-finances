@@ -1,3 +1,4 @@
+import { money } from './utils';
 import { validateForeignExpense } from './foreignValidation';
 import type { FinanceData, Transaction, Loan, Installment } from './types';
 import { add, apportion, converted, decimal, integer, multiply, pricePerUnit, proportional, quantityAdd, split, sum } from './decimal';
@@ -5,6 +6,12 @@ import { canonicalDay, isoDay, jalaliParts, nextDate } from './calendar';
 
 export const active = (t: Transaction) => t.status !== 'reversed';
 export const allowed = (x: { visibility: string; owner?: string; createdBy?: string }, viewer: string) => x.visibility === 'shared' || (x.owner ?? x.createdBy) === viewer;
+export const cashlessFeeError = 'در حالت «اصلاح موجودی بدون تغییر پول حساب» نمی‌توان کارمزد پرداخت کرد. کارمزد را صفر کن؛ اگر خرید یا فروش واقعی انجام داده‌ای، این حالت را خاموش کن و حساب پرداخت را انتخاب کن.';
+export function assetAccountFunds(data: FinanceData, accountId: string) {
+  const balance = data.accounts.find(a=>a.id===accountId)?.balance ?? 0;
+  const reserved = sum(data.transactions.filter(t=>active(t)&&t.type==='saving'&&t.allocationOnly&&t.accountId===accountId).map(t=>t.goalWithdrawal?-t.amount:t.amount));
+  return {balance,reserved,available:add(balance,-reserved)};
+}
 export const earnedIncome = (t: Transaction) => active(t) && t.type === 'income' ? t.paymentAllocation ? add(t.amount,-(t.fx ? converted(String(t.paymentAllocation.principal),t.fx.rate) : t.paymentAllocation.principal)) : t.amount : 0;
 export const consumption = (t: Transaction) => active(t) ? t.paymentAllocation ? t.paymentAllocation.expense : t.type === 'expense' ? add(t.amount,t.foreignExpense?.feeToman??0) : t.type === 'loan-payment' ? sum([t.interest ?? 0, t.fee ?? 0]) : t.type === 'asset-buy' || t.type === 'asset-sell' ? t.fee ?? 0 : 0 : 0;
 export const remainingLoan = (data: FinanceData, loan: Loan) => {
@@ -71,7 +78,7 @@ export function post(data: FinanceData, transaction: Transaction, financialDay =
   if (!t.foreignExpense && [t.accountId,t.toAccountId].filter(Boolean).some(id=>data.accounts.find(a=>a.id===id)?.currency!=='IRT')) throw new Error('برای حساب ارزی از ماژول هزینه ارزی استفاده کن.');
   integer(String(t.fee ?? 0), true);
   if (t.allocationOnly && !['saving','asset-buy','asset-sell'].includes(t.type)) throw new Error('ثبت بدون حرکت وجه نقد فقط برای تخصیص یا اصلاح دارایی است.');
-  if (t.allocationOnly && t.assetId && t.fee) throw new Error('اصلاح بدون حرکت وجه نقد کارمزد نقدی ندارد.');
+  if (t.allocationOnly && t.assetId && t.fee) throw new Error(cashlessFeeError);
   if (!isoDay(t.date)) throw new Error('تاریخ معتبر لازم است.');
   if (t.date > financialDay) throw new Error('پرداخت آینده را در چک‌ها و تعهدات ثبت کن؛ هنوز از موجودی کم نمی‌شود.');
   if (!data.accounts.some(a => a.id === t.accountId)) throw new Error('حساب معتبر انتخاب کن.');
@@ -101,8 +108,11 @@ export function post(data: FinanceData, transaction: Transaction, financialDay =
     const asset = data.assets.find(a => a.id === t.assetId);
     if (!asset || !t.quantity || decimal(t.quantity).units <= 0n) throw new Error('دارایی و مقدار معتبر لازم است.');
     if (t.type === 'asset-buy' && !t.allocationOnly) {
-      const reserved = sum(data.transactions.filter(x => active(x) && x.type === 'saving' && x.allocationOnly && x.accountId === t.accountId).map(x => x.goalWithdrawal ? -x.amount : x.amount));
-      if (add(t.amount,t.fee??0) > add(data.accounts.find(a=>a.id===t.accountId)!.balance,-reserved)) throw new Error('موجودی آزاد حساب کافی نیست؛ تخصیص مرتبط را آزاد کن یا هدف تأمین را انتخاب کن.');
+      const funds = assetAccountFunds(data,t.accountId), required = add(t.amount,t.fee??0);
+      if (required > funds.available) {
+        const account = data.accounts.find(a=>a.id===t.accountId)!;
+        throw new Error(`برای این خرید با کارمزد ${money(required)} لازم است؛ مبلغ قابل استفاده از «${account.name}» ${money(funds.available)} است.` + (funds.reserved > 0 ? ` ${money(funds.reserved)} از پول این حساب برای باکس‌های پس‌انداز کنار گذاشته شده است. برای استفاده از آن، در «پرداخت از باکس پس‌انداز» باکس مربوط به همین حساب را انتخاب کن، یا در بخش باکس‌ها برداشت ثبت کن؛ می‌توانی حساب دیگری هم انتخاب کنی.` : ' مبلغ خرید را کمتر کن یا حساب دیگری انتخاب کن.'));
+      }
     }
     if (t.type === 'asset-buy') t.unitPrice = pricePerUnit(t.fx?.originalAmount ?? String(t.amount), t.quantity);
     if (t.type === 'asset-sell') { quantityAdd(asset.quantity, t.quantity, true); t.costBasis = proportional(asset.cost, t.quantity, asset.quantity); }

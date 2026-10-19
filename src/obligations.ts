@@ -1,5 +1,5 @@
 import type { FinanceData, Installment, Loan, Obligation, ObligationCurrency, Recurring, Transaction } from './types';
-import { add, converted, integer, split, sum } from './decimal';
+import { add, apportion, converted, integer, split, sum } from './decimal';
 import { canonicalDay, isoDay, jalaliParts, nextDate, periodKey } from './calendar';
 import { active, allowed, post, refreshObligationLoans } from './finance';
 
@@ -62,7 +62,7 @@ export function settleCheck(data: FinanceData, id: string, opts: Settlement, cre
 export function createLoan(data: FinanceData, loan: Loan, custom: Installment[]|undefined, viewer: Transaction['createdBy']): FinanceData {
   common(data,{...loan,amount:loan.principalTotal??0},viewer); day(loan.startDate??''); day(loan.repaymentStartDate??'');
   if (!['borrow','lend'].includes(loan.direction??'') || !Number.isInteger(loan.count) || loan.count<1 || loan.count>1200 || data.loans.some(l=>l.id===loan.id)) throw new Error('جهت و تعداد اقساط معتبر لازم است.');
-  amount(loan.interestTotal??0,true); amount(loan.feesTotal??0,true);
+  amount(loan.upfrontFee??0,true); amount(loan.interestTotal??0,true); amount(loan.feesTotal??0,true);
   if (loan.repaymentStartDate! < loan.startDate!) throw new Error('شروع بازپرداخت قبل از شروع وام است.');
   const principal=split(loan.principalTotal!,loan.count), interest=split(loan.interestTotal??0,loan.count), fees=split(loan.feesTotal??0,loan.count);
   let date=loan.repaymentStartDate!;
@@ -87,6 +87,36 @@ export function adjustInstallment(data: FinanceData, row: Installment, viewer: s
   const updated={...loan,principalTotal:sum(schedule.map(i=>i.principal??0)),interestTotal:sum(schedule.map(i=>i.interest??0)),feesTotal:sum(schedule.map(i=>i.fees??0)),total:sum(schedule.map(i=>i.amount)),calculation:'manual' as const};
   validateSchedule(updated,schedule);
   return refreshObligationLoans({...data,loans:data.loans.map(l=>l.id===loan.id?updated:l),installments:rows});
+}
+// Preserve the contract and posted history; distribute changes over untouched future rows.
+export function resizeInstallment(data: FinanceData, id: string, value: number, date: string, viewer: string): FinanceData {
+  const old=data.installments.find(i=>i.id===id);
+  const loan=data.loans.find(l=>l.id===old?.loanId&&l.managed&&!l.archived&&!l.canceled);
+  if(!old||!loan||!allowed(loan as Loan & {visibility:string},viewer))throw new Error('وام معتبر نیست.');
+  amount(value); day(date);
+  if(old.settled||old.paidAmount||data.transactions.some(t=>t.paymentAllocation?.installmentId===id))throw new Error('قسط دارای سابقه پرداخت قابل تغییر نیست.');
+  const editable=data.installments.filter(i=>i.loanId===loan.id&&(i.id===id||!i.amountAdjusted&&!i.settled&&!i.paidAmount&&!data.transactions.some(t=>t.paymentAllocation?.installmentId===i.id))).sort((a,b)=>a.index-b.index);
+  const others=editable.filter(i=>i.id!==id),total=sum(editable.map(i=>i.amount)),rest=add(total,-value);
+  if(rest<others.length||(!others.length&&rest!==0))throw new Error('مبلغ قسط باید در مجموع ثابت قرارداد جا بگیرد و برای سایر اقساط مبلغ مثبت باقی بگذارد.');
+  const equal=others.length?split(rest,others.length):[];
+  const amounts=editable.map(i=>i.id===id?value:equal[others.findIndex(o=>o.id===i.id)]);
+  const principal=apportion(sum(editable.map(i=>i.principal??0)),amounts);
+  const residual=amounts.map((n,index)=>add(n,-principal[index]));
+  const interestTotal=sum(editable.map(i=>i.interest??0));
+  const interest=sum(residual)?apportion(interestTotal,residual):residual;
+  const rows=data.installments.map(i=>{
+    const index=editable.findIndex(e=>e.id===i.id);
+    return index<0?i:{...i,amount:amounts[index],principal:principal[index],interest:interest[index],fees:residual[index]-interest[index],date:i.id===id?date:i.date,amountAdjusted:i.id===id?true:i.amountAdjusted};
+  });
+  validateSchedule(loan,rows.filter(i=>i.loanId===loan.id));
+  return refreshObligationLoans({...data,installments:rows});
+}
+export function installmentPaymentParts(row: Installment, value: number) {
+  amount(value);
+  const remaining=[add(row.principal??0,-(row.principalPaid??0)),add(row.interest??0,-(row.interestPaid??0)),add(row.fees??0,-(row.feesPaid??0))];
+  if(value>sum(remaining))throw new Error('پرداخت بیش از مانده قسط است.');
+  const parts=apportion(value,remaining);
+  return {principal:parts[0],interest:parts[1],fees:parts[2]};
 }
 export function settleInstallment(data: FinanceData, id: string, opts: Settlement, creator: Transaction['createdBy']): FinanceData {
   if(data.transactions.some(t=>t.id===`installment:${id}:${opts.requestId}` || active(t)&&opts.existingId===t.id&&t.paymentAllocation?.installmentId===id))return data;
@@ -148,6 +178,7 @@ export function totals(rows: DueItem[], date: string) {
 export function validateObligations(data: FinanceData) {
   for(const o of data.obligations){if(o.currency&&!currencies.includes(o.currency))throw new Error('ارز چک معتبر نیست.');o.reminderDays?.forEach(n=>amount(n,true));}
   for(const l of data.loans.filter(l=>l.managed)){
+    amount(l.upfrontFee??0,true);
     common(data,{...l,amount:l.principalTotal??0},l.owner??'');day(l.startDate??'');day(l.repaymentStartDate??'');
     validateSchedule(l,data.installments.filter(i=>i.loanId===l.id));
   }

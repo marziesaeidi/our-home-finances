@@ -1,3 +1,4 @@
+import { ErrorNotice } from './error-notice';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Dialog } from '../Dialog';
 import { ComposerIntro } from './transaction-composer';
@@ -24,7 +25,7 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
     catch(err) { setError(err instanceof Error?err.message:'ثبت انجام نشد.'); }
     finally { lock.current=false; }
   }}><div className="planning-fields"><ComposerIntro kind={kind ?? 'expense'}/>{children}
-    {error&&<p role="alert" className="form-error">{error}</p>}
+    {error&&<ErrorNotice message={error}/>}
     </div><div className="planning-footer app-action-footer">{summary&&<p className="composer-receipt" aria-live="polite">{summary}</p>}<Action type="submit" className="primary full">{submitLabel}</Action><Action type="button" className="outline full" onClick={()=>{setOpen(false);flow?.close();}}>انصراف</Action></div>
   </form>;
   if (kind && flow) return <div className="planning-launcher asset-flow-launcher">
@@ -53,7 +54,7 @@ export function EditorForm({ title, children, onSubmit, defaultOpen = false, aft
       finally { lock.current = false; }
     }}>
       {children}
-      {error && <p role="alert" className="form-error">{error}</p>}
+      {error && <ErrorNotice message={error}/>}
       {saved && <p role="status">ثبت شد.</p>}
       <Action type="submit" className="primary" disabled={saved}>{submitLabel}</Action>
       {saved && <Action type="button" className="outline" onClick={() => { onNew?.(); setEpoch(n => n + 1); setSaved(false); setError(''); }}>{onNew ? 'ثبت مورد جدید' : 'ویرایش دوباره'}</Action>}

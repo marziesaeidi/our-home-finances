@@ -1,3 +1,6 @@
+import './error-guidance.test';
+import { assetAccountFunds, cashlessFeeError } from '../src/finance';
+import './removal.test';
 import './asset-history.test';
 import './household.test';
 import { deleteCategory } from '../src/personalization';
@@ -267,4 +270,22 @@ test('category deletion removes matching events atomically and reconciles after 
  validate(result);
  const storage=new MemoryStorage(); saveStore(storage,result);
  assert.deepEqual(loadStore(storage,legacy(),at),result);
+});
+
+test('asset purchase errors distinguish insufficient cash from money reserved for boxes',()=>{
+ const d=savingsAssetFixture(),purchase=tx({id:'buy-error',type:'asset-buy',assetId:'gold',quantity:'1',amount:1100,fee:10});
+ assert.deepEqual(assetAccountFunds(d,'a'),{balance:1000,reserved:0,available:1000});
+ assert.throws(()=>post(d,purchase),(e:Error)=>e.message.includes('مبلغ قابل استفاده')&&!e.message.includes('کنار گذاشته'));
+ const reserved=post(d,tx({id:'reserved-error',type:'saving',goalId:'g',allocationOnly:true,amount:600}));
+ assert.deepEqual(assetAccountFunds(reserved,'a'),{balance:1000,reserved:600,available:400});
+ assert.throws(()=>post(reserved,{...purchase,amount:500}),(e:Error)=>e.message.includes('پرداخت از باکس پس‌انداز')&&e.message.includes('همین حساب'));
+ const funded=assetTrade(reserved,{...purchase,amount:500},'g');
+ assert.equal(balance(funded,'a'),490);assert.equal(funded.goals[0].saved,90);validate(funded);
+ assert.deepEqual(assetAccountFunds(reserved,'a'),{balance:1000,reserved:600,available:400});
+});
+test('cashless fee error explains both corrections and leaves all records unchanged',()=>{
+ const d=savingsAssetFixture(),before=structuredClone(d);
+ assert.throws(()=>post(d,tx({type:'asset-buy',assetId:'gold',allocationOnly:true,quantity:'1',fee:10})),{message:cashlessFeeError});
+ assert.match(cashlessFeeError,/کارمزد را صفر کن/);assert.match(cashlessFeeError,/این حالت را خاموش کن/);
+ assert.deepEqual(d,before);
 });

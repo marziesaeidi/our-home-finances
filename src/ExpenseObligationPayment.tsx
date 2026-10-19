@@ -1,3 +1,4 @@
+import { ErrorNotice } from './components/error-notice';
 import { ComposerIntro, ComposerFooter, CompactDate } from './components/transaction-composer';
 import { useRef, useState } from 'react';
 import type { FinanceData } from './types';
@@ -31,6 +32,6 @@ function PaymentForm({data,viewer,change,onSaved,row}:Props & {row:ExpensePaymen
     <label className="field composer-account"><span>حساب پرداخت</span><FieldSelect required value={account} onChange={e=>setAccount(e.target.value)}><option value="">انتخاب حساب</option>{data.accounts.filter(a=>allowed(a,viewer)&&(a.currency??'IRT')==='IRT').map(a=><option key={a.id} value={a.id}>{a.name}</option>)}</FieldSelect></label>
     <CompactDate label="تاریخ پرداخت" value={date} onChange={setDate}/>
     <p className="field-hint">با ثبت پرداخت، موجودی حساب و وضعیت همین تعهد هم‌زمان به‌روز می‌شوند.</p>
-    {error&&<p role="alert" className="form-error">{error}</p>}<ComposerFooter summary={`${row.name} · ${obligationMoney(total,row.currency)} از ${data.accounts.find(a=>a.id===account)?.name??'حساب انتخاب‌شده'}`}><Action type="submit" className="primary full submit">ثبت پرداخت</Action></ComposerFooter>
+    {error&&<ErrorNotice message={error}/>}<ComposerFooter summary={`${row.name} · ${obligationMoney(total,row.currency)} از ${data.accounts.find(a=>a.id===account)?.name??'حساب انتخاب‌شده'}`}><Action type="submit" className="primary full submit">ثبت پرداخت</Action></ComposerFooter>
   </form></Surface>;
 }

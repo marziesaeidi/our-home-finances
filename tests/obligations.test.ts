@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { FinancialObligations } from '../src/FinancialObligations';
-import { adjustInstallment, createLoan, deleteRecurring, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from '../src/obligations';
+import { installmentPaymentParts, resizeInstallment, adjustInstallment, createLoan, deleteRecurring, dueItems, reminders, saveCheck, saveRecurring, setCheckStatus, settleCheck, settleInstallment, settleRecurring, totals } from '../src/obligations';
 import { consumption, earnedIncome, post, remainingLoan, reverse } from '../src/finance';
 import { expensePayments, payExpenseObligation } from '../src/expense-payments';
 import { ExpenseObligationPayment } from '../src/ExpenseObligationPayment';
@@ -249,4 +249,31 @@ test('deleting recurring template preserves payments, balances and reversal afte
  d=JSON.parse(JSON.stringify(d));validate(d);
  assert.throws(()=>settleRecurring(d,'rent',nextDate(date,'ماهانه'),opts(),who));
  d=reverse(d,transactions[0].id);assert.equal(balance(d),10000);validate(d);
+});
+
+
+test('resizing preserves contract, manual overrides, payment history and reload',()=>{
+ let d=createLoan(fixture(),loan({principalTotal:12000000,interestTotal:1200000,feesTotal:0,upfrontFee:2000000,count:12}),undefined,who);
+ assert.equal(d.loans[0].total,13200000);assert.equal(balance(d),10000);
+ d=resizeInstallment(d,'loan:0',1500000,date,who);
+ assert.equal(d.loans[0].total,13200000);assert.equal(d.loans[0].principalTotal,12000000);
+ d=resizeInstallment(d,'loan:11',500000,d.installments[11].date,who);
+ assert.equal(d.installments[0].amount,1500000);assert.equal(d.installments[11].amount,500000);
+ assert.equal(d.installments.reduce((n,i)=>n+i.amount,0),13200000);validate(d);
+ const parts=installmentPaymentParts(d.installments[0],1500000);
+ d=settleInstallment(d,'loan:0',opts(parts),who);
+ const history=JSON.stringify(d.installments[0]);
+ d=resizeInstallment(d,'loan:1',1200000,d.installments[1].date,who);
+ assert.equal(JSON.stringify(d.installments[0]),history);
+ assert.throws(()=>resizeInstallment(d,'loan:0',1,date,who));
+ assert.throws(()=>resizeInstallment(d,'loan:1',13200000,date,who));
+ validate(JSON.parse(JSON.stringify(d)));
+});
+test('interest-free uneven installments conserve exact principal and partial allocation',()=>{
+ let d=createLoan(fixture(),loan({principalTotal:12000000,interestTotal:0,feesTotal:0,count:12}),undefined,who);
+ d=resizeInstallment(d,'loan:0',1500000,date,who);
+ d=resizeInstallment(d,'loan:11',500000,d.installments[11].date,who);
+ assert.ok(d.installments.slice(1,11).every(i=>i.amount===1000000));
+ assert.deepEqual(installmentPaymentParts(d.installments[0],123),{principal:123,interest:0,fees:0});
+ assert.throws(()=>installmentPaymentParts(d.installments[0],1500001));validate(d);
 });
