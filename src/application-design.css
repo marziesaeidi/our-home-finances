@@ -927,3 +927,22 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
 .error-help-dialog > .error-help-actions { margin-top:var(--space-6); }
 .error-help-actions button,.error-notice > button { height:auto; min-height:44px; padding:10px 14px; white-space:normal; line-height:1.8; }
 @media(max-width:650px) { .error-help-dialog .error-help-actions { flex-direction:column; } .error-help-dialog .error-help-actions button { width:100%; } }
+
+/* Preserve the transaction row layout while prioritizing the complete amount. */
+.transaction-row .row-main { flex:1 1 0; overflow:hidden; }
+.transaction-row .row-main > strong {
+  display:block;
+  width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.transaction-row .row-end { flex:0 0 auto; max-width:none; white-space:nowrap; }
+.transaction-row .row-end > strong {
+  font-size:0.75rem;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+  direction:ltr;
+  unicode-bidi:isolate;
+}
+.detail-amount > span:last-child { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
