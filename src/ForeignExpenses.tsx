@@ -1,5 +1,6 @@
+import { ChoiceGroup } from './components/action-layout';
+import { AppIcon } from './components/app-icon';
 import { CategoryFlow } from './SettingsPanel';
-import { categoryNames } from './personalization';
 import { ActionGroup } from './components/action-layout';
 import { Detail } from './components/content-state';
 import { ErrorNotice } from './components/error-notice';
@@ -11,7 +12,7 @@ import { FormField } from './components/form-fields';
 import { ReportCard, Metric, Empty } from './components/report-card';
 import { Action, AddAction, FieldSelect, FieldInput, Surface } from './components/finance-ui';
 import { useState } from 'react';
-import { Download, ChevronDown } from 'lucide-react';
+import { Download, ChevronDown, Plus } from 'lucide-react';
 import type { FinanceData, Transaction } from './types';
 import { currencies, nativeMoney, minorUnits } from './currencies';
 import { checked, integer, pricePerUnit } from './decimal';
@@ -81,8 +82,12 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
 
     {input('چی خریدی؟',title,setTitle,true)}
     {input('از کجا خریدی؟',merchant,setMerchant,true)}
-    <FormField label="دسته‌بندی"><FieldSelect value={category} onChange={e=>setCategory(e.target.value)}>{[...new Set([category,'آموزش','اشتراک اکانت','موسیقی',...categoryNames(data,'expense')])].map(name=><option key={name}>{name}</option>)}</FieldSelect></FormField>
-    <AddAction variant="secondary" onClick={()=>setAddingCategory(true)}>افزودن دسته‌بندی</AddAction>
+    <label className="field"><span>دسته‌بندی</span></label>
+    <ChoiceGroup className="category-picker">{[...new Set(['آموزش','اشتراک اکانت','موسیقی','سایر',category])].map(name=>{
+      const record=data.categoryRecords.find(c=>c.name===name);
+      const icon=record?.icon??({'آموزش':'🎓','اشتراک اکانت':'💳','موسیقی':'🎵','خوراک':'🛒','خرید':'🛍️','خانه':'🏠','حمل‌ونقل':'🚕','سلامت':'💊','تفریح':'☕','قبوض':'🧾','سفر':'✈️'} as Record<string,string>)[name]??'◌';
+      return <Action key={name} variant="ghost" type="button" aria-pressed={category===name} className={category===name?'selected':''} onClick={()=>setCategory(name)}><span style={{color:record?.color}}><AppIcon symbol={icon}/></span><span className="composer-category-label">{name}</span></Action>;
+    })}<Action variant="ghost" type="button" aria-label="افزودن دسته‌بندی" onClick={()=>setAddingCategory(true)}><span className="composer-category-icon"><Plus size={18}/></span><span className="composer-category-label">افزودن</span></Action></ChoiceGroup>
     <FormField className="composer-account" label="ارز خرید"><FieldSelect value={currency} onChange={e=>setCurrency(e.target.value)}>{[...currencies,...data.currencyDefinitions??[]].filter(c=>c.code!=='IRT').map(c=><option key={c.code} value={c.code}>{c.label} · {c.code}</option>)}</FieldSelect></FormField>
     <div className="composer-fx-pair">{input(`مبلغ خرید به ${currencyLabel}`,original,setOriginal,true,true)}
     {input('مبلغ پرداختی به تومان',paid,setPaid,true,true)}</div>
