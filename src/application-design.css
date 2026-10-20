@@ -491,7 +491,7 @@ html[data-theme=dark] .transaction-composer { --composer-tint:color-mix(in srgb,
 html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14201d; }
 
 /* Shared transaction actions stay reachable above navigation and device insets. */
-.composer-footer-space { min-height:160px; }
+.composer-footer-space { min-height:0; }
 .composer-footer { position:fixed; bottom:calc(96px + env(safe-area-inset-bottom,0px)); left:16px; right:16px; width:auto; max-width:738px; margin-inline:auto; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-card); box-shadow:var(--shadow-popover); }
 .app-flow .composer-footer { bottom:calc(16px + env(safe-area-inset-bottom,0px)); }
 .transaction-composer .composer-footer .submit,.foreign-composer-form .composer-footer .submit { width:100%; background:var(--primary); color:var(--primary-foreground); min-height:52px; margin:0; }
@@ -990,4 +990,36 @@ details[open]:has(> summary) > summary ~ * { max-width:100%; }
  border:1px solid var(--primary); border-top:0;
  border-radius:0 0 var(--radius-control) var(--radius-control);
  background:var(--card);
+}
+
+/* Form actions belong to the content flow, after all fields and disclosures. */
+.app-action-footer.app-action-footer.app-action-footer.app-action-footer,
+.filter-submit.filter-submit,
+.composer-footer.composer-footer,
+.planning-footer.planning-footer {
+ position:static; inset:auto; z-index:auto;
+ width:100%; max-width:none; box-sizing:border-box;
+ margin:0; padding:16px 0; box-shadow:none;
+}
+.composer-footer-space.composer-footer-space { min-height:0; }
+.asset-flow-editor .planning-form { padding-bottom:24px; }
+.transaction-filter-flow { padding-bottom:0; }
+
+/* Scroll the complete dialog body, including its final actions. */
+.planning-editor-dialog.finance-dialog .planning-form {
+ overflow-y:auto; overscroll-behavior:contain; scroll-padding-block:24px;
+}
+.planning-editor-dialog .planning-fields,
+.folder-editor-dialog .folder-editor-fields {
+ flex:0 0 auto; min-height:auto; overflow:visible;
+}
+.planning-editor-dialog .planning-form > .app-action-footer {
+ width:100%; max-width:650px; margin-inline:auto;
+ padding:16px 40px calc(16px + env(safe-area-inset-bottom,0px));
+}
+@media(max-width:650px) {
+ .asset-flow-editor .planning-form { padding-bottom:18px; }
+ .planning-editor-dialog .planning-form > .app-action-footer {
+  padding-inline:34px;
+ }
 }
