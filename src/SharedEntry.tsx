@@ -8,7 +8,7 @@ import { activeSpace, api, fetchSession, lastSpace, logout, remoteRequest, setAc
 
 let session: Session | null = null;
 
-// Signed-in entry: picks the last used space (else the personal one) and loads it from the server.
+// Explicit switches take priority; entry otherwise defaults to a shared household.
 export function AppEntry({ children }: { children: (data: FinanceData) => ReactNode }) {
  const [data, setData] = useState<FinanceData | null>(null), [error, setError] = useState('');
  useEffect(() => { let active = true; void (async () => {
@@ -16,8 +16,10 @@ export function AppEntry({ children }: { children: (data: FinanceData) => ReactN
    const current = await fetchSession();
    if (!current) { location.replace('/login?next=' + encodeURIComponent(location.pathname)); return; }
    session = current;
+   const explicit = sessionStorage.getItem('khaneh-space-switch');
+   sessionStorage.removeItem('khaneh-space-switch');
    const preferred = lastSpace(current.user.id);
-   const space = current.spaces.find(s => s.id === preferred) ?? current.spaces.find(s => s.kind === 'personal') ?? current.spaces[0];
+   const space = current.spaces.find(s => s.id === explicit) ?? current.spaces.find(s => s.id === preferred && s.kind === 'household') ?? current.spaces.find(s => s.kind === 'household') ?? current.spaces.find(s => s.kind === 'personal') ?? current.spaces[0];
    if (!space) throw new Error('هیچ فضای مالی برای این حساب پیدا نشد.');
    setActiveSpace(current.user.id, space);
    const result = await remoteRequest('read');
@@ -39,12 +41,12 @@ export function SpaceSwitcher({ beforeCreate }: { beforeCreate?: ReactNode } = {
  const label = (kind: string, spaceName: string) => kind === 'personal' ? `فضای شخصی · ${spaceName}` : spaceName;
  async function create() {
   setBusy(true); setError('');
-  try { const { space } = await api('/api/spaces', { name: name.trim() }); setActiveSpace(user.id, space); location.reload(); }
+  try { const { space } = await api('/api/spaces', { name: name.trim() }); setActiveSpace(user.id, space); sessionStorage.setItem('khaneh-space-switch',space.id); location.reload(); }
   catch (e) { setError((e as Error).message); setBusy(false); }
  }
  return <div className="space-switcher" style={{ display: 'grid', gap: 8, margin: '12px 0' }}>
   <small>{user.name} · <span dir="ltr">{user.email}</span></small>
-  <FieldSelect aria-label="انتخاب فضای مالی" value={current.id} onChange={e => { const next = session!.spaces.find(s => s.id === e.target.value); if (next) { setActiveSpace(user.id, next); location.reload(); } }}>
+  <FieldSelect aria-label="انتخاب فضای مالی" value={current.id} onChange={e => { const next = session!.spaces.find(s => s.id === e.target.value); if (next) { setActiveSpace(user.id, next); sessionStorage.setItem('khaneh-space-switch',next.id); location.reload(); } }}>
    {session.spaces.map(s => <option key={s.id} value={s.id}>{label(s.kind, s.name)}</option>)}
   </FieldSelect>
   {beforeCreate}

@@ -643,8 +643,8 @@ html[data-theme=dark] .transaction-composer .composer-footer .submit { color:#14
 }
 :where(details:not(.composer-date)) > summary::-webkit-details-marker { display:none; }
 :where(details:not(.composer-date)) > summary::after {
- content:''; width:8px; height:8px; flex-shrink:0; border-inline-end:2px solid currentColor;
- border-block-end:2px solid currentColor; transform:rotate(45deg); margin-inline:4px;
+ content:''; width:8px; height:8px; flex-shrink:0; border-right:2px solid currentColor;
+ border-bottom:2px solid currentColor; transform:rotate(45deg); margin-inline:4px;
 }
 :where(details:not(.composer-date))[open] > summary::after { transform:rotate(225deg); }
 :where(details:not(.composer-date)) > summary:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
@@ -950,3 +950,44 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
   unicode-bidi:isolate;
 }
 .detail-amount > span:last-child { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+
+.folder-select-row { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
+.folder-select-row > .field { flex: 1; min-width: 0; }
+.folder-select-row > button { flex: 0 0 auto; margin-bottom: 0; }
+.detail-actions > .folder-selector, .detail-actions > .field { width: 100%; }
+
+/* Keep an expanded section and its contents inside one visible boundary. */
+details[open]:has(> summary) {
+ border:1px solid var(--border);
+ border-radius:var(--radius-control);
+ background:var(--card);
+ padding:0 var(--space-4) var(--space-4);
+}
+details[open]:has(> summary) > summary {
+ margin:0 calc(-1 * var(--space-4)) var(--space-4);
+ padding:var(--space-3) var(--space-4);
+ border:0;
+ border-bottom:1px solid var(--border);
+ border-radius:var(--radius-control) var(--radius-control) 0 0;
+ background:var(--muted);
+ color:var(--foreground);
+}
+details[open]:has(> summary) > summary ~ * { max-width:100%; }
+.composer-date > summary .disclosure-arrow { flex-shrink:0; transition:transform .15s ease; }
+.composer-date[open] > summary .disclosure-arrow { transform:rotate(180deg); }
+.transaction-composer .more-toggle,.foreign-composer-form .more-toggle {
+ justify-content:space-between; border:1px solid var(--border);
+ border-radius:var(--radius-control); padding:var(--space-3) var(--space-4);
+}
+.transaction-composer .more-toggle[aria-expanded="true"],.foreign-composer-form .more-toggle[aria-expanded="true"] {
+ background:var(--muted); border-color:var(--primary);
+ border-radius:var(--radius-control) var(--radius-control) 0 0;
+}
+.more-toggle .rotated { transform:rotate(180deg); }
+.disclosure-panel {
+ display:flex; flex-direction:column; gap:var(--space-4);
+ padding:var(--space-4); margin-block-start:calc(-1 * var(--space-4));
+ border:1px solid var(--primary); border-top:0;
+ border-radius:0 0 var(--radius-control) var(--radius-control);
+ background:var(--card);
+}

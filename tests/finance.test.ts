@@ -1,3 +1,4 @@
+import { registerAsset } from '../src/savings';
 import './space-transfer.test';
 import './error-guidance.test';
 import { assetAccountFunds, cashlessFeeError } from '../src/finance';
@@ -308,4 +309,18 @@ test('per-asset amounts separate lifetime purchases from remaining basis and una
  d=correctAssetOpening(d,'gold',{openingQuantity:'1',openingCost:100},'opening correction');
  assert.equal(assetAmounts(d,d.assets[0]).totalPurchases,700);
  validate(d);
+});
+
+
+test('new asset and purchase reconcile cash, fees and quantity across reload and reversal',()=>{
+ const original=fixture();
+ const asset={id:'new-gold',name:'طلا',kind:'gold' as const,identifier:'GOLD',unit:'گرم',purity:'18K',custody:'خانه',quantity:'2.5',openingQuantity:'2.5',cost:300,openingCost:300,acquisitionDate:'2026-10-08',visibility:'shared' as const,owner:'مرزیه'};
+ const purchase=tx({id:'new-purchase',type:'asset-buy',assetId:asset.id,quantity:'2.5',amount:300,fee:10});
+ const bought=registerAsset(original,asset,purchase);
+ assert.equal(balance(bought,'a'),690);assert.equal(bought.assets[0].quantity,'2.5');assert.equal(bought.assets[0].openingQuantity,'0');assert.equal(bought.assets[0].cost,300);assert.equal(bought.assets[0].openingCost,0);assert.equal(bought.transactions.filter(active).length,1);validate(bought);
+ const loaded=JSON.parse(JSON.stringify(bought));validate(loaded);assert.throws(()=>registerAsset(loaded,asset,purchase));
+ const reversed=reverse(loaded,purchase.id);assert.equal(balance(reversed,'a'),1000);assert.equal(reversed.assets[0].quantity,'0');assert.equal(reversed.assets[0].cost,0);
+ assert.deepEqual(reverse(reversed,purchase.id),reversed);
+ const existing=registerAsset(original,asset);assert.equal(balance(existing,'a'),1000);assert.equal(existing.assets[0].openingQuantity,'2.5');assert.equal(existing.transactions.length,0);
+ assert.throws(()=>registerAsset(original,asset,{...purchase,amount:2000}));assert.equal(original.assets.length,0);assert.equal(balance(original,'a'),1000);
 });

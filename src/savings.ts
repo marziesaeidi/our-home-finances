@@ -43,6 +43,15 @@ export function savingsSummary(data: FinanceData, viewer: string, month: string)
   const contributions = data.transactions.filter(t => active(t) && allowed(t,viewer) && t.type === 'saving' && periodKey(t.date) === month);
   return { allocated: sum(goals.map(g=>g.saved)), planned: sum(goals.filter(g=>(g.status??'active')==='active').map(g=>g.monthlyPlans?.[month]??g.monthlyTarget??0)), actual: sum(contributions.filter(t=>!t.goalWithdrawal).map(t=>t.amount)), withdrawals: sum(contributions.filter(t=>t.goalWithdrawal).map(t=>t.amount)), cost: sum(assets.map(a=>a.cost)), originalAcquisitions: sum([...assets.map(a=>a.openingCost),...data.transactions.filter(t=>active(t)&&assets.some(a=>a.id===t.assetId)&&t.type==='asset-buy').map(t=>t.amount)]), valuation: sum(assets.filter(a=>a.quote).map(a=>converted(a.quantity,a.quote!))), missing: assets.filter(a=>!a.quote).length };
 }
+// Registering a purchase starts at zero so the linked trade is the only cash/quantity effect.
+export function registerAsset(data:FinanceData, asset:Asset, purchase?:Transaction):FinanceData {
+ if(data.assets.some(a=>a.id===asset.id))throw new Error('این دارایی قبلاً ثبت شده است.');
+ if(purchase&&(purchase.assetId!==asset.id||purchase.type!=='asset-buy'||purchase.allocationOnly))throw new Error('خرید باید به همین دارایی مرتبط باشد.');
+ const opening=purchase?{...asset,quantity:'0',openingQuantity:'0',cost:0,openingCost:0,originalCost:'0',acquisitionPrice:undefined}:asset;
+ const next={...data,assets:[...data.assets,opening]};
+ return purchase?assetTrade(next,purchase):next;
+}
+
 export function assetTrade(data: FinanceData, t: Transaction, fundingGoalId?: string): FinanceData {
   if (data.transactions.some(x=>x.id===t.id)) return data;
   let next = data;

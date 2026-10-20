@@ -9,7 +9,7 @@ import { FormField } from './components/form-fields';
 import { ReportCard, Metric, Empty } from './components/report-card';
 import { Action, AddAction, FieldSelect, FieldInput, Surface } from './components/finance-ui';
 import { useState } from 'react';
-import { Download, ChevronLeft } from 'lucide-react';
+import { Download, ChevronDown } from 'lucide-react';
 import type { FinanceData, Transaction } from './types';
 import { currencies, nativeMoney, minorUnits } from './currencies';
 import { checked, integer, pricePerUnit } from './decimal';
@@ -84,8 +84,8 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
     <CompactDate value={date} onChange={setDate}/>
     <FormField className="composer-account" label="حساب پرداخت"><FieldSelect required value={account} onChange={e=>setAccount(e.target.value)}><option value="" disabled>حساب پرداخت را انتخاب کن</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name}{a.currency==='IRR'?' (ریالی)':''}</option>)}</FieldSelect><p className="field-hint">همان مبلغ پرداختی از این حساب کم می‌شود؛ برای حساب ریالی، تومان به ریال تبدیل می‌شود.</p></FormField>
     <AddAction variant="secondary" onClick={()=>setCreatingAccount(true)}>افزودن حساب</AddAction>
-    <Action variant="ghost" type="button" className="more-toggle" aria-expanded={more} onClick={()=>setMore(!more)}>افزودن جزئیات <ChevronLeft size={16} className={more?'rotated':''}/></Action>
-    {more&&<><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/>{input('یادداشت (اختیاری)',note,setNote)}</>}
+    <Action variant="ghost" type="button" className="more-toggle" aria-expanded={more} aria-controls="foreign-extra-details" onClick={()=>setMore(!more)}>افزودن جزئیات <ChevronDown size={16} className={more?'rotated':''}/></Action>
+    {more&&<div id="foreign-extra-details" className="disclosure-panel"><FolderSelector hideSearch data={data} viewer={viewer} change={change} value={folderId} onChange={setFolderId}/>{input('یادداشت (اختیاری)',note,setNote)}</div>}
     {error&&<ErrorNotice message={error}/>}
     <ComposerFooter summary={rate?`${original} ${currency} · ${money(integer(paid))} از ${accounts.find(a=>a.id===account)?.name??'حساب انتخاب‌شده'}`:'مبلغ ارزی و پرداخت تومانی را وارد کن'}><Action variant="default" className="primary full submit">{initial?'ذخیره تغییرات خرید':'ثبت خرید ارزی'}</Action>{initial&&<Action variant="outline" type="button" className="outline full" onClick={cancel}>انصراف</Action>}</ComposerFooter>
   </form>;

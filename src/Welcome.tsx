@@ -10,13 +10,13 @@ type Step = 'choose' | 'household' | 'invite';
 
 // Shown once after a sign-up that didn't come from an invitation: personal use, or a new household with invites.
 export function Welcome() {
- const [session, setSession] = useState<Session | null>(null), [step, setStep] = useState<Step>('choose');
+ const [session, setSession] = useState<Session | null>(null), [step, setStep] = useState<Step>('household');
  const [name, setName] = useState(''), [space, setSpace] = useState<SpaceSummary | null>(null), [link, setLink] = useState('');
  const [busy, setBusy] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
  useEffect(() => { fetchSession().then(result => { if (!result) location.replace('/login?next=/welcome'); else setSession(result); }).catch(e => setError((e as Error).message)); }, []);
  if (!session) return <AccessShell><section className="access-card"><p role="status">{error || 'در حال آماده‌سازی…'}</p></section></AccessShell>;
  const user = session.user;
- const enter = (target?: SpaceSummary) => { const personal = session.spaces.find(s => s.kind === 'personal'); const chosen = target ?? personal; if (chosen) setActiveSpace(user.id, chosen); location.replace('/app'); };
+ const enter = (target?: SpaceSummary) => { const personal = session.spaces.find(s => s.kind === 'personal'); const chosen = target ?? personal; if (chosen) {setActiveSpace(user.id, chosen);sessionStorage.setItem('khaneh-space-switch',chosen.id);} location.replace('/app'); };
  async function run(task: () => Promise<void>) { setBusy(true); setError(''); try { await task(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }
  const createHousehold = () => run(async () => { const result = await api('/api/spaces', { name: name.trim() }); setSpace(result.space); setStep('invite'); });
  const createLink = () => run(async () => { const result = await api(`/api/spaces/${space!.id}/invitations`); setLink(result.url); setMessage(''); });
