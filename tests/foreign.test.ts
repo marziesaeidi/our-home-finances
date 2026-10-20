@@ -11,7 +11,7 @@ import { recordForeign, foreignSummary, suggestedForeignDebit } from '../src/for
 import type { ForeignInput } from '../src/foreignLedger';
 import { ProxyRateProvider, RateService } from '../src/exchangeRates';
 import type { RateQuote } from '../src/exchangeRates';
-import { consumption, post, reverse } from '../src/finance';
+import { consumption, post, reverse, revise } from '../src/finance';
 import { loadStore, migrate, saveStore, validate, STORE_KEY } from '../src/store';
 const at='2026-10-08T12:00:00.000Z';
 function fixture(){return migrate({transactions:[],accounts:[{id:'a',name:'تومان',type:'بانک',balance:10000000,visibility:'shared'}],loans:[],goals:[],recurring:[],budget:{total:10000000,categories:{}}},at);}
@@ -135,4 +135,15 @@ test('foreign report route keeps purchase history outside the entry form',()=>{
  const html=renderToStaticMarkup(createElement(FinanceModules,{...props,page:'foreign-reports'}));
  assert.match(html,/گزارش خریدهای ارزی/);assert.match(html,/خلاصه هزینه‌های انتخاب‌شده/);assert.match(html,/خریدهای ثبت‌شده/);
  assert.doesNotMatch(html,/چی خریدی؟|مبلغ پرداختی به تومان/);
+});
+
+test('direct foreign amount correction updates cash, report and retains full receipt history',()=>{
+ let d=recordForeign(fixture(),input({subscription:true}),'مرزیه');d=revise(d,'foreign','Updated subscription',1500000);
+ assert.equal(d.accounts[0].balance,8490000);assert.equal(foreignSummary(d,'مرزیه').total,1510000);
+ assert.equal(d.transactions[0].fx?.originalAmount,'20');assert.equal(d.transactions[0].revisions?.[0].previous?.foreignExpense?.debitMinor,1250000);
+ validate(JSON.parse(JSON.stringify(d)));d=reverse(d,'foreign');assert.equal(d.accounts[0].balance,10000000);
+});
+test('foreign purchase form offers requested categories and custom category action',()=>{
+ const html=renderToStaticMarkup(createElement(ForeignExpenses,{data:fixture(),viewer:'مرزیه',change:()=>{}}));
+ for(const label of ['آموزش','اشتراک اکانت','موسیقی','افزودن دسته‌بندی'])assert.ok(html.includes(label));
 });

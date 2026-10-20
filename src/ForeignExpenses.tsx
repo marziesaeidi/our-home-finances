@@ -1,3 +1,5 @@
+import { CategoryFlow } from './SettingsPanel';
+import { categoryNames } from './personalization';
 import { ActionGroup } from './components/action-layout';
 import { Detail } from './components/content-state';
 import { ErrorNotice } from './components/error-notice';
@@ -57,11 +59,13 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
   const f=initial?.foreignExpense;
   const [more,setMore]=useState(false);
   const [creatingAccount,setCreatingAccount]=useState(false);
+  const [addingCategory,setAddingCategory]=useState(false);
   const accounts=data.accounts.filter(a=>allowed(a,viewer)&&['IRT','IRR'].includes(a.currency??'IRT'));
-  const [title,setTitle]=useState(initial?.title??''),[merchant,setMerchant]=useState(f?.merchant??''),[currency,setCurrency]=useState(initial?.fx?.currency??data.settings.preferredCurrency??'USD'),[original,setOriginal]=useState(initial?.fx?.originalAmount??''),[paid,setPaid]=useState(initial?String(initial.amount+(f?.feeToman??0)):''),[date,setDate]=useState(initial?.date??today()),[account,setAccount]=useState(initial?.accountId??accounts[0]?.id??''),[category]=useState(initial?.category??'سایر'),[folderId,setFolderId]=useState(initial?.folderId??''),[note,setNote]=useState(initial?.note??''),[error,setError]=useState(''),[requestId]=useState(()=>crypto.randomUUID());
+  const [title,setTitle]=useState(initial?.title??''),[merchant,setMerchant]=useState(f?.merchant??''),[currency,setCurrency]=useState(initial?.fx?.currency??data.settings.preferredCurrency??'USD'),[original,setOriginal]=useState(initial?.fx?.originalAmount??''),[paid,setPaid]=useState(initial?String(initial.amount+(f?.feeToman??0)):''),[date,setDate]=useState(initial?.date??today()),[account,setAccount]=useState(initial?.accountId??accounts[0]?.id??''),[category,setCategory]=useState(initial?.category??'سایر'),[folderId,setFolderId]=useState(initial?.folderId??''),[note,setNote]=useState(initial?.note??''),[error,setError]=useState(''),[requestId]=useState(()=>crypto.randomUUID());
   let rate='';try{integer(paid);if(minorUnits(original,currency,data.currencyDefinitions)>0)rate=pricePerUnit(paid,original);}catch{/* Show no rate until both amounts are valid. */}
   const currencyLabel=[...currencies,...data.currencyDefinitions??[]].find(c=>c.code===currency)?.label??currency;
   const input=(label:string,value:string,set:(s:string)=>void,required=false,numeric=false)=><FormField label={label}><FieldInput required={required} value={value} onChange={e=>set(e.target.value)} inputMode={numeric?'decimal':undefined}/></FormField>;
+  if(addingCategory)return <CategoryFlow data={data} change={change} kind="expense" onDone={name=>{if(name)setCategory(name);setAddingCategory(false)}}/>;
   if(creatingAccount)return <ComposerAccountForm viewer={viewer} onCancel={()=>setCreatingAccount(false)} onSave={newAccount=>{change(d=>({...d,accounts:[newAccount,...d.accounts]}));setAccount(newAccount.id);setCreatingAccount(false)}}/>;
   return <form className="finance-form foreign-composer-form" onSubmit={e=>{e.preventDefault();setError('');try{
     if(!title.trim()||!merchant.trim())throw new Error('نام خرید و محل خرید را وارد کن.');
@@ -77,6 +81,8 @@ function ForeignExpenseForm({data,viewer,change,initial,saved,cancel}:Props&{ini
 
     {input('چی خریدی؟',title,setTitle,true)}
     {input('از کجا خریدی؟',merchant,setMerchant,true)}
+    <FormField label="دسته‌بندی"><FieldSelect value={category} onChange={e=>setCategory(e.target.value)}>{[...new Set([category,'آموزش','اشتراک اکانت','موسیقی',...categoryNames(data,'expense')])].map(name=><option key={name}>{name}</option>)}</FieldSelect></FormField>
+    <AddAction variant="secondary" onClick={()=>setAddingCategory(true)}>افزودن دسته‌بندی</AddAction>
     <FormField className="composer-account" label="ارز خرید"><FieldSelect value={currency} onChange={e=>setCurrency(e.target.value)}>{[...currencies,...data.currencyDefinitions??[]].filter(c=>c.code!=='IRT').map(c=><option key={c.code} value={c.code}>{c.label} · {c.code}</option>)}</FieldSelect></FormField>
     <div className="composer-fx-pair">{input(`مبلغ خرید به ${currencyLabel}`,original,setOriginal,true,true)}
     {input('مبلغ پرداختی به تومان',paid,setPaid,true,true)}</div>

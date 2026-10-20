@@ -1,3 +1,4 @@
+import { minorUnits, nativeText } from './currencies';
 import { money } from './utils';
 import { validateForeignExpense } from './foreignValidation';
 import type { FinanceData, Transaction, Loan, Installment } from './types';
@@ -141,18 +142,73 @@ export function revise(data: FinanceData, transactionId: string, title: string, 
   const t = data.transactions.find(x => x.id === transactionId);
   if (!t || !active(t)) throw new Error('تراکنش فعال نیست.');
   if (t.id.endsWith(':release')) throw new Error('این تخصیص وابسته به خرید است؛ خرید مرتبط را اصلاح کن.');
-  if (t.paymentAllocation || t.assetId || t.loanId || t.obligationId || t.occurrenceKey || t.fx) throw new Error('برای اصلاح این رویداد، آن را برگشت بده و دوباره ثبت کن.');
   integer(String(amount));
-  const undone = effects(data, t, -1);
-  const revised = { ...t, title, amount, revisions: [...(t.revisions ?? []), { title: t.title, amount: t.amount, at: new Date().toISOString() }] };
+  if (!title.trim()) throw new Error('عنوان لازم است.');
+  const at = new Date().toISOString();
+  const finish=(result:FinanceData):FinanceData=>({...result,recurring:result.recurring.map(r=>r.id===`foreign:${t.id}`?{...r,name:title.trim(),amount}:r)});
+  const revised: Transaction = { ...t, title: title.trim(), amount, revisions: [...(t.revisions ?? []), { title: t.title, amount: t.amount, at, previous: structuredClone({...t,revisions:undefined}) }] };
+  // A name-only correction must not replay a financial event.
+  if (amount === t.amount) return finish({...data,transactions:data.transactions.map(x=>x.id===t.id?revised:x)});
+  let undone = effects(data, t.assetId?{...t,assetId:undefined}:t, -1);
+  if (t.foreignExpense && t.fx) {
+    const f=t.foreignExpense;
+    const debit=pricePerUnit(String(amount),f.paymentRate);
+    revised.foreignExpense={...f,debitMinor:minorUnits(debit,f.paymentCurrency,data.currencyDefinitions),convertedOverride:amount,overrideReason:'اصلاح مبلغ پرداختی تراکنش'};
+    // Keep the original currency amount and explicitly version the paid rate.
+    const rate=pricePerUnit(String(amount),t.fx.originalAmount);
+    revised.fx=t.fx.currency==='IRR'?{...t.fx}:{...t.fx,rate,source:'محاسبه از مبلغ پرداختی اصلاح‌شده'};
+    revised.foreignExpense.quote={...f.quote,rate:revised.fx.rate,source:revised.fx.source};
+  } else if (t.fx) {
+    // The edited field is paid toman; preserve the historical exchange rate.
+    const originalAmount=nativeText(minorUnits(pricePerUnit(String(amount),t.fx.rate),t.fx.currency,data.currencyDefinitions),t.fx.currency,data.currencyDefinitions);
+    if(converted(originalAmount,t.fx.rate)!==amount)throw new Error('این مبلغ با دقت ارز و نرخ تاریخی قابل ثبت نیست. مبلغ سازگار با نرخ تاریخی وارد کن.');
+    revised.fx={...t.fx,originalAmount};
+  }
+  if(t.paymentAllocation){
+    const old=t.paymentAllocation,row=undone.installments.find(i=>i.id===old.installmentId);
+    if(!row)throw new Error('قسط مرتبط پیدا نشد.');
+    const nativeAmount=revised.fx?integer(revised.fx.originalAmount):amount;
+    const remaining=[add(row.principal??0,-(row.principalPaid??0)),add(row.interest??0,-(row.interestPaid??0)),add(row.fees??0,-(row.feesPaid??0))];
+    if(nativeAmount>sum(remaining))throw new Error('مبلغ اصلاح‌شده بیشتر از مانده قسط است.');
+    const [principal,interest,fees]=apportion(nativeAmount,remaining);
+    revised.paymentAllocation={...old,nativeAmount,principal,interest,fees,expense:t.type==='income'?0:revised.fx?converted(String(add(interest,fees)),revised.fx.rate):add(interest,fees)};
+  }
+  if(t.type==='loan-payment'){
+    const [principal,interest,fee]=apportion(amount,[t.principal??0,t.interest??0,t.fee??0]);
+    Object.assign(revised,{principal,interest,fee});
+  }
+  if(t.installmentId){
+    undone={...undone,installments:undone.installments.map(i=>i.id===t.installmentId?{...i,amount,principal:revised.principal,interest:revised.interest}:i)};
+  }
+  if(t.obligationId)undone={...undone,obligations:undone.obligations.map(o=>o.id===t.obligationId?{...o,amount:revised.fx?integer(revised.fx.originalAmount):amount}:o)};
+  if(t.assetId){
+    const release=data.transactions.find(x=>x.id===`${t.id}:release`&&active(x));
+    let correctedRelease=release;
+    if(release && release.amount>add(amount,t.fee??0)){
+      correctedRelease={...release,amount:add(amount,t.fee??0),revisions:[...(release.revisions??[]),{title:release.title,amount:release.amount,at}]};
+      undone=effects(effects(undone,release,-1),correctedRelease,1);
+    }
+    // Quantity is unchanged. Recompute the cost of every dependent sale in order.
+    let transactions=data.transactions.map(x=>x.id===t.id?{...revised,unitPrice:revised.quantity?pricePerUnit(revised.fx?.originalAmount??String(amount),revised.quantity):revised.unitPrice}:x.id===release?.id?correctedRelease!:x);
+    const asset=data.assets.find(a=>a.id===t.assetId)!;
+    let quantity=asset.openingQuantity,cost=asset.openingCost;
+    for(const event of transactions.filter(x=>active(x)&&x.assetId===t.assetId).reverse()){
+      if(event.type==='asset-buy'){quantity=quantityAdd(quantity,event.quantity!);cost=add(cost,event.amount);}
+      else {const basis=proportional(cost,event.quantity!,quantity);quantity=quantityAdd(quantity,event.quantity!,true);cost=add(cost,-basis);transactions=transactions.map(x=>x.id===event.id?{...x,costBasis:basis,costBasisRevisions:[...(x.costBasisRevisions??[]),{value:x.costBasis??0,at}]}:x);}
+    }
+    const result=effects(undone,{...revised,assetId:undefined},1);
+    return {...result,transactions,assets:result.assets.map(a=>a.id===t.assetId?{...a,quantity,cost}:a)};
+  }
   if (t.legacy) {
     // Historical saving events debited cash. Preserve that meaning when correcting them.
     const result = effects(undone,revised,1);
     if (result.goals.some(g=>g.saved<0)) throw new Error('اصلاح با تخصیص‌های بعدی هدف سازگار نیست.');
     return { ...result, transactions: data.transactions.map(x=>x.id===t.id?revised:x) };
   }
+  if(t.loanId && data.loans.some(l=>l.id===t.loanId&&l.managed)) return {...effects(undone,revised,1),transactions:data.transactions.map(x=>x.id===t.id?revised:x)};
   const validated = post({ ...undone, transactions: undone.transactions.filter(x => x.id !== t.id) }, { ...revised, folderId: undefined });
-  return { ...validated, transactions: data.transactions.map(x => x.id === t.id ? revised : x) };
+  if (validated.goals.some(g=>g.saved<0)) throw new Error('مبلغ اصلاح‌شده با برداشت‌های بعدی هدف سازگار نیست.');
+  return finish({ ...validated, transactions: data.transactions.map(x => x.id === t.id ? revised : x) });
 }
 export function loanPayment(data: FinanceData, loanId: string, accountId: string, date: string, creator: Transaction['createdBy'], expectedPaid?: number): FinanceData {
   const loan = data.loans.find(l => l.id === loanId && !l.archived && !l.canceled);

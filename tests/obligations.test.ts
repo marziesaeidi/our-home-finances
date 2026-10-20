@@ -1,3 +1,4 @@
+import { revise } from '../src/finance';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
@@ -299,4 +300,13 @@ test('overdue legacy recurring dates can be completed without moving the opening
  assert.equal(balance(paid),9880);
  const reloaded=JSON.parse(JSON.stringify(paid));validate(reloaded);
  assert.deepEqual(settleRecurring(reloaded,old.id,old.nextDate,opts({date:date,value:120}),who),reloaded);
+});
+
+test('paid installment correction refreshes schedule, outstanding principal and cash',()=>{
+ let d=createLoan(fixture(),loan(),undefined,who);
+ d=payExpenseObligation(d,who,expensePayments(d,who).find(r=>r.id==='loan:0')!.key,opts());
+ const id=d.transactions[0].id;d=revise(d,id,'Partial corrected payment',20);
+ assert.equal(balance(d),9980);assert.equal(d.installments[0].settled,false);assert.equal(d.installments[0].paidAmount,20);
+ assert.equal(d.loans[0].paid,0);validate(JSON.parse(JSON.stringify(d)));
+ assert.throws(()=>revise(d,id,'Overpayment',1000));d=reverse(d,id);assert.equal(balance(d),10000);
 });

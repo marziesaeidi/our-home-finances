@@ -324,3 +324,23 @@ test('new asset and purchase reconcile cash, fees and quantity across reload and
  const existing=registerAsset(original,asset);assert.equal(balance(existing,'a'),1000);assert.equal(existing.assets[0].openingQuantity,'2.5');assert.equal(existing.transactions.length,0);
  assert.throws(()=>registerAsset(original,asset,{...purchase,amount:2000}));assert.equal(original.assets.length,0);assert.equal(balance(original,'a'),1000);
 });
+
+ test('linked recurring and check corrections keep identities and update cash and reports',()=>{
+  let d=fixture();d.recurring.push({id:'r',name:'Rent',amount:100,frequency:'ماهانه',nextDate:'2026-10-08',category:'خانه',accountId:'a',owner:'مرزیه',reminder:true,transactionType:'expense'});
+  d=payRecurring(d,'r','2026-10-08','2026-10-08','مرزیه');const due=d.recurring[0].nextDate;
+  d=revise(d,d.transactions[0].id,'Corrected rent',150);
+  assert.equal(balance(d,'a'),850);assert.equal(consumption(d.transactions[0]),150);assert.equal(d.recurring[0].nextDate,due);assert.equal(d.transactions.length,1);validate(JSON.parse(JSON.stringify(d)));
+  d=reverse(d,d.transactions[0].id);assert.equal(balance(d,'a'),1000);
+ });
+ test('transfer correction updates both accounts and reload reconciliation',()=>{
+  let d=post(fixture(),tx({type:'transfer',toAccountId:'b'}));d=revise(d,'event','Transfer corrected',250);
+  assert.equal(balance(d,'a'),750);assert.equal(balance(d,'b'),450);assert.equal(consumption(d.transactions[0]),0);validate(JSON.parse(JSON.stringify(d)));
+ });
+
+test('asset amount correction recalculates later disposal basis and account balances',()=>{
+ let d=fixture();d.assets.push({id:'asset',name:'Gold',kind:'gold',quantity:'0',openingQuantity:'0',unit:'gram',custody:'home',cost:0,openingCost:0,visibility:'shared',owner:'مرزیه'});
+ d=post(d,tx({id:'buy',type:'asset-buy',assetId:'asset',quantity:'2',amount:200}));
+ d=post(d,tx({id:'sell',type:'asset-sell',assetId:'asset',quantity:'1',amount:150}));
+ d=revise(d,'buy','Corrected purchase',300);
+ assert.equal(balance(d,'a'),850);assert.equal(d.assets[0].cost,150);assert.equal(d.assets[0].quantity,'1');assert.equal(d.transactions.find(t=>t.id==='sell')?.costBasis,150);validate(JSON.parse(JSON.stringify(d)));
+});
