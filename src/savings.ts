@@ -78,9 +78,10 @@ export function correctAssetTrade(data: FinanceData, id: string, replacement: Tr
   }
   return next;
 }
-export function correctAssetOpening(data: FinanceData, assetId: string, opening: Pick<Asset, 'openingQuantity' | 'openingCost' | 'acquisitionDate' | 'originalCost' | 'originalCurrency' | 'acquisitionPrice' | 'notes'>, reason: string): FinanceData {
+export function correctAssetOpening(data: FinanceData, assetId: string, opening: Pick<Asset, 'openingQuantity' | 'openingCost' | 'acquisitionDate' | 'originalCost' | 'originalCurrency' | 'acquisitionPrice' | 'notes'> & Partial<Pick<Asset, 'name' | 'kind' | 'identifier' | 'unit' | 'purity' | 'network' | 'custody' | 'goalId'>>, reason = ''): FinanceData {
   const old = data.assets.find(a=>a.id===assetId);
-  if (!old || !reason.trim()) throw new Error('دارایی و دلیل اصلاح لازم است.');
+  if (!old) throw new Error('دارایی پیدا نشد.');
+  if (opening.name !== undefined && !opening.name.trim()) throw new Error('نام دارایی لازم است.');
   decimal(opening.openingQuantity); integer(String(opening.openingCost),true);
   let quantity=opening.openingQuantity, cost=opening.openingCost;
   const corrections=new Map<string,number>();
@@ -118,5 +119,5 @@ export function validateSavingsAssets(data: FinanceData) {
     const x=decimal(quantity),y=decimal(a.quantity);
     if(x.units*y.scale!==y.units*x.scale || cost!==a.cost) throw new Error('موجودی دارایی با تاریخچه سازگار نیست.');
   }
-  if (data.assetOpeningRevisions && (!Array.isArray(data.assetOpeningRevisions) || data.assetOpeningRevisions.some(r=>!data.assets.some(a=>a.id===r.assetId) || !r.reason?.trim() || !Number.isFinite(Date.parse(r.at)) || !r.previous || r.previous.id!==r.assetId))) throw new Error('تاریخچه اصلاح افتتاحیه معتبر نیست.');
+  if (data.assetOpeningRevisions && (!Array.isArray(data.assetOpeningRevisions) || data.assetOpeningRevisions.some(r=>!data.assets.some(a=>a.id===r.assetId) || typeof r.reason!=='string' || !Number.isFinite(Date.parse(r.at)) || !r.previous || r.previous.id!==r.assetId))) throw new Error('تاریخچه اصلاح افتتاحیه معتبر نیست.');
 }

@@ -1,4 +1,4 @@
-import { revise } from '../src/finance';
+import { active, revise } from '../src/finance';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
@@ -67,7 +67,10 @@ test('check creation and editing never debit cash; settling and reload retry pos
   let d=saveCheck(fixture(),check(),who);d=saveCheck(d,check({bank:'سامان'}),who);assert.equal(balance(d),10000);
   d=settleCheck(d,'check',opts(),who);assert.equal(balance(d),9900);assert.equal(d.obligations[0].status,'cleared');validate(d);
   assert.deepEqual(settleCheck(JSON.parse(JSON.stringify(d)),'check',opts(),who),d);
-  assert.throws(()=>saveCheck(d,check(),who));
+  const corrected=saveCheck(d,check({name:'اصلاح چک',amount:150}),who);
+  assert.equal(balance(corrected),9850);assert.equal(corrected.obligations[0].status,'cleared');
+  assert.equal(corrected.transactions.filter(active).length,1);assert.equal(d.transactions[0].status,'posted');validate(JSON.parse(JSON.stringify(corrected)));
+  const undone=reverse(corrected,corrected.obligations[0].transactionId!);assert.equal(balance(undone),10000);
 });
 test('incoming check credits once and pending cancellation or bouncing has no cash effects',()=>{
   const d=saveCheck(fixture(),check({direction:'receive'}),who);
@@ -309,4 +312,17 @@ test('paid installment correction refreshes schedule, outstanding principal and 
  assert.equal(balance(d),9980);assert.equal(d.installments[0].settled,false);assert.equal(d.installments[0].paidAmount,20);
  assert.equal(d.loans[0].paid,0);validate(JSON.parse(JSON.stringify(d)));
  assert.throws(()=>revise(d,id,'Overpayment',1000));d=reverse(d,id);assert.equal(balance(d),10000);
+});
+
+import { saveLoan } from '../src/obligations';
+test('loan editing preserves paid installments and cash while recalculating future contract and retaining history',()=>{
+ let d=createLoan(fixture(),loan(),undefined,who);
+ d=settleInstallment(d,'loan:0',opts({principal:33,interest:3,fees:1}),who);
+ const paid=structuredClone(d.installments.find(i=>i.id==='loan:0')!),cash=balance(d);
+ const next=saveLoan(d,{...d.loans[0],name:'edited',principalTotal:150,interestTotal:20,count:4},who);
+ assert.equal(balance(next),cash);assert.deepEqual(next.transactions,d.transactions);
+ assert.deepEqual(next.installments.find(i=>i.id===paid.id),paid);assert.equal(next.installments.length,4);
+ assert.equal(next.loans[0].principalRemaining,117);assert.equal(next.loans[0].revisions!.length,1);
+ assert.equal(next.installments.reduce((n,i)=>n+(i.principal??0),0),150);validate(JSON.parse(JSON.stringify(next)));
+ assert.throws(()=>saveLoan(d,{...d.loans[0],principalTotal:10},who));assert.equal(balance(d),cash);
 });

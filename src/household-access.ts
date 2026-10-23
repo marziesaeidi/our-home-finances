@@ -16,3 +16,12 @@ export function assertMemberChange(previous:FinanceData,next:FinanceData,viewer:
  }
 }
 
+
+// Sharing is a property of the space; creator identities and audit records stay intact.
+export function shareSpaceData(data: FinanceData): FinanceData {
+ const next = {...data};
+ for (const key of ['accounts','transactions','assets','goals','folders','obligations','loans','recurring'] as const) {
+  (next as unknown as Record<string, unknown>)[key] = data[key].map(row => ({...row, visibility:'shared'}));
+ }
+ return next;
+}

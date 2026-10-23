@@ -17,3 +17,13 @@ test('asset price history snapshots date-specific holdings, survives reload and 
  next.assets[0].quantity='3';assert.equal(next.assets[0].quoteHistory![0].quantity,'2');
  const bad=structuredClone(next);bad.assets[0].quoteHistory![0].cost=-1;assert.throws(()=>validate(bad));
 });
+
+import { correctAssetOpening } from '../src/savings';
+test('asset metadata and opening can be corrected without a reason, with original history and cash preserved',()=>{
+ const data=migrate({transactions:[],accounts:[],loans:[],goals:[],recurring:[],budget:{total:0,categories:{}}},'2026-01-01T00:00:00Z');
+ data.assets=[{id:'asset',name:'old',identifier:'CUSTOM',kind:'other',unit:'واحد',custody:'home',quantity:'2',openingQuantity:'2',cost:100,openingCost:100,owner:'a',visibility:'private'}];
+ const next=correctAssetOpening(data,'asset',{name:'new',kind:'gold',identifier:'GOLD',unit:'گرم',purity:'18K',custody:'bank',openingQuantity:'3',openingCost:150});
+ assert.equal(next.assets[0].name,'new');assert.equal(next.assets[0].kind,'gold');assert.equal(next.assets[0].quantity,'3');
+ assert.deepEqual(next.accounts,data.accounts);assert.deepEqual(next.transactions,data.transactions);
+ assert.deepEqual(next.assetOpeningRevisions![0].previous,data.assets[0]);assert.equal(next.assetOpeningRevisions![0].reason,'');validate(JSON.parse(JSON.stringify(next)));
+});

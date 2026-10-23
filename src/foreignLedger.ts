@@ -19,7 +19,7 @@ export function foreignTransaction(data: FinanceData, input: ForeignInput, viewe
 export function recordForeign(data: FinanceData, input: ForeignInput, viewer: Transaction['createdBy']) {
   const existing=data.transactions.find(t=>t.id===input.id);if(existing)return data;
   let base=data;
-  if(input.correctsId){const old=data.transactions.find(t=>t.id===input.correctsId&&active(t)&&allowed(t,viewer)&&t.foreignExpense);if(!old||!input.reason?.trim())throw new Error('اصلاح تاریخی به تراکنش فعال و دلیل نیاز دارد.');base=reverse(data,old.id);}
+  if(input.correctsId){const old=data.transactions.find(t=>t.id===input.correctsId&&active(t)&&allowed(t,viewer)&&t.foreignExpense);if(!old)throw new Error('اصلاح تاریخی به تراکنش فعال نیاز دارد.');base=reverse(data,old.id);}
   const t=foreignTransaction(base,input,viewer);let result=post(base,t);
   if(input.correctsId){
     let root=data.transactions.find(t=>t.id===input.correctsId);

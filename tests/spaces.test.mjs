@@ -98,3 +98,29 @@ test('stale writes are rejected with 409 and leave data unchanged', async () => 
     assert.equal((await sara.post(`/api/spaces/${space.id}/write`, { data: { ...invalid, accounts: 'nope' }, expected: invalid })).status, 400);
   } finally { await app.close(); }
 });
+
+
+test('household records from one member are shared with every member while personal space stays private', async()=>{
+ const app=await startTestServer();
+ try {
+  const {owner,member,space,token}=await household(app);
+  await member.post('/api/invitations/join',{token});
+  const {body:{requests}}=await owner.post(`/api/spaces/${space.id}/requests`);
+  await owner.post(`/api/spaces/${space.id}/decide`,{requestId:requests[0].id,approved:true});
+  const memberId=(await read(member,space)).body.member.id;
+  const result=await write(member,space,d=>{
+   d.accounts.push({id:'cash',name:'cash',type:'cash',balance:1000,openingBalance:1000,currency:'IRT',visibility:'private',owner:memberId});
+   d.assets.push({id:'asset',name:'asset',kind:'other',identifier:'CUSTOM',unit:'واحد',custody:'home',quantity:'2',openingQuantity:'2',cost:100,openingCost:100,visibility:'private',owner:memberId});
+   d.obligations.push({id:'check',name:'check',kind:'check',direction:'pay',amount:100,date:'2026-10-23',accountId:'cash',category:'سایر',status:'pending',reference:'123',bank:'bank',counterparty:'someone',owner:memberId,visibility:'private'});
+  });
+  assert.equal(result.status,200,JSON.stringify(result.body));
+  const fromOwner=(await read(owner,space)).body.data;
+  const fromMember=(await read(member,space)).body.data;
+  assert.deepEqual(fromOwner,fromMember);
+  for(const key of ['accounts','assets','obligations']){assert.equal(fromOwner[key][0].visibility,'shared');assert.equal(fromOwner[key][0].owner,memberId);}
+  assert.equal((await write(owner,space,d=>{d.assets[0].name='edited by owner';})).status,200);
+  const personal=(await member.me()).spaces.find(s=>s.kind==='personal');
+  assert.equal((await read(member,personal)).body.data.assets.length,0);
+  assert.equal((await read(owner,personal)).status,404);
+ } finally {await app.close();}
+});

@@ -1,7 +1,7 @@
 import type { FinanceData, Installment, Loan, Obligation, ObligationCurrency, Recurring, Transaction } from './types';
 import { add, apportion, converted, integer, split, sum } from './decimal';
 import { canonicalDay, isoDay, jalaliParts, nextDate, periodKey } from './calendar';
-import { active, allowed, post, refreshObligationLoans } from './finance';
+import { active, allowed, post, reverse, refreshObligationLoans } from './finance';
 
 const amount = (n: number, zero = false) => integer(String(n), zero);
 const day = (d: string) => { if (!isoDay(d)) throw new Error('تاریخ کامل شمسی لازم است.'); };
@@ -22,9 +22,20 @@ export function saveCheck(data: FinanceData, row: Obligation, viewer: string): F
   common(data,row,viewer); day(row.date);
   if (!allowed(row,viewer) || !['pay','receive'].includes(row.direction) || !row.bank?.trim() || !row.counterparty?.trim()) throw new Error('نوع چک، بانک و طرف چک را تکمیل کن.');
   const previous = data.obligations.find(o=>o.id===row.id);
-  if (previous && (previous.status!=='pending' || !allowed(previous,viewer))) throw new Error('ویرایش فقط برای چک در انتظار مجاز است.');
-  if(previous&&previous.transactionId)throw new Error('سابقه تسویه قابل بازنویسی نیست.');
-  return {...data,obligations:previous?data.obligations.map(o=>o.id===row.id?{...row,status:'pending',transactionId:undefined}:o):[...data.obligations,{...row,status:'pending',transactionId:undefined}]};
+  if (previous && !allowed(previous,viewer)) throw new Error('چک در دسترس نیست.');
+  const at=new Date().toISOString();
+  const saved={...row,owner:previous?.owner??row.owner,status:previous?.status??'pending',...(previous?.transactionId?{transactionId:previous.transactionId}:{}),...(previous?{revisions:[...(previous.revisions??[]),{at,previous:JSON.parse(JSON.stringify({...previous,revisions:undefined}))}]}:{})} as Obligation;
+  let next={...data,obligations:previous?data.obligations.map(o=>o.id===row.id?saved:o):[...data.obligations,saved]};
+  if(previous?.status==='cleared') {
+    const tx=data.transactions.find(t=>t.id===previous.transactionId&&active(t));
+    if(!tx)throw new Error('تراکنش تسویه پیدا نشد.');
+    const undone=reverse(next,tx.id);
+    const native=nativeTransaction(undone,row.currency??'IRT',row.amount,{requestId:'correction',date:tx.date,accountId:row.accountId,rate:tx.fx?.rate},viewer,row.direction==='receive');
+    const corrected:Transaction={...tx,...native,id:`${tx.id}:correction:${saved.revisions?.length}`,title:row.name,category:row.category,type:row.direction==='receive'?'income':'expense',accountId:row.accountId,status:'posted',correctsId:tx.id};
+    next=post(undone,corrected);
+    next={...next,obligations:next.obligations.map(o=>o.id===row.id?{...saved,transactionId:corrected.id}:o)};
+  }
+  return next;
 }
 export function setCheckStatus(data: FinanceData, id: string, status: 'canceled'|'bounced'|'pending', viewer: string): FinanceData {
   const row=data.obligations.find(o=>o.id===id);
@@ -70,6 +81,32 @@ export function createLoan(data: FinanceData, loan: Loan, custom: Installment[]|
   const schedule=custom??principal.map((p,index)=>{if(index)date=nextDate(date,loan.frequency,anchor);return {id:`${loan.id}:${index}`,loanId:loan.id,index,principal:p,interest:interest[index],fees:fees[index],amount:sum([p,interest[index],fees[index]]),date,settled:false};});
   validateSchedule(loan,schedule);
   return refreshObligationLoans({...data,loans:[{...loan,managed:true,paid:0,total:sum(schedule.map(i=>i.amount)),owner:viewer,visibility:data.accounts.find(a=>a.id===loan.accountId)!.visibility},...data.loans],installments:[...data.installments,...schedule]});
+}
+export function saveLoan(data:FinanceData, loan:Loan, viewer:string):FinanceData {
+ const old=data.loans.find(l=>l.id===loan.id);
+ if(!old)return createLoan(data,loan,undefined,viewer);
+ if(!old.managed||!allowed({visibility:old.visibility??'private',owner:old.owner},viewer))throw new Error('وام معتبر نیست.');
+ const events=data.transactions.filter(t=>t.loanId===old.id||t.paymentAllocation?.loanId===old.id);
+ if(events.some(active)&&((old.currency??'IRT')!==(loan.currency??'IRT')||old.direction!==loan.direction))throw new Error('برای تغییر جهت یا ارز، ابتدا پرداخت‌های قبلی را از تاریخچه برگشت بده.');
+ const scheduleChanged=(['principalTotal','interestTotal','feesTotal','count','frequency','startDate','repaymentStartDate'] as const).some(key=>loan[key]!==old[key]);
+ if(!scheduleChanged){
+  common(data,{...loan,amount:loan.principalTotal??0},viewer);amount(loan.upfrontFee??0,true);
+  const saved={...old,...loan,owner:old.owner,visibility:old.visibility,revisions:[...(old.revisions??[]),{at:new Date().toISOString(),previous:JSON.parse(JSON.stringify({...old,revisions:undefined}))}]};
+  return refreshObligationLoans({...data,loans:data.loans.map(l=>l.id===old.id?saved:l)});
+ }
+ const fresh=createLoan({...data,loans:data.loans.filter(l=>l.id!==old.id),installments:data.installments.filter(i=>i.loanId!==old.id)},loan,undefined,viewer);
+ const protectedRows=data.installments.filter(i=>i.loanId===old.id&&(i.settled||i.paidAmount||events.some(t=>t.installmentId===i.id||t.paymentAllocation?.installmentId===i.id)));
+ const count=loan.count-protectedRows.length;
+ const principal=add(loan.principalTotal??0,-sum(protectedRows.map(i=>i.principal??0))),interest=add(loan.interestTotal??0,-sum(protectedRows.map(i=>i.interest??0))),fees=add(loan.feesTotal??0,-sum(protectedRows.map(i=>i.fees??0)));
+ if(count<0||principal<0||interest<0||fees<0||(!count&&(principal||interest||fees)))throw new Error('مبالغ و تعداد قرارداد باید سوابق پرداخت‌شده را پوشش دهند.');
+ const indexes=Array.from({length:loan.count},(_,i)=>i).filter(i=>!protectedRows.some(row=>row.index===i));
+ if(indexes.length!==count)throw new Error('تعداد اقساط از شماره اقساط پرداخت‌شده کمتر است.');
+ const p=count?split(principal,count):[],i=count?split(interest,count):[],f=count?split(fees,count):[];
+ const at=new Date().toISOString();
+ const rows=indexes.map((index,n)=>({...fresh.installments.find(row=>row.loanId===loan.id&&row.index===index)!,id:`${loan.id}:revision:${(old.revisions?.length??0)+1}:${index}`,principal:p[n],interest:i[n],fees:f[n],amount:sum([p[n],i[n],f[n]])}));
+ const saved={...fresh.loans.find(l=>l.id===loan.id)!,owner:old.owner,visibility:old.visibility,revisions:[...(old.revisions??[]),{at,previous:JSON.parse(JSON.stringify({...old,revisions:undefined}))}]};
+ const schedule=[...protectedRows,...rows];validateSchedule(saved,schedule);
+ return refreshObligationLoans({...data,loans:data.loans.map(l=>l.id===loan.id?saved:l),installments:[...data.installments.filter(i=>i.loanId!==loan.id),...schedule]});
 }
 function validateSchedule(loan: Loan, rows: Installment[]) {
   if (rows.length!==loan.count || new Set(rows.map(i=>i.id)).size!==rows.length || new Set(rows.map(i=>i.index)).size!==rows.length || rows.some(i=>!Number.isInteger(i.index)||i.index<0||i.index>=loan.count)) throw new Error('تعداد یا شناسه اقساط نادرست است.');
@@ -131,22 +168,22 @@ export function settleInstallment(data: FinanceData, id: string, opts: Settlemen
 }
 export function saveRecurring(data: FinanceData, row: Recurring, viewer: string): FinanceData {
   common(data,row,viewer);day(row.startDate??'');day(row.nextDate);if(row.endDate)day(row.endDate);
-  if(row.owner!==viewer || row.endDate && row.endDate<row.startDate! || row.nextDate<row.startDate!)throw new Error('بازه پرداخت معتبر نیست.');
+  if((row.visibility!=='shared'&&row.owner!==viewer) || row.endDate && row.endDate<row.startDate! || row.nextDate<row.startDate!)throw new Error('بازه پرداخت معتبر نیست.');
   if(!['ماهانه','هفتگی','سالانه','سفارشی'].includes(row.frequency))throw new Error('تکرار معتبر نیست.');
   if(row.frequency==='سفارشی' && (!row.customDays || row.customDays>3650))throw new Error('فاصله سفارشی را به روز وارد کن.');
   if(row.customDays)amount(row.customDays);
-  const old=data.recurring.find(r=>r.id===row.id);if(old&&old.owner!==viewer)throw new Error('الگو قابل ویرایش نیست.');
+  const old=data.recurring.find(r=>r.id===row.id);if(old&&(old.visibility!=='shared'&&old.owner!==viewer))throw new Error('الگو قابل ویرایش نیست.');
   if(old&&data.transactions.some(t=>active(t)&&t.occurrenceKey?.startsWith(`${row.id}:`))&&(old.currency??'IRT')!==(row.currency??'IRT'))throw new Error('ارز الگوی دارای سابقه تغییر نمی‌کند؛ الگوی جدید بساز.');
   return {...data,recurring:old?data.recurring.map(r=>r.id===row.id?row:r):[...data.recurring,row]};
 }
 export function deleteRecurring(data: FinanceData, id: string, viewer: string): FinanceData {
   const row = data.recurring.find(r => r.id === id);
-  if (!row || row.owner !== viewer) throw new Error('الگو قابل حذف نیست.');
+  if (!row || (row.visibility!=='shared'&&row.owner !== viewer)) throw new Error('الگو قابل حذف نیست.');
   return { ...data, recurring: data.recurring.filter(r => r.id !== id) };
 }
 export function settleRecurring(data: FinanceData, id: string, due: string, opts: Settlement, creator: Transaction['createdBy']): FinanceData {
   const key=`${id}:${due}`;if(data.transactions.some(t=>active(t)&&t.occurrenceKey===key))return data;
-  const row=data.recurring.find(r=>r.id===id&&!r.archived&&r.owner===creator);
+  const row=data.recurring.find(r=>r.id===id&&!r.archived&&(r.visibility==='shared'||r.owner===creator));
   if(!row || row.nextDate!==due || row.endDate&&due>row.endDate)throw new Error('سررسید فعال نیست.');
   if (row.foreignCurrency) throw new Error('اشتراک ارزی را از ماژول هزینه‌های ارزی با مبلغ اصلی و نرخ روز خرید ثبت کن؛ سپس سررسید یادآور را تغییر بده.');
   if (!row.transactionType)throw new Error('نوع رویداد و ارز الگوی قدیمی را ابتدا تکمیل کن.');
@@ -161,7 +198,7 @@ export type DueItem={id:string;name:string;date:string;amount:number;currency:Ob
 export function dueItems(data: FinanceData, viewer: string, horizon = nextDate(canonicalDay(new Date()),'سالانه')): DueItem[] {
   const checks:DueItem[]=data.obligations.filter(o=>o.status==='pending'&&allowed(o,viewer)).map(o=>({...o,kind:'check',currency:o.currency??'IRT',reminderDays:o.reminderDays??[]}));
   const loans:DueItem[]=data.installments.filter(i=>!i.settled&&isoDay(i.date)).flatMap(i=>{const l=data.loans.find(l=>l.id===i.loanId&&!l.canceled&&!l.archived);return l&&(l.visibility?allowed(l as Loan & {visibility:string},viewer):true)?[{id:i.id,name:l.name,date:i.date,amount:add(i.amount,-(i.paidAmount??0)),currency:l.currency??'IRT',kind:'installment' as const,direction:l.direction==='lend'?'receive' as const:'pay' as const,reminderDays:l.reminderDays??[]}]:[];});
-  const recurring:DueItem[]=data.recurring.filter(r=>!r.archived&&r.owner===viewer&&isoDay(r.nextDate)).flatMap(r=>{
+  const recurring:DueItem[]=data.recurring.filter(r=>!r.archived&&(r.visibility==='shared'||r.owner===viewer)&&isoDay(r.nextDate)).flatMap(r=>{
     const rows:DueItem[]=[];let date=r.nextDate;
     for(let count=0;count<1200&&date<=horizon&&(!r.endDate||date<=r.endDate);count++){
       if(!data.transactions.some(t=>active(t)&&t.occurrenceKey===`${r.id}:${date}`))rows.push({id:`${r.id}:${date}`,name:r.name,date,amount:r.amount,currency:r.currency??'IRT',kind:'recurring',direction:r.transactionType==='income'?'receive':'pay',reminderDays:r.reminderDays??[]});

@@ -40,3 +40,14 @@ test('every member can rename only their own profile without changing identity o
   }
  }
 });
+
+import { shareSpaceData } from '../src/household-access';
+import { allowed } from '../src/finance';
+test('household shares every record without changing creators, balances or personal source',()=>{
+ const data=fixture(), original=structuredClone(data);
+ const next=shareSpaceData(data);
+ for(const key of ['accounts','transactions','assets','goals','folders','obligations','loans','recurring'] as const){
+  next[key].forEach((row,index)=>{assert.equal(row.visibility,'shared');assert.equal(allowed(row as {visibility:string},'another-member'),true);assert.deepEqual({...row,visibility:undefined},{...original[key][index],visibility:undefined});});
+ }
+ assert.deepEqual(data,original);assert.deepEqual(shareSpaceData(next),next);validate(JSON.parse(JSON.stringify(next)));
+});

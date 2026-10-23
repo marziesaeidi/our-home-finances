@@ -1,3 +1,4 @@
+import { shareSpaceData } from './household-access';
 import { ConfirmationDialog } from './components/confirmation-dialog';
 import { ActionFooter } from './components/action-layout';
 import { ChoiceGroup } from './components/action-layout';
@@ -89,7 +90,7 @@ function App({ initial }: { initial: FinanceData }) {
  const { requestText, requestDialog } = useUIRequest();
  const [savedType,setSavedType]=useState<'expense'|'income'|null>(null); const [formVersion,setFormVersion]=useState(0);
  const [folderForExpense,setFolderForExpense]=useState(''); const [editingExpense,setEditingExpense]=useState<Transaction|null>(null);
- const [data,updateData] = useState<FinanceData>(initial); const dataRef = useRef(data); configureDisplay(data.settings); const categories = categoryNames(data);
+ const [data,updateData] = useState<FinanceData>(()=>activeSpace()?.kind==='household'?shareSpaceData(initial):initial); const dataRef = useRef(data); configureDisplay(data.settings); const categories = categoryNames(data);
  const savingRef=useRef(false);
  const [saving,setSaving]=useState(false),[syncError,setSyncError]=useState(()=>spaceStorage.getItem('khaneh-unsynced-change')?'یک تغییر تأییدنشده از اجرای قبلی باقی مانده است. نسخه پشتیبان را دریافت کن یا دوباره ارسال کن.':'');
  const pendingChange=useRef<{data:FinanceData;expected:FinanceData}|null>(null);
@@ -107,7 +108,8 @@ function App({ initial }: { initial: FinanceData }) {
  const setData = (next: FinanceData | ((d: FinanceData) => FinanceData)) => { try {
    if(savingRef.current)throw new Error('منتظر پایان ذخیره قبلی بمان.');
    const previous=dataRef.current;
-   const result=typeof next==='function'?next(previous):next;
+   const proposed=typeof next==='function'?next(previous):next;
+   const result=activeSpace()?.kind==='household'?shareSpaceData(proposed):proposed;
    assertMemberChange(previous,result,viewer);
    if(remoteEnabled()){
      if(syncError)throw new Error('ابتدا وضعیت تغییر تأییدنشده را مشخص کن.');

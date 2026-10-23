@@ -49,8 +49,8 @@ export async function startAppServer({ filename, port = 4173, host = '127.0.0.1'
     throw new Error('APP_PUBLIC_ORIGIN must be an HTTPS origin without a trailing slash');
   }
   // Reuse the application's complete financial validator and member rules on the server.
-  const bundle = await build({ stdin: { contents: "export { validate, createSpaceData } from './src/store'; export { assertMemberChange, membersOf } from './src/household-access'; export { transferPlan, moveBetweenSpaces } from './src/space-transfer';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) }, bundle: true, write: false, platform: 'node', format: 'esm' });
-  const { validate, createSpaceData, assertMemberChange, membersOf, transferPlan, moveBetweenSpaces } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+  const bundle = await build({ stdin: { contents: "export { validate, createSpaceData } from './src/store'; export { assertMemberChange, membersOf, shareSpaceData } from './src/household-access'; export { transferPlan, moveBetweenSpaces } from './src/space-transfer';", resolveDir: fileURLToPath(new URL('..', import.meta.url)) }, bundle: true, write: false, platform: 'node', format: 'esm' });
+  const { validate, createSpaceData, assertMemberChange, membersOf, shareSpaceData, transferPlan, moveBetweenSpaces } = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
   const database = openDatabase(filename);
   const rateServer = rates ? startRateServer() : null;
   const ratePort = Number(process.env.FX_PORT ?? 8788);
@@ -168,6 +168,11 @@ export async function startAppServer({ filename, port = 4173, host = '127.0.0.1'
         if (!member) return send(403, { error: 'دیگر به این فضا دسترسی نداری.' });
         const space = database.spaces(user.id).find(s => s.id === spaceId);
 
+        if(space.kind==='household') Object.assign(current,shareSpaceData(current));
+        if (action === 'write' && space.kind==='household') {
+          try { validate(body.data); validate(body.expected); } catch(error) { return send(400,{error:error.message}); }
+          body.data=shareSpaceData(body.data); body.expected=shareSpaceData(body.expected);
+        }
         if (action === 'read') return send(200, { data: current, member, revision: row.revision, space });
         if (action === 'write') {
           if (JSON.stringify(body.data) === JSON.stringify(current)) return send(200, { revision: row.revision });
