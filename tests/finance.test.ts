@@ -1,3 +1,4 @@
+import { transactionUserNote, transactionTone } from '../src/transaction-presentation';
 import { registerAsset } from '../src/savings';
 import './space-transfer.test';
 import './error-guidance.test';
@@ -343,4 +344,15 @@ test('asset amount correction recalculates later disposal basis and account bala
  d=post(d,tx({id:'sell',type:'asset-sell',assetId:'asset',quantity:'1',amount:150}));
  d=revise(d,'buy','Corrected purchase',300);
  assert.equal(balance(d,'a'),850);assert.equal(d.assets[0].cost,150);assert.equal(d.assets[0].quantity,'1');assert.equal(d.transactions.find(t=>t.id==='sell')?.costBasis,150);validate(JSON.parse(JSON.stringify(d)));
+});
+
+
+test('transaction presentation shows user notes without audit identifiers', () => {
+  assert.equal(transactionUserNote(undefined), '');
+  assert.equal(transactionUserNote('اصلاح مرتبط با asset:correction:123'), '');
+  assert.equal(transactionUserNote('یادداشت کاربر\nاصلاح مرتبط با asset:123\nبرگشت در 2026-10-08T12:00:00Z'), 'یادداشت کاربر');
+  assert.equal(transactionUserNote('خرید طلا با کد ۱۲۳'), 'خرید طلا با کد ۱۲۳');
+  assert.equal(transactionTone(tx()), 'var(--destructive)');
+  assert.equal(transactionTone(tx({type:'income'})), 'var(--success)');
+  assert.equal(transactionTone(tx({type:'asset-buy',assetId:'gold'})), '#2563eb');
 });

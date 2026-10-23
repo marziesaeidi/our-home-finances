@@ -83,3 +83,5 @@ html,body,button,input,select,textarea,.invite-code { font-family:Vazirmatn,syst
 
 .ds-calendar-tabs { gap:1.25rem; height:auto; max-width:100%; flex-wrap:wrap; padding:.5rem; margin-block-end:1rem; }
 .ds-calendar-tabs [data-slot=tabs-trigger] { padding:.5rem .75rem; }
+
+.ds-balance-blue { color: #2563eb; }

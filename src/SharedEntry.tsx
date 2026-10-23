@@ -52,7 +52,9 @@ export function SpaceSwitcher({ beforeCreate }: { beforeCreate?: ReactNode } = {
   {beforeCreate}
   {creating ? <form style={{ display: 'grid', gap: 8 }} onSubmit={e => { e.preventDefault(); void create(); }}><FieldInput aria-label="نام فضای مشترک" autoFocus required maxLength={60} placeholder="مثلاً خانه ما" value={name} onChange={e => setName(e.target.value)}/><Action variant="default" className="primary small" disabled={busy || !name.trim()}>ساخت فضای مشترک</Action><Action variant="outline" type="button" className="outline small" onClick={() => setCreating(false)}>انصراف</Action></form>
    : <Action variant="outline" className="outline small" onClick={() => setCreating(true)}><Plus size={16}/> فضای مشترک تازه</Action>}
-  <Action variant="outline" className="outline small" onClick={() => void logout()}><LogOut size={16}/> خروج از حساب</Action>
+
   {error && <ErrorNotice message={error}/>}
  </div>;
 }
+
+export function LogoutButton() { return <Action variant="outline" className="outline small" onClick={() => void logout()}><LogOut size={16}/> خروج از حساب</Action>; }
