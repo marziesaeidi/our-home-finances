@@ -316,6 +316,12 @@ input[aria-invalid=true],.field input[aria-invalid=true],.date-segments[data-inv
 .category-settings-editor { border:1px solid var(--border); border-radius:var(--radius-card); padding:16px; background:var(--card); }
 .category-settings-editor summary { cursor:pointer; font-weight:600; padding-block:8px; }
 .category-settings-editor[open] summary { margin-block-end:16px; }
+.category-settings-editor .category-editor-actions.detail-actions {
+ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:8px; width:100%;
+}
+.category-settings-editor .category-editor-actions.detail-actions > .finance-action {
+ min-width:0; padding-inline:6px; white-space:nowrap; font-size:var(--type-caption);
+}
 .top-actions select { max-width:130px; }
 @media(max-width:650px) { .member-card-grid { grid-template-columns:minmax(0,1fr); } }
 .route-content .household-summary,.route-content .reminder-card { flex-direction:row; }
@@ -676,7 +682,7 @@ details:not(.composer-date)>p:last-child { margin-block-end:var(--space-4); }
 select.finance-select,.field select.finance-select,.composer-account select.finance-select {
  box-sizing:border-box; width:100%; min-width:0; min-height:var(--control-height);
  border:1px solid var(--input); border-radius:var(--radius-control); background-color:var(--card);
- color:var(--foreground); padding:.75rem 1rem; font:inherit; font-size:var(--type-body);
+ color:var(--foreground); padding:.75rem 1rem; padding-inline-end:2.5rem; font:inherit; font-size:var(--type-body);
  font-weight:400; line-height:1.8; box-shadow:none; cursor:pointer;
 }
 select.finance-select:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
@@ -951,9 +957,10 @@ select.finance-select option { background:var(--card); color:var(--foreground); 
 }
 .detail-amount > span:last-child { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
 
-.folder-select-row { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
-.folder-select-row > .field { flex: 1; min-width: 0; }
-.folder-select-row > button { flex: 0 0 auto; margin-bottom: 0; }
+.folder-selector { min-width:0; max-width:100%; grid-template-columns:minmax(0,1fr); }
+.folder-select-row { display:flex; flex-wrap:wrap; align-items:flex-end; gap:8px; width:100%; min-width:0; }
+.folder-select-row > .field { flex:1 1 220px; min-width:0; margin:0; }
+.folder-select-row > .app-add-action { flex:0 1 auto; max-width:100%; height:auto; white-space:normal; margin:0; }
 .detail-actions > .folder-selector, .detail-actions > .field { width: 100%; }
 
 /* Keep an expanded section and its contents inside one visible boundary. */

@@ -1,3 +1,4 @@
+import { incomeIcons, iconFor } from './category-icons';
 import { transactionUserNote, transactionTone } from './transaction-presentation';
 import { shareSpaceData } from './household-access';
 import { ConfirmationDialog } from './components/confirmation-dialog';
@@ -82,9 +83,7 @@ function readAppRoute():{page:Page;form:Form}{
 }
 const appPath=(page:Page,form:Form)=>`/app/${page}${page==='add'&&form?`/${form}`:''}`;
 
-const incomeIcons: Record<string,string> = {'حقوق':'💼','پاداش':'🏅','هدیه':'🎁','فروش رمز ارز':'🪙','سایر':'💰'};
 const transactionIcons = ['🛒','🛍️','🏠','🚕','💊','☕','🧾','✈️','💳','💰'];
-const iconFor = (category: string) => ({خوراک:'🛒',خرید:'🛍️',خانه:'🏠','حمل‌ونقل':'🚕',سلامت:'💊',تفریح:'☕',قبوض:'🧾',سفر:'✈️',اقساط:'💳',درآمد:'↙️',سایر:'◌'} as Record<string,string>)[category] || '◌';
 
 function App({ initial }: { initial: FinanceData }) {
  const [recurringOpenRequest,setRecurringOpenRequest]=useState(0);

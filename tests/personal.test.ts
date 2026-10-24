@@ -10,6 +10,26 @@ import type { FinanceData } from '../src/types';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AppLock } from '../src/AppLock';
+import { categoryIcon } from '../src/category-icons';
+import { CategoryEditor } from '../src/SettingsPanel';
+
+test('legacy category icons match transaction defaults and preserve saved custom icons', () => {
+  for (const [name, icon] of [['خوراک','🛒'], ['خانه','🏠'], ['حمل‌ونقل','🚕'], ['حقوق','💼'], ['هدیه','🎁'], ['فروش رمز ارز','🪙']]) {
+    assert.equal(categoryIcon({ name }), icon);
+  }
+  assert.equal(categoryIcon({ name: 'خوراک', icon: '🦋' }), '🦋');
+  assert.equal(categoryIcon({ name: 'خوراک', icon: '◌' }), '◌');
+  assert.equal(categoryIcon({ name: 'دسته دلخواه' }), '◌');
+});
+
+test('editing a legacy category starts with its displayed icon and original name', () => {
+  const data = fixture();
+  const category = data.categoryRecords.find(c => c.name === 'خوراک')!;
+  const before = structuredClone(category);
+  const html = renderToStaticMarkup(createElement(CategoryEditor, { data, category, change: () => {}, onDone: () => {} }));
+  assert.ok(html.includes('value="🛒 خوراک"'));
+  assert.deepEqual(category, before);
+});
 
 const at = '2026-10-08T12:00:00Z';
 const initial = { transactions: [], accounts: [{ id: 'a', name: 'بانک', type: 'بانکی', balance: 1000, visibility: 'shared' as const }, { id: 'b', name: 'نقد', type: 'نقدی', balance: 0, visibility: 'shared' as const }], loans: [], goals: [], recurring: [], budget: { total: 1000, categories: { خوراک: 100 } } };

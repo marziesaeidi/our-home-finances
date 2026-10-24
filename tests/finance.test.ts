@@ -2,6 +2,7 @@ import { transactionUserNote, transactionTone } from '../src/transaction-present
 import { registerAsset } from '../src/savings';
 import './space-transfer.test';
 import './error-guidance.test';
+import './emoji.test';
 import { assetAccountFunds, cashlessFeeError } from '../src/finance';
 import './removal.test';
 import './asset-history.test';
