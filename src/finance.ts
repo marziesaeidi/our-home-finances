@@ -138,17 +138,22 @@ export function reverse(data: FinanceData, transactionId: string): FinanceData {
   const reversed: FinanceData = { ...result, transactions: result.transactions.map(x => x.id === t.id ? { ...x, status: 'reversed', note: `${x.note ?? ''}\nبرگشت در ${new Date().toISOString()}` } : x), obligations: result.obligations.map(o => o.transactionId === t.id ? { ...o, status: 'pending', transactionId: undefined } : o), recurring: result.recurring.map(r => t.occurrenceKey?.startsWith(`${r.id}:`) ? { ...r, nextDate: t.occurrenceKey.slice(r.id.length + 1) } : r) };
   return t.assetId && reversed.transactions.some(x=>x.id===`${t.id}:release` && active(x)) ? reverse(reversed,`${t.id}:release`) : reversed;
 }
-export function revise(data: FinanceData, transactionId: string, title: string, amount: number): FinanceData {
+export function revise(data: FinanceData, transactionId: string, title: string, amount: number, accountId?: string): FinanceData {
   const t = data.transactions.find(x => x.id === transactionId);
   if (!t || !active(t)) throw new Error('تراکنش فعال نیست.');
+  const nextAccountId=accountId??t.accountId;
+  const source=data.accounts.find(a=>a.id===t.accountId),destination=data.accounts.find(a=>a.id===nextAccountId);
+  if(!destination||(destination.currency??'IRT')!==(source?.currency??'IRT'))throw new Error('حساب معتبر با ارز یکسان انتخاب کن.');
+  if(t.type==='transfer'&&nextAccountId===t.toAccountId)throw new Error('مبدأ و مقصد انتقال باید متفاوت باشند.');
+  if(nextAccountId!==t.accountId&&data.transactions.some(x=>active(x)&&x.id===`${t.id}:release`))throw new Error('ابتدا تخصیص باکس مرتبط با خرید را اصلاح کن.');
   if (t.id.endsWith(':release')) throw new Error('این تخصیص وابسته به خرید است؛ خرید مرتبط را اصلاح کن.');
   integer(String(amount));
   if (!title.trim()) throw new Error('عنوان لازم است.');
   const at = new Date().toISOString();
   const finish=(result:FinanceData):FinanceData=>({...result,recurring:result.recurring.map(r=>r.id===`foreign:${t.id}`?{...r,name:title.trim(),amount}:r)});
-  const revised: Transaction = { ...t, title: title.trim(), amount, revisions: [...(t.revisions ?? []), { title: t.title, amount: t.amount, at, previous: structuredClone({...t,revisions:undefined}) }] };
+  const revised: Transaction = { ...t, accountId: nextAccountId, title: title.trim(), amount, revisions: [...(t.revisions ?? []), { title: t.title, amount: t.amount, at, previous: structuredClone({...t,revisions:undefined}) }] };
   // A name-only correction must not replay a financial event.
-  if (amount === t.amount) return finish({...data,transactions:data.transactions.map(x=>x.id===t.id?revised:x)});
+  if (amount === t.amount && nextAccountId === t.accountId) return finish({...data,transactions:data.transactions.map(x=>x.id===t.id?revised:x)});
   let undone = effects(data, t.assetId?{...t,assetId:undefined}:t, -1);
   if (t.foreignExpense && t.fx) {
     const f=t.foreignExpense;

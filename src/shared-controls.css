@@ -45,3 +45,20 @@
  .box-history .payment-row.box-transaction-row { grid-template-columns:36px minmax(0,1fr); gap:8px 12px; }
  .box-history .box-transaction-row > strong { grid-column:2; justify-self:start; margin:0; }
 }
+
+/* Keep transaction copy and amounts inside narrow cards. */
+.transaction-row{min-width:0;max-width:100%;gap:16px;overflow:hidden}
+.transaction-row .row-icon{flex-shrink:0}
+.transaction-row .row-main{flex:1 1 0;min-width:0;overflow:hidden}
+.transaction-row .row-main strong,.transaction-row .row-main small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.transaction-row .row-end{flex:0 1 auto;min-width:0;max-width:52%;margin-inline-start:auto;overflow:hidden}
+.transaction-row .row-end strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.input-control,.field{min-width:0;max-width:100%}
+.finance-select{width:100%;max-width:100%;min-width:0;text-overflow:ellipsis;white-space:nowrap;overflow:hidden}
+.composer-account{width:100%;min-width:0}
+.composer-account .input-control{width:100%;min-width:0;flex:1}
+.detail-row>span{min-width:0;overflow-wrap:anywhere}
+.detail-amount>span:last-child{max-width:100%;overflow-wrap:anywhere}
+
+.composer-account{grid-template-columns:minmax(0,1fr);gap:6px}
+.composer-account > .input-control{font-size:var(--type-body);color:var(--foreground)}

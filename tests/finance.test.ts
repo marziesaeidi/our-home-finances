@@ -1,3 +1,4 @@
+import { defaultAccount, accountLabel, confirmAccounts } from '../src/account-selection';
 import { transactionUserNote, transactionTone } from '../src/transaction-presentation';
 import { registerAsset } from '../src/savings';
 import './space-transfer.test';
@@ -356,4 +357,40 @@ test('transaction presentation shows user notes without audit identifiers', () =
   assert.equal(transactionTone(tx()), 'var(--destructive)');
   assert.equal(transactionTone(tx({type:'income'})), 'var(--success)');
   assert.equal(transactionTone(tx({type:'asset-buy',assetId:'gold'})), '#2563eb');
+});
+
+
+test('account correction moves cash once, preserves creator and reverses on the corrected account',()=>{
+ const original=post(fixture(),tx());
+ const corrected=revise(original,'event','اصلاح حساب',150,'b');
+ assert.equal(corrected.accounts.find(a=>a.id==='a')!.balance,1000);
+ assert.equal(corrected.accounts.find(a=>a.id==='b')!.balance,50);
+ assert.equal(corrected.transactions[0].createdBy,'مرزیه');
+ assert.equal(corrected.transactions[0].revisions!.at(-1)!.previous!.accountId,'a');
+ const undone=reverse(corrected,'event');
+ assert.equal(undone.accounts.find(a=>a.id==='a')!.balance,1000);
+ assert.equal(undone.accounts.find(a=>a.id==='b')!.balance,200);
+ const sameAmount=revise(original,'event','فقط حساب',100,'b');
+ assert.equal(sameAmount.accounts.find(a=>a.id==='a')!.balance,1000);
+ assert.equal(sameAmount.accounts.find(a=>a.id==='b')!.balance,100);
+ assert.throws(()=>revise(original,'event','نامعتبر',100,'missing'));
+ const transfer=post(fixture(),tx({type:'transfer',toAccountId:'b'}));
+ assert.throws(()=>revise(transfer,'event','انتقال',100,'b'));
+});
+
+test('last entered account is personal to the recorder and excludes reversed records',()=>{
+ const data=fixture();data.accounts[0].owner='علی';data.accounts[1].owner='مرزیه';
+ data.transactions=[tx({id:'other',createdBy:'علی',accountId:'a'}),tx({id:'reversed',accountId:'a',status:'reversed'}),tx({id:'last',accountId:'b',date:'2026-09-01'})];
+ assert.equal(defaultAccount(data,'مرزیه'),'b');
+ assert.equal(defaultAccount(data,'علی'),'a');
+ assert.match(accountLabel(data,data.accounts[0]),/علی/);
+ let prompts=0;
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'window');
+ Object.defineProperty(globalThis,'window',{configurable:true,value:{confirm:()=>{prompts++;return false;}}});
+ try{
+  assert.throws(()=>confirmAccounts(data,'مرزیه',['a']));
+  assert.equal(prompts,1);
+  confirmAccounts(data,'مرزیه',['b']);
+  assert.equal(prompts,1);
+ }finally{if(previous)Object.defineProperty(globalThis,'window',previous);else Reflect.deleteProperty(globalThis,'window');}
 });
