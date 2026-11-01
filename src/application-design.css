@@ -1030,3 +1030,8 @@ details[open]:has(> summary) > summary ~ * { max-width:100%; }
   padding-inline:34px;
  }
 }
+
+/* Keep member email controls spaced and their actions sized to the label. */
+.member-login-email { display:flex; flex-direction:column; gap:var(--space-3); }
+.member-login-email > .field { margin-block:0; }
+.member-calendar-email > .member-email-action { align-self:flex-start; width:auto; min-height:36px; padding-inline:16px; flex:none; }

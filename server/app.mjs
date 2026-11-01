@@ -125,6 +125,16 @@ export async function startAppServer({ filename, port = 4173, host = '127.0.0.1'
         }
         if (!user) return send(401, { error: 'ابتدا وارد شو.' });
 
+        if (path === '/api/auth/email') {
+          const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+          const password = typeof body.password === 'string' ? body.password : '';
+          if (!email || email.length > 254 || !emailPattern.test(email)) return send(400, { error: 'ایمیل معتبر وارد کن.' });
+          if (!allowLogin('change-email:' + user.id)) return send(429, { error: 'تلاش‌های زیاد؛ ۱۵ دقیقه بعد دوباره امتحان کن.' });
+          const account = database.credentials(user.email);
+          if (!password || password.length > 200 || !account || !await verifyPassword(password, account.password_hash)) return send(403, { error: 'رمز عبور فعلی درست نیست.' });
+          return send(200, { user: database.updateEmail(user.id, email) });
+        }
+
         if (path === '/api/spaces') {
           const name = typeof body.name === 'string' ? body.name.trim() : '';
           if (!name || name.length > 60) return send(400, { error: 'نام فضای مشترک را وارد کن.' });

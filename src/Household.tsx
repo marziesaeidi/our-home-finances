@@ -2,7 +2,7 @@ import { ConfirmationDialog } from './components/confirmation-dialog';
 import { ActionGroup } from './components/action-layout';
 import {AccessRequests} from './InvitationAccess';
 import {DatabasePanel} from './DatabasePanel';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Users, Camera, Pencil, Trash2 } from 'lucide-react';
 import { Surface, Action, AddAction, FieldInput, FieldSelect } from './components/finance-ui';
 import { FormField } from './components/form-fields';
@@ -10,7 +10,7 @@ import { Dialog } from './Dialog';
 import type { FinanceData, HouseholdMember } from './types';
 
 import { membersOf } from './household-access';
-import { activeSpace, remoteRequest } from './remote-store';
+import { activeSpace, remoteRequest, api, fetchSession } from './remote-store';
 export function Household({data,viewer,change}:{data:FinanceData;viewer:string;change:(fn:(d:FinanceData)=>FinanceData)=>void}) {
  const [editingName,setEditingName]=useState<HouseholdMember|null>(null),[name,setName]=useState(''),[inviteLink,setInviteLink]=useState(''),[inviting,setInviting]=useState(false),[message,setMessage]=useState(''),[removing,setRemoving]=useState<HouseholdMember|null>(null);
  const [editingPhoto,setEditingPhoto]=useState<HouseholdMember|null>(null);
@@ -39,6 +39,7 @@ export function Household({data,viewer,change}:{data:FinanceData;viewer:string;c
  return <><div className="page-head"><div><h1>فضای مشترک</h1><p>اعضا و دسترسی‌های فضای مالی را مدیریت کن.</p></div></div>
  <Surface as="section" className="card module-card collection-card household-summary"><span className="navigation-card-icon"><Users/></span><div><h2>{data.settings.name}</h2><p>{members.filter(m=>!m.removed).length.toLocaleString('fa-IR')} عضو · حساب‌ها و برنامه‌های مشترک در یک جا</p></div></Surface>
  <AccessRequests owner={owner}/><div className="section-heading"><h2>اعضای فضای مشترک</h2></div><div className="member-card-grid">{members.filter(m=>!m.removed).map(m=><Surface as="section" className="card module-card collection-card" key={m.id}><div className="member-profile"><button type="button" className="avatar member-avatar-button" disabled={!owner&&viewer!==m.id} aria-label={`ویرایش عکس ${m.name}`} onClick={()=>setEditingPhoto(m)}>{m.avatar?<img src={m.avatar} alt=""/>:m.name.slice(0,1)}{(owner||viewer===m.id)&&<span className="member-avatar-camera"><Camera size={14}/></span>}</button><div><h3>{viewer===m.id?<button type="button" className="member-name-button" aria-label="ویرایش نام" onClick={()=>{setEditingName(m);setName(m.name);}}>{m.name}<Pencil size={15}/></button>:m.name}</h3><small>{m.role==='owner'?'مالک':m.role==='reader'?'فقط مشاهده':'ثبت و ویرایش'}</small></div></div>
+ {viewer===m.id&&<MemberLoginEmail/>}
  <MemberCalendarEmail member={m} email={m.calendarEmail ?? (m.role==='owner' ? data.settings.calendarEmail : undefined)} editable={owner||viewer===m.id} save={email=>change(d=>({...d,settings:{...d.settings,members:membersOf(d).map(row=>row.id===m.id?{...row,calendarEmail:email}:row)}}))}/>{viewer===m.id&&<div id="member-calendar-connection"/>}
  {owner&&m.role!=='owner'&&<><FormField label="دسترسی"><FieldSelect value={m.role} onChange={e=>update(rows=>rows.map(row=>row.id===m.id?{...row,role:e.target.value as 'editor'|'reader'}:row))}><option value="editor">ثبت و ویرایش</option><option value="reader">فقط مشاهده</option></FieldSelect></FormField><Action variant="destructive" className="danger" onClick={()=>setRemoving(m)}>حذف عضو</Action></>}
  </Surface>)}</div>
@@ -52,5 +53,11 @@ export function Household({data,viewer,change}:{data:FinanceData;viewer:string;c
 
 function MemberCalendarEmail({member,email,editable,save}:{member:HouseholdMember;email?:string;editable:boolean;save:(email:string)=>void}) {
  const [draft,setDraft]=useState(email??''),[message,setMessage]=useState('');
- return <form className="finance-form member-calendar-email" onSubmit={e=>{e.preventDefault();try{save(draft.trim());setMessage('ایمیل ذخیره شد.');}catch(error){setMessage((error as Error).message);}}}><FormField label="ایمیل تقویم"><FieldInput aria-label={`ایمیل تقویم ${member.name}`} type="email" dir="ltr" required maxLength={254} value={draft} disabled={!editable} onChange={e=>setDraft(e.target.value)}/></FormField>{editable&&<Action variant="outline" type="submit" className="outline small">ذخیره ایمیل</Action>}{message&&<p role="status">{message}</p>}</form>;
+ return <form className="finance-form member-calendar-email" onSubmit={e=>{e.preventDefault();try{save(draft.trim());setMessage('ایمیل ذخیره شد.');}catch(error){setMessage((error as Error).message);}}}><FormField label="ایمیل تقویم"><FieldInput aria-label={`ایمیل تقویم ${member.name}`} type="email" dir="ltr" required maxLength={254} value={draft} disabled={!editable} onChange={e=>setDraft(e.target.value)}/></FormField>{editable&&<Action variant="outline" size="sm" type="submit" className="outline member-email-action">ذخیره ایمیل</Action>}{message&&<p role="status">{message}</p>}</form>;
+}
+
+function MemberLoginEmail() {
+ const [email,setEmail]=useState(''),[draft,setDraft]=useState(''),[password,setPassword]=useState(''),[editing,setEditing]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ useEffect(()=>{let alive=true;void fetchSession().then(session=>{if(alive&&session){setEmail(session.user.email);setDraft(session.user.email);}}).catch(()=>{if(alive)setMessage('دریافت ایمیل انجام نشد؛ صفحه را تازه کن.');});return()=>{alive=false;};},[]);
+ return <div className="member-calendar-email member-login-email"><FormField label="ایمیل ورود"><FieldInput type="email" dir="ltr" readOnly value={email} aria-label="ایمیل ورود فعلی"/></FormField><Action variant="outline" size="sm" className="outline member-email-action" disabled={!email} onClick={()=>{setDraft(email);setPassword('');setMessage('');setEditing(true);}}>ویرایش ایمیل ورود</Action>{message&&<p role="status">{message}</p>}{editing&&<Dialog title="ویرایش ایمیل ورود" onClose={()=>{if(!busy)setEditing(false);}}><form className="finance-form" onSubmit={async e=>{e.preventDefault();if(busy)return;setBusy(true);setMessage('');try{const result=await api('/api/auth/email',{email:draft,password});setEmail(result.user.email);setPassword('');setEditing(false);setMessage('ایمیل ورود تغییر کرد. از این پس با ایمیل جدید وارد شو.');}catch(error){setMessage((error as Error).message);}finally{setBusy(false);}}}><FormField label="ایمیل جدید"><FieldInput autoFocus type="email" dir="ltr" autoComplete="email" required maxLength={254} disabled={busy} value={draft} onChange={e=>setDraft(e.target.value)}/></FormField><FormField label="رمز عبور فعلی"><FieldInput type="password" autoComplete="current-password" required maxLength={200} disabled={busy} value={password} onChange={e=>setPassword(e.target.value)}/></FormField>{message&&<p role="alert">{message}</p>}<ActionGroup className="detail-actions"><Action type="button" variant="outline" disabled={busy} onClick={()=>setEditing(false)}>انصراف</Action><Action type="submit" variant="default" disabled={busy||!draft.trim()||!password}>{busy?'در حال ذخیره…':'ذخیره ایمیل'}</Action></ActionGroup></form></Dialog>}</div>;
 }

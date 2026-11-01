@@ -82,3 +82,24 @@ test('pages redirect by session; unknown and removed API routes answer JSON 404'
     assert.equal((await visitor.post('/api/database/local-session')).status, 401);
   } finally { await app.close(); }
 });
+
+test('change own login email with password confirmation and preserve membership', async () => {
+  const app = await startTestServer();
+  try {
+    const sara = app.client(), other = app.client();
+    const spaces = await sara.signup('Sara', 'sara@example.com');
+    await other.signup('Other', 'other@example.com');
+    assert.equal((await app.client().post('/api/auth/email', {email:'new@example.com',password:'correct horse'})).status,401);
+    assert.equal((await sara.post('/api/auth/email', {email:'bad',password:'correct horse'})).status,400);
+    assert.equal((await sara.post('/api/auth/email', {email:'new@example.com',password:'wrong'})).status,403);
+    assert.equal((await sara.post('/api/auth/email', {email:'OTHER@example.com',password:'correct horse'})).status,409);
+    assert.equal((await sara.me()).user.email,'sara@example.com');
+    const changed = await sara.post('/api/auth/email', {email:' New@Example.com ',password:'correct horse',userId:(await other.me()).user.id});
+    assert.equal(changed.status,200);
+    assert.equal(changed.body.user.email,'new@example.com');
+    assert.deepEqual((await sara.me()).spaces,spaces);
+    assert.equal((await other.me()).user.email,'other@example.com');
+    assert.equal((await app.client().post('/api/auth/login',{email:'sara@example.com',password:'correct horse'})).status,401);
+    assert.equal((await app.client().post('/api/auth/login',{email:'new@example.com',password:'correct horse'})).status,200);
+  } finally { await app.close(); }
+});

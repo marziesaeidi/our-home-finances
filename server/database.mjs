@@ -101,6 +101,13 @@ export function openDatabase(filename = databasePath) {
         return { id, email, name };
       });
     },
+    updateEmail(userId, email) {
+      return transaction(() => {
+        if (db.prepare('SELECT 1 FROM users WHERE email = ? AND id != ?').get(email, userId)) throw new Error('EMAIL_TAKEN');
+        db.prepare('UPDATE users SET email = ? WHERE id = ?').run(email, userId);
+        return publicUser(db.prepare('SELECT id, email, name FROM users WHERE id = ?').get(userId));
+      });
+    },
     credentials(email) { return db.prepare('SELECT id, email, name, password_hash FROM users WHERE email = ?').get(email) ?? null; },
     user(id) { return publicUser(db.prepare('SELECT id, email, name FROM users WHERE id = ?').get(id)); },
     createSession(userId) {
